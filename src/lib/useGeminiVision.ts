@@ -141,6 +141,14 @@ export function useGeminiVision() {
       const data = await res.json();
 
       if (!res.ok) {
+        // On rate limit, stop auto-scan and show friendly message
+        if (res.status === 429) {
+          if (intervalRef.current) {
+            clearInterval(intervalRef.current);
+            intervalRef.current = null;
+          }
+          setAutoScan(false);
+        }
         throw new Error(data.error || "Analysis failed");
       }
 
