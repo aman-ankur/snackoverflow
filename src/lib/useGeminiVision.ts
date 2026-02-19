@@ -109,13 +109,16 @@ export function useGeminiVision() {
     const canvas = captureCanvasRef.current;
     if (!video || !canvas || video.readyState < 2) return null;
 
-    canvas.width = video.videoWidth;
-    canvas.height = video.videoHeight;
+    // Downscale to max 512px wide to reduce token usage
+    const maxWidth = 512;
+    const scale = Math.min(maxWidth / video.videoWidth, 1);
+    canvas.width = Math.round(video.videoWidth * scale);
+    canvas.height = Math.round(video.videoHeight * scale);
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
 
-    ctx.drawImage(video, 0, 0);
-    return canvas.toDataURL("image/jpeg", 0.8);
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.6);
   }, []);
 
   // Analyze a single frame with Gemini
