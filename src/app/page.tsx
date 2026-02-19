@@ -1,30 +1,31 @@
 "use client";
 
+import { useState } from "react";
 import { useGeminiVision } from "@/lib/useGeminiVision";
+import { useYoloDetection } from "@/lib/useYoloDetection";
+import { getMatchingRecipes } from "@/lib/recipes";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import GeminiDetectedItems from "@/components/GeminiDetectedItems";
 import GeminiRecipeCard from "@/components/GeminiRecipeCard";
+import YoloCameraView from "@/components/YoloCameraView";
+import DetectedItems from "@/components/DetectedItems";
+import RecipeCard from "@/components/RecipeCard";
+import ModeSwitcher, { DetectionMode } from "@/components/ModeSwitcher";
 import { Scan, Sparkles, UtensilsCrossed, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function Home() {
-  const {
-    videoRef,
-    canvasRef,
-    isStreaming,
-    isAnalyzing,
-    error,
-    analysis,
-    lastAnalyzedAt,
-    autoScan,
-    frameCount,
-    startCamera,
-    stopCamera,
-    flipCamera,
-    analyzeFrame,
-    toggleAutoScan,
-    clearAnalysis,
-  } = useGeminiVision();
+  const [mode, setMode] = useState<DetectionMode>("gemini");
+
+  // Gemini/Groq cloud mode
+  const gemini = useGeminiVision();
+
+  // YOLO on-device mode
+  const yolo = useYoloDetection();
+
+  // Offline recipe matching for YOLO mode
+  const yoloIngredients = Array.from(yolo.detectedItems.keys());
+  const yoloRecipes = getMatchingRecipes(yoloIngredients);
 
   return (
     <div className="min-h-screen bg-background">
@@ -46,7 +47,7 @@ export default function Home() {
           </div>
           <div className="flex items-center gap-2">
             <span className="rounded-full bg-accent/10 border border-accent/20 px-2.5 py-1 text-[10px] font-medium text-accent">
-              Gemini AI
+              {mode === "yolo" ? "On-Device" : "Cloud AI"}
             </span>
           </div>
         </div>
@@ -54,98 +55,160 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-lg px-4 py-4 pb-20 space-y-4">
-        {/* Camera */}
-        <GeminiCameraView
-          videoRef={videoRef}
-          canvasRef={canvasRef}
-          isStreaming={isStreaming}
-          isAnalyzing={isAnalyzing}
-          autoScan={autoScan}
-          error={error}
-          onStart={startCamera}
-          onStop={stopCamera}
-          onFlip={flipCamera}
-          onAnalyze={analyzeFrame}
-          onToggleAutoScan={toggleAutoScan}
-          hasApiKey={true}
-        />
+        {/* Mode Switcher */}
+        <ModeSwitcher mode={mode} onModeChange={setMode} />
 
-        {/* Detected Items */}
-        <GeminiDetectedItems
-          items={analysis?.items || []}
-          onClear={clearAnalysis}
-          frameCount={frameCount}
-          lastAnalyzedAt={lastAnalyzedAt}
-        />
+        {/* ===== GEMINI / GROQ CLOUD MODE ===== */}
+        {mode === "gemini" && (
+          <>
+            <GeminiCameraView
+              videoRef={gemini.videoRef}
+              canvasRef={gemini.canvasRef}
+              isStreaming={gemini.isStreaming}
+              isAnalyzing={gemini.isAnalyzing}
+              autoScan={gemini.autoScan}
+              error={gemini.error}
+              onStart={gemini.startCamera}
+              onStop={gemini.stopCamera}
+              onFlip={gemini.flipCamera}
+              onAnalyze={gemini.analyzeFrame}
+              onToggleAutoScan={gemini.toggleAutoScan}
+              hasApiKey={true}
+            />
 
-        {/* AI Tip */}
-        <AnimatePresence>
-          {analysis?.tip && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              className="flex items-start gap-3 rounded-2xl bg-orange/5 border border-orange/15 p-4"
-            >
-              <Lightbulb className="h-4 w-4 text-orange shrink-0 mt-0.5" />
-              <p className="text-xs text-foreground/60 leading-relaxed">
-                {analysis.tip}
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
+            <GeminiDetectedItems
+              items={gemini.analysis?.items || []}
+              onClear={gemini.clearAnalysis}
+              frameCount={gemini.frameCount}
+              lastAnalyzedAt={gemini.lastAnalyzedAt}
+            />
 
-        {/* Recipe Suggestions */}
-        <div className="space-y-3">
-          <div className="flex items-center gap-2 px-1">
-            <Sparkles className="h-4 w-4 text-orange" />
-            <h2 className="text-sm font-semibold">Recipe Suggestions</h2>
-            {analysis?.recipes && analysis.recipes.length > 0 && (
-              <span className="rounded-full bg-orange/20 px-2 py-0.5 text-xs font-medium text-orange">
-                {analysis.recipes.length}
-              </span>
-            )}
-          </div>
-
-          <AnimatePresence mode="popLayout">
-            {!analysis?.recipes || analysis.recipes.length === 0 ? (
-              <motion.div
-                key="empty"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface border border-border py-10 px-6"
-              >
-                <div className="rounded-full bg-orange-glow p-4">
-                  <UtensilsCrossed className="h-8 w-8 text-orange/60" />
-                </div>
-                <div className="text-center">
-                  <p className="text-sm font-medium text-foreground/50">
-                    No recipes yet
+            <AnimatePresence>
+              {gemini.analysis?.tip && (
+                <motion.div
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: 8 }}
+                  className="flex items-start gap-3 rounded-2xl bg-orange/5 border border-orange/15 p-4"
+                >
+                  <Lightbulb className="h-4 w-4 text-orange shrink-0 mt-0.5" />
+                  <p className="text-xs text-foreground/60 leading-relaxed">
+                    {gemini.analysis.tip}
                   </p>
-                  <p className="text-xs text-foreground/30 mt-1">
-                    Scan your fridge to get AI-powered Indian recipe suggestions
-                  </p>
-                </div>
-              </motion.div>
-            ) : (
-              <div className="space-y-3">
-                {analysis.recipes.map((recipe, i) => (
-                  <GeminiRecipeCard
-                    key={`${recipe.name}-${i}`}
-                    recipe={recipe}
-                    index={i}
-                  />
-                ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {/* Gemini Recipes */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <Sparkles className="h-4 w-4 text-orange" />
+                <h2 className="text-sm font-semibold">Recipe Suggestions</h2>
+                {gemini.analysis?.recipes && gemini.analysis.recipes.length > 0 && (
+                  <span className="rounded-full bg-orange/20 px-2 py-0.5 text-xs font-medium text-orange">
+                    {gemini.analysis.recipes.length}
+                  </span>
+                )}
               </div>
-            )}
-          </AnimatePresence>
-        </div>
+
+              <AnimatePresence mode="popLayout">
+                {!gemini.analysis?.recipes || gemini.analysis.recipes.length === 0 ? (
+                  <motion.div
+                    key="empty-gemini"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface border border-border py-10 px-6"
+                  >
+                    <div className="rounded-full bg-orange-glow p-4">
+                      <UtensilsCrossed className="h-8 w-8 text-orange/60" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-foreground/50">No recipes yet</p>
+                      <p className="text-xs text-foreground/30 mt-1">
+                        Scan your fridge to get AI-powered Indian recipe suggestions
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="space-y-3">
+                    {gemini.analysis.recipes.map((recipe, i) => (
+                      <GeminiRecipeCard key={`${recipe.name}-${i}`} recipe={recipe} index={i} />
+                    ))}
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </>
+        )}
+
+        {/* ===== YOLO ON-DEVICE MODE ===== */}
+        {mode === "yolo" && (
+          <>
+            <YoloCameraView
+              videoRef={yolo.videoRef}
+              canvasRef={yolo.canvasRef}
+              isLoading={yolo.isLoading}
+              isStreaming={yolo.isStreaming}
+              error={yolo.error}
+              detectionCount={yolo.detections.length}
+              fps={yolo.fps}
+              onStart={yolo.startCamera}
+              onStop={yolo.stopCamera}
+              onFlip={yolo.flipCamera}
+            />
+
+            <DetectedItems items={yolo.detectedItems} onClear={yolo.clearDetectedItems} />
+
+            {/* YOLO Recipes (offline matching) */}
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 px-1">
+                <Sparkles className="h-4 w-4 text-orange" />
+                <h2 className="text-sm font-semibold">Recipe Suggestions</h2>
+                {yoloRecipes.length > 0 && (
+                  <span className="rounded-full bg-orange/20 px-2 py-0.5 text-xs font-medium text-orange">
+                    {yoloRecipes.length}
+                  </span>
+                )}
+              </div>
+
+              <AnimatePresence mode="popLayout">
+                {yoloRecipes.length === 0 ? (
+                  <motion.div
+                    key="empty-yolo"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface border border-border py-10 px-6"
+                  >
+                    <div className="rounded-full bg-orange-glow p-4">
+                      <UtensilsCrossed className="h-8 w-8 text-orange/60" />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-medium text-foreground/50">No recipes yet</p>
+                      <p className="text-xs text-foreground/30 mt-1">
+                        Point camera at food items to get recipe suggestions
+                      </p>
+                    </div>
+                  </motion.div>
+                ) : (
+                  <div className="space-y-3">
+                    {yoloRecipes.map((recipe, i) => (
+                      <RecipeCard key={recipe.name} recipe={recipe} index={i} />
+                    ))}
+                  </div>
+                )}
+              </AnimatePresence>
+            </div>
+          </>
+        )}
 
         {/* Footer */}
         <div className="text-center pt-4 pb-2">
           <p className="text-[10px] text-foreground/20">
-            Powered by Google Gemini 2.0 Flash • Your images are not stored
+            {mode === "yolo"
+              ? "YOLOv8n via ONNX Runtime • Runs entirely on your device"
+              : "Powered by Gemini / Groq • Your images are not stored"}
           </p>
         </div>
       </main>

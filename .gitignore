@@ -37,6 +37,10 @@ yarn-error.log*
 # certs
 /certs
 
+# ONNX Runtime WASM + MJS files (copied from node_modules via postinstall)
+/public/ort-wasm-*
+/public/ort.*.mjs
+
 # vercel
 .vercel
 
