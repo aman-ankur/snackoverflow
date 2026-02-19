@@ -59,40 +59,59 @@ export async function POST(request: NextRequest) {
     }
 
     const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash" });
-
-    // Strip the data URL prefix to get raw base64
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
 
-    const result = await model.generateContent([
-      SYSTEM_PROMPT,
-      {
-        inlineData: {
-          mimeType: "image/jpeg",
-          data: base64Data,
-        },
+    const imageContent = {
+      inlineData: {
+        mimeType: "image/jpeg" as const,
+        data: base64Data,
       },
-    ]);
+    };
 
-    const responseText = result.response.text();
+    // Try primary model, fallback to lite on rate limit
+    const models = ["gemini-2.0-flash", "gemini-2.0-flash-lite"];
+    let lastError: string = "";
 
-    // Parse JSON from response (handle potential markdown wrapping)
-    let parsed;
-    try {
-      const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        parsed = JSON.parse(jsonMatch[0]);
-      } else {
-        throw new Error("No JSON found in response");
+    for (const modelName of models) {
+      try {
+        const model = genAI.getGenerativeModel({ model: modelName });
+        const result = await model.generateContent([SYSTEM_PROMPT, imageContent]);
+        const responseText = result.response.text();
+
+        // Parse JSON from response (handle potential markdown wrapping)
+        const jsonMatch = responseText.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) {
+          return NextResponse.json(
+            { error: "Failed to parse AI response" },
+            { status: 500 }
+          );
+        }
+
+        const parsed = JSON.parse(jsonMatch[0]);
+        return NextResponse.json(parsed);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "";
+        console.error(`[${modelName}] error:`, msg);
+
+        // If rate limited, try next model
+        if (msg.includes("429") || msg.includes("quota") || msg.includes("RESOURCE_EXHAUSTED")) {
+          lastError = msg;
+          continue;
+        }
+
+        // Non-rate-limit error, return immediately
+        return NextResponse.json({ error: msg || "Analysis failed" }, { status: 500 });
       }
-    } catch {
-      return NextResponse.json(
-        { error: "Failed to parse AI response", raw: responseText },
-        { status: 500 }
-      );
     }
 
-    return NextResponse.json(parsed);
+    // All models rate limited — extract retry delay if available
+    const retryMatch = lastError.match(/retry in ([\d.]+)/i);
+    const retrySec = retryMatch ? Math.ceil(parseFloat(retryMatch[1])) : 30;
+
+    return NextResponse.json(
+      { error: `Rate limited. Please wait ${retrySec}s and try again.` },
+      { status: 429 }
+    );
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : "Unknown error";
     console.error("Gemini API error:", message);
