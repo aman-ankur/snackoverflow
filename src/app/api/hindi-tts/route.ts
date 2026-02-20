@@ -29,7 +29,6 @@ export async function POST(request: NextRequest) {
         model: "bulbul:v3",
         speaker: "kabir",
         pace: 1.0,
-        loudness: 1.2,
         response_format: "mp3",
         sample_rate: 24000,
       }),
