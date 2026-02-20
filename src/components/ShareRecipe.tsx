@@ -33,7 +33,7 @@ function buildMessage(recipe: GeminiRecipe): string {
     lines.push(...recipe.ingredients_needed.map((i) => `  • ${i}`));
   }
 
-  lines.push(``, `— Sent from FridgeVision 🧊`);
+  lines.push(``, `— Sent from Fridgenius 🧊`);
   return lines.join("\n");
 }
 

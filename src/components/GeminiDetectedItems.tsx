@@ -63,7 +63,7 @@ export default function GeminiDetectedItems({
       <div className="p-3 min-h-[60px]">
         {items.length === 0 ? (
           <p className="text-xs text-foreground/30 text-center py-3">
-            Tap &quot;Analyze&quot; to identify items with Gemini AI
+            Tap &quot;Analyze&quot; to identify items
           </p>
         ) : (
           <>

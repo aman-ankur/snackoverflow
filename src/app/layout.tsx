@@ -13,7 +13,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "FridgeVision — Smart Kitchen Assistant",
+  title: "Fridgenius — Smart Kitchen Assistant",
   description: "Point your camera at your fridge and get instant Indian recipe suggestions",
 };
 

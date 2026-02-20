@@ -30,7 +30,7 @@ export default function Home() {
             </div>
             <div>
               <h1 className="text-sm font-bold tracking-tight">
-                FridgeVision
+                Fridgenius
               </h1>
               <p className="text-[10px] text-foreground/40 -mt-0.5">
                 Smart Kitchen Assistant
@@ -59,7 +59,7 @@ export default function Home() {
           <p className="text-[10px] text-foreground/20">
             {mode === "yolo"
               ? "YOLOv8n via ONNX Runtime • Runs entirely on your device"
-              : "Powered by Gemini / Groq • Your images are not stored"}
+              : "Powered by Fridgenius AI • Your images are not stored"}
           </p>
         </div>
       </main>

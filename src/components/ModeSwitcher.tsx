@@ -43,7 +43,7 @@ export default function ModeSwitcher({ mode, onModeChange }: ModeSwitcherProps) 
           )}
           <span className={`relative flex items-center gap-1.5 ${mode === "gemini" ? "text-accent" : "text-foreground/40"}`}>
             <Cloud className="h-3.5 w-3.5" />
-            Gemini / Groq Cloud
+            Cloud AI
           </span>
         </button>
       </div>

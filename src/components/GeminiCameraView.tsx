@@ -43,8 +43,8 @@ export default function GeminiCameraView({
 }: GeminiCameraViewProps) {
   return (
     <div className="relative w-full overflow-hidden rounded-2xl bg-surface border border-border">
-      {/* Camera Feed */}
-      <div className="relative aspect-[4/3] w-full bg-black">
+      {/* Camera Feed — near full-screen when streaming */}
+      <div className={`relative w-full bg-black transition-all duration-300 ${isStreaming ? "h-[65vh]" : "aspect-[4/3]"}`}>
         <video
           ref={videoRef}
           className="absolute inset-0 h-full w-full object-cover"
@@ -98,7 +98,7 @@ export default function GeminiCameraView({
                 <>
                   <RefreshCw className="h-3 w-3 text-accent animate-spin" />
                   <span className="text-xs font-medium text-white/90">
-                    Analyzing with Gemini...
+                    Analyzing...
                   </span>
                 </>
               ) : autoScan ? (
@@ -136,7 +136,7 @@ export default function GeminiCameraView({
                 Point your camera at your fridge
               </p>
               <p className="text-xs text-foreground/40 mt-1">
-                Gemini AI will identify items and suggest Indian recipes
+                AI will identify items and suggest recipes
               </p>
             </div>
           </div>
