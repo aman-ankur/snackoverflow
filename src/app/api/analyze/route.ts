@@ -13,7 +13,7 @@ Your job:
 1. Identify ALL food items, ingredients, vegetables, fruits, dairy products, packaged goods, condiments, and beverages visible in the image.
 2. Be very specific — say "paneer" not "cheese block", say "green chili" not "pepper", say "toor dal" not "lentils" if you can tell.
 3. Include quantities/amounts if visible (e.g., "3 tomatoes", "1 bottle of milk").
-4. Based on the identified items, suggest 3-5 Indian recipes that can be made TODAY with these ingredients.
+4. Based on the identified items, suggest exactly 5 Indian lunch/dinner recipes that can be made TODAY with these ingredients. Focus on proper meals (sabzi, dal, rice dishes, rotis, curries, biryanis, etc.) — not snacks or drinks.
 5. For each recipe, include: name (English + Hindi), time to cook, difficulty, brief description, and key steps.
 6. For each recipe, include a "diet" tag: one of "vegetarian", "vegan", "eggetarian", "non-vegetarian", "jain".
 
