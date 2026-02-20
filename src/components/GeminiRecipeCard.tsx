@@ -12,6 +12,7 @@ import {
   CheckCircle2,
 } from "lucide-react";
 import type { GeminiRecipe } from "@/lib/useGeminiVision";
+import ShareRecipe from "@/components/ShareRecipe";
 
 function getDietStyle(diet: string): string {
   const styles: Record<string, string> = {
@@ -75,6 +76,7 @@ export default function GeminiRecipeCard({
               {recipe.description}
             </p>
           </div>
+          <ShareRecipe recipe={recipe} />
         </div>
 
         {/* Meta badges */}
