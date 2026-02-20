@@ -27,7 +27,7 @@ export async function POST(request: NextRequest) {
         text: text,
         target_language_code: "hi-IN",
         model: "bulbul:v3",
-        speaker: "meera",
+        speaker: "kabir",
         pace: 1.0,
         loudness: 1.2,
         response_format: "mp3",
