@@ -37,6 +37,8 @@ function buildMessage(recipe: GeminiRecipe): string {
   return lines.join("\n");
 }
 
+const SERVING_OPTIONS = [1, 2, 3, 4] as const;
+
 export default function ShareRecipe({ recipe }: ShareRecipeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -44,9 +46,16 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
   const [hindiLoading, setHindiLoading] = useState(false);
   const [audioLoading, setAudioLoading] = useState(false);
   const [hindiText, setHindiText] = useState<string | null>(null);
+  const [servings, setServings] = useState(2);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const message = buildMessage(recipe);
+
+  // Clear cached hindi text when servings change
+  const handleServingsChange = useCallback((n: number) => {
+    setServings(n);
+    setHindiText(null);
+  }, []);
 
   // Generate Hindi text message via AI
   const generateHindiText = useCallback(async (): Promise<string | null> => {
@@ -60,6 +69,7 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
           recipeName: recipe.name,
           recipeHindi: recipe.hindi,
           ingredientsUsed: recipe.ingredients_used,
+          servings,
         }),
       });
       const data = await res.json();
@@ -73,7 +83,7 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
     } finally {
       setHindiLoading(false);
     }
-  }, [hindiText, recipe]);
+  }, [hindiText, recipe, servings]);
 
   // Send Hindi text via WhatsApp
   const handleHindiWhatsApp = useCallback(async () => {
@@ -224,8 +234,30 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
               className="absolute right-0 top-full mt-1 z-50 w-56 rounded-xl bg-surface border border-border shadow-xl overflow-hidden"
             >
               <div className="p-1.5 space-y-0.5">
+                {/* Serving size picker */}
+                <div className="px-3 pt-2 pb-1.5">
+                  <span className="text-[10px] text-foreground/40 block mb-1.5">Servings</span>
+                  <div className="flex items-center gap-1">
+                    {SERVING_OPTIONS.map((n) => (
+                      <button
+                        key={n}
+                        onClick={() => handleServingsChange(n)}
+                        className={`flex items-center justify-center w-9 h-8 rounded-lg text-xs font-semibold transition-all active:scale-95 ${
+                          servings === n
+                            ? "bg-accent text-background shadow-sm"
+                            : "bg-foreground/5 text-foreground/50 border border-foreground/10"
+                        }`}
+                      >
+                        {n}🧑
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="border-t border-border my-1" />
+
                 {/* Section: Hindi (for cook) */}
-                <div className="px-3 pt-2 pb-1">
+                <div className="px-3 pt-1 pb-1">
                   <span className="text-[10px] font-semibold text-orange uppercase tracking-wider">
                     हिंदी — For Cook
                   </span>

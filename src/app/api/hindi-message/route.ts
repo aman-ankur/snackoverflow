@@ -1,27 +1,36 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
 
-const HINDI_PROMPT = `You are a helpful Indian household assistant. Generate a SHORT, casual Hindi message (in Devanagari script) to send to a cook/bhaiya asking them to prepare a specific dish.
+function buildHindiPrompt(servings: number): string {
+  const servingHint = servings === 1
+    ? "एक प्लेट / एक आदमी के लिए"
+    : `${servings} लोगों के लिए`;
+
+  return `You are a helpful Indian household assistant. Generate a SHORT, casual Hindi message (in Devanagari script) to send to a cook/bhaiya asking them to prepare a specific dish.
 
 Rules:
 - Write in natural spoken Hindi (Devanagari), like how a family member would talk to their cook
-- Keep it very short — 1-2 sentences max
-- Mention the dish name and key ingredients they should use
+- Keep it very short — 2-3 sentences max
+- Mention the dish name
+- Mention it should be made for ${servingHint} (${servings} people)
+- Mention key ingredients are in the fridge
 - Don't include full recipe steps — the cook knows how to cook
 - Be polite but casual (use "bhaiya" or respectful tone)
-- Example: "भैया, आज लंच में पनीर मटर बना दीजिए। पनीर, मटर, टमाटर सब फ्रिज में है।"
+- Example for 2 people: "भैया, आज लंच में 2 लोगों के लिए पनीर मटर बना दीजिए। पनीर, मटर, टमाटर सब फ्रिज में है।"
+- Example for 1 person: "भैया, आज एक प्लेट दाल तड़का बना दीजिए। दाल और टमाटर फ्रिज में है।"
 
 Respond with ONLY the Hindi message text, nothing else. No quotes, no explanation.`;
+}
 
 export async function POST(request: NextRequest) {
   try {
-    const { recipeName, recipeHindi, ingredientsUsed } = await request.json();
+    const { recipeName, recipeHindi, ingredientsUsed, servings = 2 } = await request.json();
 
     if (!recipeName) {
       return NextResponse.json({ error: "Recipe name required" }, { status: 400 });
     }
 
-    const userMsg = `Dish: ${recipeName} (${recipeHindi || ""}). Ingredients available: ${ingredientsUsed?.join(", ") || "various items"}`;
+    const userMsg = `Dish: ${recipeName} (${recipeHindi || ""}). For ${servings} people. Ingredients available: ${ingredientsUsed?.join(", ") || "various items"}`;
 
     // Use Groq (free) to generate the Hindi text
     const groqKey = process.env.GROQ_API_KEY;
@@ -33,7 +42,7 @@ export async function POST(request: NextRequest) {
     const result = await groq.chat.completions.create({
       model: "meta-llama/llama-4-scout-17b-16e-instruct",
       messages: [
-        { role: "system", content: HINDI_PROMPT },
+        { role: "system", content: buildHindiPrompt(servings) },
         { role: "user", content: userMsg },
       ],
       temperature: 0.7,
