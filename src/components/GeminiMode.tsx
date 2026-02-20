@@ -1,16 +1,31 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useGeminiVision } from "@/lib/useGeminiVision";
+import { useExpiryTracker } from "@/lib/useExpiryTracker";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import GeminiDetectedItems from "@/components/GeminiDetectedItems";
 import GeminiRecipeCard from "@/components/GeminiRecipeCard";
 import DietaryFilter from "@/components/DietaryFilter";
 import ShoppingList from "@/components/ShoppingList";
+import ExpiryTracker from "@/components/ExpiryTracker";
 import { Sparkles, UtensilsCrossed, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 export default function GeminiMode() {
   const gemini = useGeminiVision();
+  const expiry = useExpiryTracker();
+
+  // Auto-add detected items to expiry tracker when new items appear
+  const prevItemCountRef = useRef(0);
+  useEffect(() => {
+    if (gemini.allItems.length > prevItemCountRef.current) {
+      expiry.addItems(
+        gemini.allItems.map((i) => ({ name: i.name, hindi: i.hindi }))
+      );
+    }
+    prevItemCountRef.current = gemini.allItems.length;
+  }, [gemini.allItems]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <>
@@ -41,6 +56,16 @@ export default function GeminiMode() {
         onRemoveItem={gemini.removeItem}
         frameCount={gemini.frameCount}
         lastAnalyzedAt={gemini.lastAnalyzedAt}
+      />
+
+      {/* Expiry / Freshness Tracker */}
+      <ExpiryTracker
+        items={expiry.trackedItems}
+        expiringCount={expiry.expiringCount}
+        onSetExpiry={expiry.setExpiry}
+        onRemove={expiry.removeTrackedItem}
+        onClearAll={expiry.clearAll}
+        getDaysLeft={expiry.getDaysLeft}
       />
 
       <AnimatePresence>
