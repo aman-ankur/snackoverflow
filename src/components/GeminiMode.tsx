@@ -9,6 +9,7 @@ import GeminiRecipeCard from "@/components/GeminiRecipeCard";
 import DietaryFilter from "@/components/DietaryFilter";
 import ShoppingList from "@/components/ShoppingList";
 import ExpiryTracker from "@/components/ExpiryTracker";
+import MealPlanner from "@/components/MealPlanner";
 import { Sparkles, UtensilsCrossed, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -87,6 +88,12 @@ export default function GeminiMode() {
       {/* Shopping List */}
       <ShoppingList
         recipes={gemini.analysis?.recipes || []}
+        detectedItemNames={gemini.allItems.map((i) => i.name)}
+      />
+
+      {/* Meal Planner */}
+      <MealPlanner
+        availableRecipes={gemini.analysis?.recipes || []}
         detectedItemNames={gemini.allItems.map((i) => i.name)}
       />
 
