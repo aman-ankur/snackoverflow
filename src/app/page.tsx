@@ -77,8 +77,9 @@ export default function Home() {
             />
 
             <GeminiDetectedItems
-              items={gemini.analysis?.items || []}
+              items={gemini.allItems}
               onClear={gemini.clearAnalysis}
+              onRemoveItem={gemini.removeItem}
               frameCount={gemini.frameCount}
               lastAnalyzedAt={gemini.lastAnalyzedAt}
             />

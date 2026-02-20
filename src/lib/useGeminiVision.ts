@@ -39,6 +39,8 @@ export function useGeminiVision() {
   const [error, setError] = useState<string | null>(null);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
   const [analysis, setAnalysis] = useState<AnalysisResult | null>(null);
+  const [allItems, setAllItems] = useState<DetectedItem[]>([]);
+  const [removedItems, setRemovedItems] = useState<Set<string>>(new Set());
   const [lastAnalyzedAt, setLastAnalyzedAt] = useState<Date | null>(null);
   const [autoScan, setAutoScan] = useState(false);
   const [frameCount, setFrameCount] = useState(0);
@@ -155,7 +157,26 @@ export function useGeminiVision() {
         throw new Error(data.error || "Analysis failed");
       }
 
-      setAnalysis(data as AnalysisResult);
+      const result = data as AnalysisResult;
+      setAnalysis(result);
+
+      // Accumulate items across scans (deduplicate by name, keep highest confidence)
+      setAllItems((prev) => {
+        const merged = new Map<string, DetectedItem>();
+        // Existing items first
+        prev.forEach((item) => merged.set(item.name.toLowerCase(), item));
+        // New items override if higher confidence
+        const confRank = { high: 3, medium: 2, low: 1 };
+        result.items.forEach((item) => {
+          const key = item.name.toLowerCase();
+          const existing = merged.get(key);
+          if (!existing || confRank[item.confidence] > confRank[existing.confidence]) {
+            merged.set(key, item);
+          }
+        });
+        return Array.from(merged.values());
+      });
+
       setLastAnalyzedAt(new Date());
       setFrameCount((c) => c + 1);
     } catch (err: unknown) {
@@ -196,11 +217,23 @@ export function useGeminiVision() {
     };
   }, []);
 
+  const removeItem = useCallback((itemName: string) => {
+    setAllItems((prev) => prev.filter((i) => i.name !== itemName));
+    setRemovedItems((prev) => new Set(prev).add(itemName.toLowerCase()));
+  }, []);
+
   const clearAnalysis = useCallback(() => {
     setAnalysis(null);
+    setAllItems([]);
+    setRemovedItems(new Set());
     setFrameCount(0);
     setLastAnalyzedAt(null);
   }, []);
+
+  // Filter out removed items from accumulated list
+  const visibleItems = allItems.filter(
+    (item) => !removedItems.has(item.name.toLowerCase())
+  );
 
   return {
     videoRef,
@@ -209,6 +242,7 @@ export function useGeminiVision() {
     isAnalyzing,
     error,
     analysis,
+    allItems: visibleItems,
     lastAnalyzedAt,
     autoScan,
     frameCount,
@@ -217,6 +251,7 @@ export function useGeminiVision() {
     flipCamera,
     analyzeFrame,
     toggleAutoScan,
+    removeItem,
     clearAnalysis,
   };
 }

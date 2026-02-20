@@ -1,12 +1,13 @@
 "use client";
 
 import { motion, AnimatePresence } from "framer-motion";
-import { Package, Trash2, Eye } from "lucide-react";
+import { Package, Trash2, Eye, X } from "lucide-react";
 import type { DetectedItem } from "@/lib/useGeminiVision";
 
 interface GeminiDetectedItemsProps {
   items: DetectedItem[];
   onClear: () => void;
+  onRemoveItem: (name: string) => void;
   frameCount: number;
   lastAnalyzedAt: Date | null;
 }
@@ -14,6 +15,7 @@ interface GeminiDetectedItemsProps {
 export default function GeminiDetectedItems({
   items,
   onClear,
+  onRemoveItem,
   frameCount,
   lastAnalyzedAt,
 }: GeminiDetectedItemsProps) {
@@ -51,7 +53,7 @@ export default function GeminiDetectedItems({
               className="flex items-center gap-1 text-xs text-foreground/40 hover:text-red-400 transition-colors"
             >
               <Trash2 className="h-3 w-3" />
-              Clear
+              Clear all
             </button>
           )}
         </div>
@@ -64,31 +66,42 @@ export default function GeminiDetectedItems({
             Tap &quot;Analyze&quot; to identify items with Gemini AI
           </p>
         ) : (
-          <div className="flex flex-wrap gap-2">
-            <AnimatePresence mode="popLayout">
-              {items.map((item, i) => (
-                <motion.div
-                  key={`${item.name}-${i}`}
-                  layout
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.8 }}
-                  transition={{ delay: i * 0.03 }}
-                  className={`flex items-center gap-1.5 rounded-full border px-3 py-1.5 ${confidenceColor[item.confidence]}`}
-                >
-                  <span className="text-xs font-medium">{item.name}</span>
-                  {item.hindi && (
-                    <span className="text-[10px] opacity-50">{item.hindi}</span>
-                  )}
-                  {item.quantity && item.quantity !== "1" && (
-                    <span className="text-[10px] font-bold opacity-70">
-                      x{item.quantity}
-                    </span>
-                  )}
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </div>
+          <>
+            <p className="text-[10px] text-foreground/25 mb-2 px-1">
+              Tap X to remove incorrect items. Items accumulate across scans.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              <AnimatePresence mode="popLayout">
+                {items.map((item) => (
+                  <motion.div
+                    key={item.name}
+                    layout
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    className={`group flex items-center gap-1.5 rounded-full border px-3 py-1.5 ${confidenceColor[item.confidence]}`}
+                  >
+                    <span className="text-xs font-medium">{item.name}</span>
+                    {item.hindi && (
+                      <span className="text-[10px] opacity-50">{item.hindi}</span>
+                    )}
+                    {item.quantity && item.quantity !== "1" && (
+                      <span className="text-[10px] font-bold opacity-70">
+                        x{item.quantity}
+                      </span>
+                    )}
+                    <button
+                      onClick={() => onRemoveItem(item.name)}
+                      className="ml-0.5 -mr-1 flex items-center justify-center rounded-full h-4 w-4 opacity-40 hover:opacity-100 hover:bg-red-500/20 transition-all"
+                      aria-label={`Remove ${item.name}`}
+                    >
+                      <X className="h-3 w-3" />
+                    </button>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+            </div>
+          </>
         )}
       </div>
     </div>
