@@ -4,6 +4,8 @@ import { useGeminiVision } from "@/lib/useGeminiVision";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import GeminiDetectedItems from "@/components/GeminiDetectedItems";
 import GeminiRecipeCard from "@/components/GeminiRecipeCard";
+import DietaryFilter from "@/components/DietaryFilter";
+import ShoppingList from "@/components/ShoppingList";
 import { Sparkles, UtensilsCrossed, Lightbulb } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -26,6 +28,12 @@ export default function GeminiMode() {
         onToggleAutoScan={gemini.toggleAutoScan}
         hasApiKey={true}
       />
+
+      {/* Dietary Filter */}
+      <div className="rounded-2xl bg-surface border border-border p-3">
+        <p className="text-[10px] text-foreground/30 mb-2 px-1">Diet Preference</p>
+        <DietaryFilter value={gemini.dietaryFilter} onChange={gemini.setDietaryFilter} />
+      </div>
 
       <GeminiDetectedItems
         items={gemini.allItems}
@@ -50,6 +58,12 @@ export default function GeminiMode() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Shopping List */}
+      <ShoppingList
+        recipes={gemini.analysis?.recipes || []}
+        detectedItemNames={gemini.allItems.map((i) => i.name)}
+      />
 
       <div className="space-y-3">
         <div className="flex items-center gap-2 px-1">

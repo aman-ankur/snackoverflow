@@ -9,6 +9,8 @@ export interface DetectedItem {
   confidence: "high" | "medium" | "low";
 }
 
+export type DietaryFilter = "all" | "vegetarian" | "vegan" | "eggetarian" | "jain";
+
 export interface GeminiRecipe {
   name: string;
   hindi: string;
@@ -19,6 +21,7 @@ export interface GeminiRecipe {
   ingredients_needed: string[];
   steps: string[];
   tags: string[];
+  diet?: string;
 }
 
 export interface AnalysisResult {
@@ -44,6 +47,7 @@ export function useGeminiVision() {
   const [lastAnalyzedAt, setLastAnalyzedAt] = useState<Date | null>(null);
   const [autoScan, setAutoScan] = useState(false);
   const [frameCount, setFrameCount] = useState(0);
+  const [dietaryFilter, setDietaryFilter] = useState<DietaryFilter>("all");
 
   // Create offscreen canvas for frame capture
   useEffect(() => {
@@ -140,7 +144,7 @@ export function useGeminiVision() {
       const res = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: frame }),
+        body: JSON.stringify({ image: frame, dietaryFilter }),
       });
 
       const data = await res.json();
@@ -185,7 +189,7 @@ export function useGeminiVision() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAnalyzing, captureFrame]);
+  }, [isAnalyzing, captureFrame, dietaryFilter]);
 
   // Auto-scan: analyze every N seconds
   const toggleAutoScan = useCallback(() => {
@@ -246,6 +250,8 @@ export function useGeminiVision() {
     lastAnalyzedAt,
     autoScan,
     frameCount,
+    dietaryFilter,
+    setDietaryFilter,
     startCamera,
     stopCamera,
     flipCamera,

@@ -13,6 +13,28 @@ import {
 } from "lucide-react";
 import type { GeminiRecipe } from "@/lib/useGeminiVision";
 
+function getDietStyle(diet: string): string {
+  const styles: Record<string, string> = {
+    vegetarian: "text-green-400 bg-green-400/10 border-green-400/20",
+    vegan: "text-emerald-400 bg-emerald-400/10 border-emerald-400/20",
+    eggetarian: "text-yellow-400 bg-yellow-400/10 border-yellow-400/20",
+    jain: "text-purple-400 bg-purple-400/10 border-purple-400/20",
+    "non-vegetarian": "text-red-400 bg-red-400/10 border-red-400/20",
+  };
+  return styles[diet] || "text-foreground/40 bg-foreground/5 border-foreground/10";
+}
+
+function getDietEmoji(diet: string): string {
+  const emojis: Record<string, string> = {
+    vegetarian: "🥬",
+    vegan: "🌱",
+    eggetarian: "🥚",
+    jain: "🙏",
+    "non-vegetarian": "🍗",
+  };
+  return emojis[diet] || "🍽️";
+}
+
 interface GeminiRecipeCardProps {
   recipe: GeminiRecipe;
   index: number;
@@ -67,6 +89,11 @@ export default function GeminiRecipeCard({
             <Flame className="h-3 w-3" />
             {recipe.difficulty}
           </span>
+          {recipe.diet && (
+            <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium ${getDietStyle(recipe.diet)}`}>
+              {getDietEmoji(recipe.diet)} {recipe.diet}
+            </span>
+          )}
           {recipe.tags?.slice(0, 2).map((tag) => (
             <span
               key={tag}
