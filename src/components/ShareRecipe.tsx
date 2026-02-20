@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import {
   Share2,
   MessageCircle,
@@ -9,6 +9,8 @@ import {
   Copy,
   Check,
   Send,
+  Mic,
+  Loader2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { GeminiRecipe } from "@/lib/useGeminiVision";
@@ -22,7 +24,7 @@ function buildMessage(recipe: GeminiRecipe): string {
     `🍳 *${recipe.name}* (${recipe.hindi})`,
     `⏱️ ${recipe.time} • ${recipe.difficulty}`,
     ``,
-    `📝 *Ingredients you have:*`,
+    `📝 *Ingredients available:*`,
     ...(recipe.ingredients_used?.map((i) => `  ✅ ${i}`) || []),
   ];
 
@@ -31,54 +33,134 @@ function buildMessage(recipe: GeminiRecipe): string {
     lines.push(...recipe.ingredients_needed.map((i) => `  • ${i}`));
   }
 
-  lines.push(``, `👨‍🍳 *Steps:*`);
-  recipe.steps?.forEach((step, i) => {
-    lines.push(`  ${i + 1}. ${step}`);
-  });
-
   lines.push(``, `— Sent from FridgeVision 🧊`);
   return lines.join("\n");
-}
-
-function buildPlainMessage(recipe: GeminiRecipe): string {
-  return `Please cook ${recipe.name} (${recipe.hindi}) today. It takes ${recipe.time} and is ${recipe.difficulty} difficulty. Ingredients: ${recipe.ingredients_used?.join(", ")}. Steps: ${recipe.steps?.map((s, i) => `${i + 1}) ${s}`).join(" ")}`;
 }
 
 export default function ShareRecipe({ recipe }: ShareRecipeProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [hindiLoading, setHindiLoading] = useState(false);
+  const [audioLoading, setAudioLoading] = useState(false);
+  const [hindiText, setHindiText] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const message = buildMessage(recipe);
-  const plainMessage = buildPlainMessage(recipe);
 
+  // Generate Hindi text message via AI
+  const generateHindiText = useCallback(async (): Promise<string | null> => {
+    if (hindiText) return hindiText;
+    setHindiLoading(true);
+    try {
+      const res = await fetch("/api/hindi-message", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipeName: recipe.name,
+          recipeHindi: recipe.hindi,
+          ingredientsUsed: recipe.ingredients_used,
+        }),
+      });
+      const data = await res.json();
+      if (data.hindiText) {
+        setHindiText(data.hindiText);
+        return data.hindiText;
+      }
+      return null;
+    } catch {
+      return null;
+    } finally {
+      setHindiLoading(false);
+    }
+  }, [hindiText, recipe]);
+
+  // Send Hindi text via WhatsApp
+  const handleHindiWhatsApp = useCallback(async () => {
+    const text = await generateHindiText();
+    if (text) {
+      const encoded = encodeURIComponent(text);
+      window.open(`https://wa.me/?text=${encoded}`, "_blank");
+    }
+    setIsOpen(false);
+  }, [generateHindiText]);
+
+  // Generate Hindi audio and share/play
+  const handleHindiAudio = useCallback(async () => {
+    setAudioLoading(true);
+    try {
+      // Step 1: Get Hindi text
+      const text = await generateHindiText();
+      if (!text) {
+        setAudioLoading(false);
+        return;
+      }
+
+      // Step 2: Convert to audio via OpenAI TTS
+      const res = await fetch("/api/hindi-tts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ text }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        console.error("TTS error:", err.error);
+        setAudioLoading(false);
+        return;
+      }
+
+      const audioBlob = await res.blob();
+      const audioFile = new File([audioBlob], `${recipe.name}-hindi.mp3`, {
+        type: "audio/mpeg",
+      });
+
+      // Try sharing via Web Share API (works on mobile → WhatsApp)
+      if (typeof navigator !== "undefined" && typeof navigator.share === "function" && navigator.canShare?.({ files: [audioFile] })) {
+        try {
+          await navigator.share({
+            title: `🍳 ${recipe.hindi}`,
+            text: text,
+            files: [audioFile],
+          });
+          setIsOpen(false);
+          setAudioLoading(false);
+          return;
+        } catch {
+          // User cancelled or share failed, fall through to play
+        }
+      }
+
+      // Fallback: play audio in browser + offer download
+      const url = URL.createObjectURL(audioBlob);
+      if (audioRef.current) {
+        audioRef.current.pause();
+      }
+      const audio = new Audio(url);
+      audioRef.current = audio;
+      audio.play();
+
+      // Also download the file
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${recipe.name}-hindi.mp3`;
+      a.click();
+    } catch (err) {
+      console.error("Audio generation failed:", err);
+    } finally {
+      setAudioLoading(false);
+      setIsOpen(false);
+    }
+  }, [generateHindiText, recipe]);
+
+  // English WhatsApp
   const handleWhatsApp = useCallback(() => {
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/?text=${encoded}`, "_blank");
     setIsOpen(false);
   }, [message]);
 
-  const handleSMS = useCallback(() => {
-    const encoded = encodeURIComponent(plainMessage);
-    // SMS deep link works on both iOS and Android
-    window.open(`sms:?body=${encoded}`, "_blank");
-    setIsOpen(false);
-  }, [plainMessage]);
-
-  const handleNativeShare = useCallback(async () => {
-    if (navigator.share) {
-      try {
-        await navigator.share({
-          title: `Recipe: ${recipe.name}`,
-          text: plainMessage,
-        });
-      } catch {
-        // User cancelled or not supported
-      }
-    }
-    setIsOpen(false);
-  }, [recipe.name, plainMessage]);
-
+  // Copy
   const handleCopy = useCallback(async () => {
     try {
       await navigator.clipboard.writeText(message);
@@ -94,14 +176,14 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
     setTimeout(() => setCopied(false), 2000);
   }, [message]);
 
+  // Read aloud in English
   const handleSpeak = useCallback(() => {
     if (isSpeaking) {
       speechSynthesis.cancel();
       setIsSpeaking(false);
       return;
     }
-
-    const text = `Recipe: ${recipe.name}. ${recipe.description}. Time: ${recipe.time}. Steps: ${recipe.steps?.map((s, i) => `Step ${i + 1}: ${s}`).join(". ")}`;
+    const text = `Recipe: ${recipe.name}. ${recipe.description}. Time: ${recipe.time}.`;
     const utterance = new SpeechSynthesisUtterance(text);
     utterance.lang = "en-IN";
     utterance.rate = 0.9;
@@ -129,7 +211,7 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-40"
+              className="fixed inset-0 z-40 bg-black/20"
               onClick={() => setIsOpen(false)}
             />
 
@@ -139,43 +221,75 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-1 z-50 w-52 rounded-xl bg-surface border border-border shadow-xl overflow-hidden"
+              className="absolute right-0 top-full mt-1 z-50 w-56 rounded-xl bg-surface border border-border shadow-xl overflow-hidden"
             >
               <div className="p-1.5 space-y-0.5">
+                {/* Section: Hindi (for cook) */}
+                <div className="px-3 pt-2 pb-1">
+                  <span className="text-[10px] font-semibold text-orange uppercase tracking-wider">
+                    हिंदी — For Cook
+                  </span>
+                </div>
+
+                <button
+                  onClick={handleHindiAudio}
+                  disabled={audioLoading}
+                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors disabled:opacity-50"
+                >
+                  {audioLoading ? (
+                    <Loader2 className="h-4 w-4 text-orange animate-spin" />
+                  ) : (
+                    <Mic className="h-4 w-4 text-orange" />
+                  )}
+                  <div>
+                    <span className="text-xs font-medium text-foreground/80 block">
+                      {audioLoading ? "Generating..." : "Hindi Audio Message"}
+                    </span>
+                    <span className="text-[10px] text-foreground/30">
+                      AI voice in Hindi → share on WhatsApp
+                    </span>
+                  </div>
+                </button>
+
+                <button
+                  onClick={handleHindiWhatsApp}
+                  disabled={hindiLoading}
+                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors disabled:opacity-50"
+                >
+                  {hindiLoading ? (
+                    <Loader2 className="h-4 w-4 text-green-400 animate-spin" />
+                  ) : (
+                    <MessageCircle className="h-4 w-4 text-green-400" />
+                  )}
+                  <div>
+                    <span className="text-xs font-medium text-foreground/80 block">
+                      {hindiLoading ? "Generating..." : "Hindi Text on WhatsApp"}
+                    </span>
+                    <span className="text-[10px] text-foreground/30">
+                      हिंदी में message भेजें
+                    </span>
+                  </div>
+                </button>
+
+                <div className="border-t border-border my-1" />
+
+                {/* Section: English */}
+                <div className="px-3 pt-1 pb-1">
+                  <span className="text-[10px] font-semibold text-foreground/30 uppercase tracking-wider">
+                    English
+                  </span>
+                </div>
+
                 <button
                   onClick={handleWhatsApp}
                   className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors"
                 >
                   <MessageCircle className="h-4 w-4 text-green-400" />
                   <div>
-                    <span className="text-xs font-medium text-foreground/80 block">WhatsApp</span>
-                    <span className="text-[10px] text-foreground/30">Send formatted recipe</span>
+                    <span className="text-xs font-medium text-foreground/80 block">WhatsApp (English)</span>
+                    <span className="text-[10px] text-foreground/30">Send recipe in English</span>
                   </div>
                 </button>
-
-                <button
-                  onClick={handleSMS}
-                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors"
-                >
-                  <Send className="h-4 w-4 text-blue-400" />
-                  <div>
-                    <span className="text-xs font-medium text-foreground/80 block">SMS / iMessage</span>
-                    <span className="text-[10px] text-foreground/30">Send as text message</span>
-                  </div>
-                </button>
-
-                {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
-                  <button
-                    onClick={handleNativeShare}
-                    className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors"
-                  >
-                    <Share2 className="h-4 w-4 text-orange" />
-                    <div>
-                      <span className="text-xs font-medium text-foreground/80 block">Share via...</span>
-                      <span className="text-[10px] text-foreground/30">Any app on your phone</span>
-                    </div>
-                  </button>
-                )}
 
                 <button
                   onClick={handleSpeak}
@@ -188,15 +302,29 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                   )}
                   <div>
                     <span className="text-xs font-medium text-foreground/80 block">
-                      {isSpeaking ? "Stop Reading" : "Read Aloud"}
+                      {isSpeaking ? "Stop" : "Read Aloud"}
                     </span>
-                    <span className="text-[10px] text-foreground/30">
-                      {isSpeaking ? "Stop voice" : "AI voice reads recipe"}
-                    </span>
+                    <span className="text-[10px] text-foreground/30">English voice</span>
                   </div>
                 </button>
 
-                <div className="border-t border-border my-1" />
+                {typeof navigator !== "undefined" && typeof navigator.share === "function" && (
+                  <button
+                    onClick={async () => {
+                      try {
+                        await navigator.share({ title: recipe.name, text: message });
+                      } catch { /* cancelled */ }
+                      setIsOpen(false);
+                    }}
+                    className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors"
+                  >
+                    <Share2 className="h-4 w-4 text-foreground/40" />
+                    <div>
+                      <span className="text-xs font-medium text-foreground/80 block">Share via...</span>
+                      <span className="text-[10px] text-foreground/30">Any app</span>
+                    </div>
+                  </button>
+                )}
 
                 <button
                   onClick={handleCopy}
@@ -211,7 +339,7 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                     <span className="text-xs font-medium text-foreground/80 block">
                       {copied ? "Copied!" : "Copy Text"}
                     </span>
-                    <span className="text-[10px] text-foreground/30">Copy to clipboard</span>
+                    <span className="text-[10px] text-foreground/30">Clipboard</span>
                   </div>
                 </button>
               </div>
