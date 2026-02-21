@@ -60,24 +60,27 @@ All components are in `src/components/`. All are `"use client"` components.
 - Props: `totals`, `mealsCount`
 - Shows calories/protein/carbs/fat with compact ring progress visuals
 
-### `CapyGarden.tsx` (NEW)
+### `CapyGarden.tsx`
 **Three.js 3D garden scene — lazy-loaded, renders only on Capy tab.**
 - Props: `garden: GardenState`, `isActive: boolean`, `onCapyTap?: () => void`
 - Loaded via `next/dynamic` with `ssr: false` — zero impact on other tabs
 - `frameloop` set to `"always"` when active, `"never"` when inactive
 - Scene elements:
-  - **Ground**: Circular island, grass color lerps green↔brown based on health
-  - **Capy3D**: Low-poly capybara from spheres/cylinders, idle breathing, tap-to-bounce
-  - **SproutOnHead**: Animated sprout with swaying leaves
+  - **Ground**: Circular island (radius 5.5), plain green surface. Color lerps green↔olive based on health. Earth-brown sides.
+  - **InteractiveCapy**: GLB model capybara with full behavior FSM (`capyBehaviors.ts`). States: idle, wander, eat, splash, chase_butterfly, tapped, dance. Wanders with slow waddle animation, eats with forward tilt (Y offset prevents ground clipping), chases butterflies, splashes in hot spring. **Random tap reactions** (one per tap): squash-and-stretch, body wiggle, nose nuzzle, look-at-camera with ear perk. Dance on double-tap. Emits particle effects per state.
+  - **BabyCapy**: Up to 3 baby capybaras (scaled 0.55×) using same behavior system + random tap reactions. Smaller wander radius (1.5), 20% chance to follow main capy. Tappable with heart particles.
+  - **PlantInPot**: Terracotta pot with growing plant balanced on capybara's head. Gentle wobble animation.
   - **Flowers**: Spiral pattern, count = days goal hit (max 30), droop when wilting
-  - **Trees**: 1-2 trees, level 0-4 (sapling→large), trunk + canopy spheres
-  - **Pond**: Circular water plane with animated opacity, fish at level 3
-  - **Butterflies**: Wing-flap animation on bezier paths (max 5)
+  - **Trees**: Multiple tree types (Oak, Pine, Spruce, Birch, Willow, Cherry), level 0-4
+  - **HotSpring**: Steam + warm water (streak ≥30), capybaras splash here
+  - **CozyHome**: Cabin with chimney smoke (based on total meals logged)
+  - **Butterflies**: Wing-flap animation on circular paths (max 5), chased by capybaras
   - **Rainbow**: Semi-transparent torus arc (14+ day streak)
-  - **Crown**: Golden crown on Capy (30+ day streak)
   - **Sparkles**: Points geometry, golden when healthy, grey when wilting
   - **FallingLeaves**: Drift-down particles when garden health < 30
-  - **SkyDome**: Canvas-gradient sphere (no external HDR assets)
+  - **DynamicSkyDome**: Canvas-gradient sphere with time-of-day lighting
+  - **Particle effects**: HeartParticles (tap), SparkleParticles (dance), NibbleParticles (eat), SplashParticles (splash)
+- Camera: low angle (Y=1.2), FOV 38, slightly below capybara eye level
 - OrbitControls: pan disabled, zoom disabled, tight azimuth/polar limits
 - Performance: low-power GPU preference, dpr [1, 1.5], 512px shadow maps
 
@@ -90,10 +93,11 @@ All components are in `src/components/`. All are `"use client"` components.
   - Top: Garden stats bar (🌸 count · 🌳 level · 🦋 count · 🔥 streak)
   - Center: Three.js canvas (55vh) with motivation bubble overlay
   - "Talk to Capy" button → cycles motivation lines
-  - Next Unlock progress card (shows next milestone + progress bar)
-  - Achievements grid (8 milestones: First Flower, Sapling, Butterfly, Pond, Fish, Rainbow, Crown, Full Garden)
+  - **Next Unlock card**: Shows next milestone with clear description (e.g. "Log meals 3 more days in a row"), progress bar, and current/target count with unit (streak days, goal days, protein days)
+  - Achievements grid (8 milestones: First Flower, Sapling, Rainbow, Forest, Baby Capy, Cozy Home, Hot Spring, Full Garden)
   - Garden Journal (last 5 events with timestamps)
   - Garden Health bar (0-100%, color-coded green/yellow/red)
+  - **How It Works** (collapsible): Explains streaks, lists all milestones with exact requirements, FAQ (streak loss, what counts as logging, wilting)
 
 ### `CapyMascot.tsx`
 **Image-based capybara mascot with mood-reactive variants.**

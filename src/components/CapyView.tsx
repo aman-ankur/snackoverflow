@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, TreePine, Flower2, Fish, Sparkles, MessageCircle, Trophy, ChevronRight, Eye, EyeOff } from "lucide-react";
+import { Flame, TreePine, Flower2, Fish, Sparkles, MessageCircle, Trophy, ChevronRight, Eye, EyeOff, HelpCircle, ChevronDown } from "lucide-react";
 import dynamic from "next/dynamic";
 import { useGardenState, type GardenState, type GardenEvent, type NextUnlock } from "@/lib/useGardenState";
 import { getContextualMotivation } from "@/lib/capyMotivation";
@@ -351,6 +351,9 @@ export default function CapyView({ streak, todayTotals, goals, isActive }: CapyV
             : "Garden is wilting! Log meals to revive it!"}
         </p>
       </div>
+
+      {/* How It Works */}
+      <HowItWorks />
     </div>
   );
 }
@@ -370,13 +373,24 @@ function NextUnlockCard({ unlock }: { unlock: NextUnlock }) {
   const percent = unlock.target > 0 ? Math.min((unlock.current / unlock.target) * 100, 100) : 0;
   const remaining = unlock.target - unlock.current;
 
+  // Determine what unit the milestone tracks
+  const isStreak = ["First Butterfly", "Baby Capybara", "Rainbow Arc", "Hot Spring"].includes(unlock.label);
+  const isFlower = unlock.label.includes("Garden") || unlock.label.includes("flower");
+  const isTree = unlock.label.includes("Tree");
+
+  let hint = "";
+  if (isStreak) hint = `Log meals ${remaining} more day${remaining === 1 ? "" : "s"} in a row`;
+  else if (isFlower) hint = `Hit your calorie goal ${remaining} more day${remaining === 1 ? "" : "s"}`;
+  else if (isTree) hint = `Hit 90%+ protein goal ${remaining} more day${remaining === 1 ? "" : "s"}`;
+  else hint = `${remaining} more to unlock`;
+
   return (
     <div className="rounded-2xl bg-gradient-to-r from-[#FFF3E0] to-[#E8F5E0] border border-orange/10 p-4">
       <div className="flex items-center gap-3">
         <span className="text-2xl">{unlock.icon}</span>
         <div className="flex-1">
           <p className="text-sm font-bold text-foreground">Next: {unlock.label}</p>
-          <p className="text-[10px] text-muted">{remaining} more to unlock</p>
+          <p className="text-[10px] text-muted">{hint}</p>
           <div className="mt-1.5 h-2 w-full rounded-full bg-white/60 overflow-hidden">
             <motion.div
               initial={{ width: 0 }}
@@ -385,9 +399,85 @@ function NextUnlockCard({ unlock }: { unlock: NextUnlock }) {
               className="h-full rounded-full bg-accent"
             />
           </div>
+          <p className="text-[9px] text-muted mt-1">{unlock.current}/{unlock.target} {isStreak ? "streak days" : isFlower ? "goal days" : isTree ? "protein days" : ""}</p>
         </div>
         <ChevronRight className="h-4 w-4 text-muted-light" />
       </div>
+    </div>
+  );
+}
+
+function HowItWorks() {
+  const [open, setOpen] = useState(false);
+
+  const milestones = [
+    { icon: "🦋", name: "First Butterfly", how: "Log meals 3 days in a row (streak)" },
+    { icon: "🐾", name: "Baby Capybara", how: "5-day meal logging streak" },
+    { icon: "🌈", name: "Rainbow", how: "14-day streak" },
+    { icon: "♨️", name: "Hot Spring", how: "30-day streak" },
+    { icon: "🌸", name: "Flowers", how: "Hit your daily calorie goal (80–120%). 1 flower per day, up to 30" },
+    { icon: "🌳", name: "Tree Growth", how: "Hit 90%+ of your protein goal. Grows through 4 levels" },
+    { icon: "🏡", name: "Cozy Home", how: "Log 5 / 15 / 30 total meals (any pace)" },
+  ];
+
+  return (
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-2 p-4 text-left"
+      >
+        <HelpCircle className="h-4 w-4 text-accent shrink-0" />
+        <h3 className="text-sm font-bold text-foreground flex-1">How It Works</h3>
+        <motion.div animate={{ rotate: open ? 180 : 0 }} transition={{ duration: 0.2 }}>
+          <ChevronDown className="h-4 w-4 text-muted" />
+        </motion.div>
+      </button>
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.25 }}
+            className="overflow-hidden"
+          >
+            <div className="px-4 pb-4 space-y-3">
+              <p className="text-[11px] text-muted leading-relaxed">
+                Your garden grows as you log meals and hit nutrition goals. <strong>Streaks</strong> are consecutive days with at least one meal logged. Missing a day resets your streak but doesn&apos;t remove unlocked items.
+              </p>
+
+              <div className="space-y-2">
+                <p className="text-[10px] font-bold text-foreground uppercase tracking-wide">Milestones</p>
+                {milestones.map((m) => (
+                  <div key={m.name} className="flex items-start gap-2">
+                    <span className="text-sm shrink-0 mt-0.5">{m.icon}</span>
+                    <div>
+                      <p className="text-[11px] font-semibold text-foreground">{m.name}</p>
+                      <p className="text-[10px] text-muted leading-snug">{m.how}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="rounded-xl bg-accent-light/30 p-3 space-y-1.5">
+                <p className="text-[10px] font-bold text-foreground">FAQ</p>
+                <div>
+                  <p className="text-[10px] font-semibold text-foreground">What if I lose my streak?</p>
+                  <p className="text-[10px] text-muted leading-snug">Streak-based unlocks (butterflies, baby capybaras, rainbow, hot spring) require an active streak. If your streak resets, they&apos;ll disappear until you rebuild it. But total-based unlocks (flowers, home, tree) are permanent.</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-foreground">What counts as logging a meal?</p>
+                  <p className="text-[10px] text-muted leading-snug">Scanning your fridge or manually adding any meal (breakfast, lunch, snack, dinner) counts. One meal per day is enough to keep your streak.</p>
+                </div>
+                <div>
+                  <p className="text-[10px] font-semibold text-foreground">Why is my garden wilting?</p>
+                  <p className="text-[10px] text-muted leading-snug">Garden health drops when you miss days. Log a meal to start recovering it!</p>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
