@@ -79,6 +79,7 @@ snackoverflow/
 │   └── lib/
 │       ├── dishTypes.ts              # Shared domain types (incl. UserProfile, NutritionGoals, StreakData)
 │       ├── tdeeCalculator.ts         # TDEE/BMR/macro calculation (Mifflin-St Jeor) (NEW)
+│       ├── capyBehaviors.ts           # Capybara FSM: states, transitions, animation helpers
 │       ├── capyLines.ts              # Motivational line picker + mood logic
 │       ├── capyMotivation.ts         # 60+ contextual motivation lines + LLM fallback
 │       ├── healthRating.ts           # Evidence-based meal health classification
@@ -150,22 +151,27 @@ Progress Tab (ProgressView.tsx):
 Capy Tab (CapyView.tsx — lazy-loaded with next/dynamic, ssr: false):
   Garden stats bar (flowers, tree level, butterflies, streak)
   → Three.js Canvas (CapyGarden.tsx — 55vh, frameloop pauses when inactive)
-     → 3D capybara with sprout, idle breathing, tap-to-bounce
-     → Ground island (grass color lerps with garden health)
+     → 3D capybara (GLB model) with full behavior FSM (capyBehaviors.ts):
+       States: idle, wander, eat, splash, chase_butterfly, tapped, dance
+       Tap reactions (random per tap): squash, wiggle, nuzzle, look-at-camera
+       Dance on double-tap, waddle animation during movement
+       Eat animation raises Y to prevent ground clipping
+     → PlantInPot balanced on capybara's head (terracotta pot + growing plant)
+     → BabyCapy: up to 3 babies (streak-based), same FSM, follow main capy
+     → Ground island (plain green surface, color lerps with garden health)
      → Flowers (spiral pattern, count = days goal hit, max 30)
-     → Trees (1-2, level 0-4 based on protein goals)
-     → Pond (appears at 7-day streak, fish at 21 days)
-     → Butterflies (flutter paths, count based on streak)
-     → Rainbow (14+ day streak), Crown (30+ day streak)
-     → Sparkles (golden when healthy, grey when wilting)
-     → Falling leaves (when garden health < 30)
-     → SkyDome (canvas gradient, no external assets)
+     → Trees (multiple types, level 0-4 based on protein goals)
+     → HotSpring (streak ≥30), CozyHome (total meals), Butterflies (streak)
+     → Rainbow (14+ day streak)
+     → Sparkles, FallingLeaves, DynamicSkyDome (time-of-day lighting)
+     → Particle effects: hearts (tap), sparkles (dance), nibble (eat), splash
   → Motivation speech bubble overlay (tap Capy or "Talk to Capy")
   → "Talk to Capy" button → getContextualMotivation()
-  → Next Unlock progress card (butterfly → pond → rainbow → crown)
+  → Next Unlock card (clear text: "Log meals X more days in a row" + progress/target)
   → Achievements grid (8 milestones, greyed when locked)
   → Garden Journal (last 5 events with timestamps)
   → Garden Health bar (0-100%, color-coded)
+  → How It Works (collapsible): milestone explanations + FAQ
   State: useGardenState() computes from meals + streak + goals → localStorage
   Motivation: 60+ pre-built lines (capyMotivation.ts) → LLM fallback (/api/capy-motivation)
 

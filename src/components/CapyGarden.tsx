@@ -5,6 +5,22 @@ import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls, useGLTF } from "@react-three/drei";
 import * as THREE from "three";
 import type { GardenState } from "@/lib/useGardenState";
+import {
+  createCapyBehavior,
+  tickCapyBehavior,
+  handleCapyTap,
+  getTappedSquash,
+  getTappedWiggle,
+  getNuzzleValues,
+  getLookValues,
+  getDanceValues,
+  getWaddleValues,
+  getEatTilt,
+  getEatYOffset,
+  getStateProgress,
+  type CapyBehavior,
+  type CapyBehaviorConfig,
+} from "@/lib/capyBehaviors";
 
 // ── Types ─────────────────────────────────────────────────────────────
 
@@ -39,8 +55,8 @@ const CAPY_BELLY = "#E8CBA8";
 const CAPY_DARK = "#5C3D20";
 const CAPY_NOSE = "#A07850";
 const SPROUT_GREEN = "#5AAC5A";
-const GRASS_GREEN = "#6BBF6B";
-const GRASS_DRY = "#B8A878";
+const GRASS_GREEN = "#4DB84D";
+const GRASS_DRY = "#9BA868";
 const EARTH_BROWN = "#8B6B4A";
 const TRUNK_BROWN = "#7A5C3A";
 const CANOPY_GREEN = "#4A9E4A";
@@ -285,7 +301,7 @@ function Ground({ health }: { health: number }) {
 
   return (
     <group>
-      {/* Top grass */}
+      {/* Top grass surface */}
       <mesh position={[0, 0, 0]} receiveShadow>
         <cylinderGeometry args={[5.5, 5.5, 0.15, 48]} />
         <meshStandardMaterial color={grassColor} />
@@ -304,16 +320,47 @@ function Ground({ health }: { health: number }) {
   );
 }
 
-// ── 3D Capybara (GLB model) ───────────────────────────────────────────
+// ── 3D Capybara (GLB model) — Interactive with behaviors ──────────────
 
 const CAPY_MODEL_PATH = "/model/capybara.glb";
 
-function Capy3D({ onClick }: { onClick?: () => void }) {
+// Shared ref so baby capybaras can read the main capy's position
+const mainCapyPosRef = { x: 0, z: 0 };
+
+function InteractiveCapy({
+  onClick,
+  hasHotSpring,
+  butterflyCount,
+}: {
+  onClick?: () => void;
+  hasHotSpring: boolean;
+  butterflyCount: number;
+}) {
   const groupRef = useRef<THREE.Group>(null);
+  const modelRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(CAPY_MODEL_PATH);
-  const [bouncing, setBouncing] = useState(false);
-  const bounceTime = useRef(0);
   const baseY = 0.08;
+
+  // Behavior state machine
+  const behaviorRef = useRef<CapyBehavior>(createCapyBehavior(0, 0));
+  const configRef = useRef<CapyBehaviorConfig>({
+    wanderRadius: 1.8,
+    homeX: 0,
+    homeZ: 0,
+    hasHotSpring,
+    butterflyCount,
+    isBaby: false,
+  });
+
+  // Keep config in sync
+  configRef.current.hasHotSpring = hasHotSpring;
+  configRef.current.butterflyCount = butterflyCount;
+
+  // Particle state
+  const [showHearts, setShowHearts] = useState(false);
+  const [showSparkles, setShowSparkles] = useState(false);
+  const [showNibble, setShowNibble] = useState(false);
+  const [showSplash, setShowSplash] = useState(false);
 
   // Clone the scene so each instance is independent
   const clonedScene = useMemo(() => {
@@ -346,54 +393,300 @@ function Capy3D({ onClick }: { onClick?: () => void }) {
   useFrame((_state: unknown, delta: number) => {
     if (!groupRef.current) return;
     const t = Date.now() * 0.001;
+    const b = behaviorRef.current;
 
-    // Idle breathing
-    const breathScale = 1 + Math.sin(t * 1.5) * 0.012;
-    groupRef.current.scale.set(breathScale, breathScale, breathScale);
+    // Tick behavior state machine
+    const prevState = b.state;
+    behaviorRef.current = tickCapyBehavior(b, delta, configRef.current);
+    const curr = behaviorRef.current;
 
-    // Gentle sway
-    groupRef.current.rotation.y = -Math.PI * 0.35 + Math.sin(t * 0.3) * 0.02;
+    // Update shared position for babies
+    mainCapyPosRef.x = curr.posX;
+    mainCapyPosRef.z = curr.posZ;
 
-    // Bounce on tap
-    if (bouncing) {
-      bounceTime.current += delta * 8;
-      const b = Math.sin(bounceTime.current * Math.PI) * 0.3;
-      groupRef.current.position.y = baseY + Math.max(0, b);
-      if (bounceTime.current >= 1) {
-        setBouncing(false);
-        bounceTime.current = 0;
-        groupRef.current.position.y = baseY;
+    // Apply world position from behavior
+    groupRef.current.position.x = curr.posX;
+    groupRef.current.position.z = curr.posZ;
+
+    // Base Y + state-specific Y offset
+    let yOffset = 0;
+    let extraRotX = 0;
+    let extraRotZ = 0;
+    const isMoving = curr.state === "wander" || curr.state === "splash" || curr.state === "chase_butterfly";
+
+    let extraRotY = 0;
+    let tapScaleX = 0, tapScaleY = 0; // 0 means use breathing scale
+
+    if (curr.state === "tapped") {
+      // Random tap reaction
+      const reaction = curr.tapReaction;
+      if (reaction === "squash") {
+        const squash = getTappedSquash(curr.elapsed, curr.duration);
+        tapScaleX = squash.scaleX;
+        tapScaleY = squash.scaleY;
+      } else if (reaction === "wiggle") {
+        extraRotZ = getTappedWiggle(curr.elapsed, curr.duration);
+      } else if (reaction === "nuzzle") {
+        const nuzzle = getNuzzleValues(curr.elapsed, curr.duration);
+        extraRotX = nuzzle.tiltX;
+        yOffset += nuzzle.bobY;
+      } else if (reaction === "look") {
+        const look = getLookValues(curr.elapsed, curr.duration);
+        extraRotY = look.turnY;
+        tapScaleY = 1 + look.earPerk;
+        tapScaleX = 1;
+      }
+      if (prevState !== "tapped" || curr.elapsed < 0.1) setShowHearts(true);
+    } else if (curr.state === "dance") {
+      const dance = getDanceValues(curr.elapsed);
+      yOffset = dance.hopY;
+      extraRotZ = dance.wiggleX;
+      extraRotX = dance.headBob;
+      if (prevState !== "dance" || curr.elapsed < 0.1) setShowSparkles(true);
+    } else if (curr.state === "eat") {
+      extraRotX = getEatTilt(curr.elapsed);
+      yOffset += getEatYOffset(curr.elapsed);
+      if (prevState !== "eat" || curr.elapsed < 0.1) setShowNibble(true);
+    } else if (curr.state === "splash") {
+      if (getStateProgress(curr) > 0.6 && !showSplash) setShowSplash(true);
+    }
+
+    // Waddle animation during movement
+    if (isMoving) {
+      const waddle = getWaddleValues(curr.elapsed, false);
+      yOffset += waddle.bobY;
+      extraRotZ += waddle.rollZ;
+      extraRotX += waddle.leanX;
+    }
+
+    // Hide particles when state changes
+    if (curr.state !== "tapped" && showHearts) setShowHearts(false);
+    if (curr.state !== "dance" && showSparkles) setShowSparkles(false);
+    if (curr.state !== "eat" && showNibble) setShowNibble(false);
+    if (curr.state !== "splash" && showSplash) setShowSplash(false);
+
+    groupRef.current.position.y = baseY + yOffset;
+
+    // Rotation: behavior rotation + state-specific extras
+    const danceSpinExtra = curr.state === "dance" ? getDanceValues(curr.elapsed).spinY : 0;
+    groupRef.current.rotation.y = curr.rotationY + danceSpinExtra;
+
+    // Apply tilt + scale to the model sub-group
+    if (modelRef.current) {
+      modelRef.current.rotation.x = extraRotX;
+      modelRef.current.rotation.z = extraRotZ;
+      modelRef.current.rotation.y = extraRotY;
+
+      if (tapScaleX > 0 && tapScaleY > 0) {
+        modelRef.current.scale.set(tapScaleX, tapScaleY, tapScaleX);
+      } else {
+        // Idle breathing
+        const breathScale = 1 + Math.sin(t * 1.5) * 0.012;
+        modelRef.current.scale.set(breathScale, breathScale, breathScale);
+      }
+
+      // Gentle idle sway (only when idle)
+      if (curr.state === "idle") {
+        modelRef.current.rotation.y = Math.sin(t * 0.3) * 0.02;
       }
     }
   });
 
-  const handleClick = useCallback(() => {
-    setBouncing(true);
-    bounceTime.current = 0;
-    onClick?.();
-  }, [onClick]);
+  const handleClick = useCallback(
+    (e: { stopPropagation: () => void }) => {
+      e.stopPropagation();
+      behaviorRef.current = handleCapyTap(behaviorRef.current);
+      onClick?.();
+    },
+    [onClick]
+  );
 
   return (
-    <group ref={groupRef} position={[0, baseY, 0]} rotation={[0, -Math.PI * 0.35, 0]} onClick={handleClick}>
-      {/* The GLB model — scale to fit the garden */}
-      <primitive object={clonedScene} scale={1.8} position={[0, 0, 0]} />
+    <group ref={groupRef} position={[0, baseY, 0]} onClick={handleClick}>
+      <group ref={modelRef}>
+        {/* The GLB model — scale to fit the garden */}
+        <primitive object={clonedScene} scale={1.8} position={[0, 0, 0]} />
+
+        {/* Plant in pot — balanced on top of capybara's head */}
+        <group position={[0, 1.12, 0.55]} scale={[1.1, 1.1, 1.1]}>
+          <PlantInPot />
+        </group>
+      </group>
 
       {/* Dedicated lights on the capybara so it's always clearly visible */}
       <pointLight position={[0, 2.5, 1.5]} intensity={4} distance={6} color="#FFF8F0" />
       <pointLight position={[-1, 1.5, 1]} intensity={2} distance={5} color="#FFE8CC" />
       <pointLight position={[1, 1, -0.5]} intensity={1.5} distance={4} color="#FFF0E0" />
 
-      {/* Plant in pot — sitting on capybara's head */}
-      <group position={[0, 0.85, 0.42]}>
-        <PlantInPot />
-      </group>
-
+      {/* Particle effects */}
+      {showHearts && <HeartParticles />}
+      {showSparkles && <SparkleParticles />}
+      {showNibble && <NibbleParticles />}
+      {showSplash && <SplashParticles />}
     </group>
   );
 }
 
 // Preload the model
 useGLTF.preload(CAPY_MODEL_PATH);
+
+// ── Particle Effects ─────────────────────────────────────────────────
+
+function HeartParticles() {
+  const ref = useRef<THREE.Points>(null);
+  const count = 8;
+  const startTime = useRef(Date.now());
+
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 0.6;
+      arr[i * 3 + 1] = 0.5 + Math.random() * 0.3;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 0.6;
+    }
+    return arr;
+  }, []);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const elapsed = (Date.now() - startTime.current) * 0.001;
+    const pos = ref.current.geometry.attributes.position;
+    for (let i = 0; i < count; i++) {
+      pos.setY(i, 0.5 + elapsed * 0.8 + Math.sin(elapsed * 3 + i) * 0.1);
+      pos.setX(i, (Math.random() - 0.5) * 0.01 + pos.getX(i));
+    }
+    pos.needsUpdate = true;
+    const mat = ref.current.material as THREE.PointsMaterial;
+    mat.opacity = Math.max(0, 1 - elapsed * 0.7);
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial color="#FF69B4" size={0.12} transparent opacity={1} sizeAttenuation depthWrite={false} />
+    </points>
+  );
+}
+
+function SparkleParticles() {
+  const ref = useRef<THREE.Points>(null);
+  const count = 10;
+
+  const { positions, phases } = useMemo(() => {
+    const pos = new Float32Array(count * 3);
+    const ph = new Float32Array(count);
+    for (let i = 0; i < count; i++) {
+      pos[i * 3] = (Math.random() - 0.5) * 1.2;
+      pos[i * 3 + 1] = 0.3 + Math.random() * 1.0;
+      pos[i * 3 + 2] = (Math.random() - 0.5) * 1.2;
+      ph[i] = Math.random() * Math.PI * 2;
+    }
+    return { positions: pos, phases: ph };
+  }, []);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const t = Date.now() * 0.001;
+    const pos = ref.current.geometry.attributes.position;
+    for (let i = 0; i < count; i++) {
+      const y = pos.getY(i) + 0.01;
+      pos.setY(i, y > 2 ? 0.3 : y);
+      pos.setX(i, pos.getX(i) + Math.sin(t * 5 + phases[i]) * 0.005);
+    }
+    pos.needsUpdate = true;
+    const mat = ref.current.material as THREE.PointsMaterial;
+    mat.opacity = 0.5 + Math.sin(t * 8) * 0.3;
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial color="#FFD700" size={0.08} transparent opacity={0.8} sizeAttenuation depthWrite={false} />
+    </points>
+  );
+}
+
+function NibbleParticles() {
+  const ref = useRef<THREE.Points>(null);
+  const count = 6;
+
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 0.4;
+      arr[i * 3 + 1] = 0.05 + Math.random() * 0.15;
+      arr[i * 3 + 2] = 0.3 + Math.random() * 0.3;
+    }
+    return arr;
+  }, []);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const t = Date.now() * 0.001;
+    const pos = ref.current.geometry.attributes.position;
+    for (let i = 0; i < count; i++) {
+      let y = pos.getY(i);
+      y += Math.sin(t * 6 + i * 2) * 0.003;
+      if (y > 0.3) y = 0.05;
+      if (y < 0) y = 0.05;
+      pos.setY(i, y);
+    }
+    pos.needsUpdate = true;
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial color="#4CAF50" size={0.05} transparent opacity={0.7} sizeAttenuation depthWrite={false} />
+    </points>
+  );
+}
+
+function SplashParticles() {
+  const ref = useRef<THREE.Points>(null);
+  const count = 8;
+  const startTime = useRef(Date.now());
+
+  const positions = useMemo(() => {
+    const arr = new Float32Array(count * 3);
+    for (let i = 0; i < count; i++) {
+      arr[i * 3] = (Math.random() - 0.5) * 0.5;
+      arr[i * 3 + 1] = 0.1;
+      arr[i * 3 + 2] = (Math.random() - 0.5) * 0.5;
+    }
+    return arr;
+  }, []);
+
+  useFrame(() => {
+    if (!ref.current) return;
+    const elapsed = (Date.now() - startTime.current) * 0.001;
+    const pos = ref.current.geometry.attributes.position;
+    for (let i = 0; i < count; i++) {
+      // Droplets arc up then fall
+      const phase = elapsed * 2 + i * 0.3;
+      pos.setY(i, 0.1 + Math.max(0, Math.sin(phase) * 0.4));
+      pos.setX(i, pos.getX(i) + (Math.random() - 0.5) * 0.01);
+    }
+    pos.needsUpdate = true;
+    const mat = ref.current.material as THREE.PointsMaterial;
+    mat.opacity = Math.max(0, 0.8 - elapsed * 0.3);
+  });
+
+  return (
+    <points ref={ref}>
+      <bufferGeometry>
+        <bufferAttribute attach="attributes-position" args={[positions, 3]} />
+      </bufferGeometry>
+      <pointsMaterial color="#7EC8E3" size={0.07} transparent opacity={0.8} sizeAttenuation depthWrite={false} />
+    </points>
+  );
+}
 
 function PlantInPot() {
   const ref = useRef<THREE.Group>(null);
@@ -862,19 +1155,36 @@ function BabyCapybaras({ count }: { count: number }) {
     [-0.8, 0.02, 1.2],
     [0.5, 0.02, -1.0],
   ];
-  const rotations: number[] = [-0.5, 0.8, -1.8];
   return (
     <group>
       {Array.from({ length: Math.min(count, 3) }).map((_, i) => (
-        <BabyCapy key={i} position={positions[i]} rotationY={rotations[i]} index={i} />
+        <BabyCapy key={i} position={positions[i]} index={i} />
       ))}
     </group>
   );
 }
 
-function BabyCapy({ position, rotationY, index }: { position: [number, number, number]; rotationY: number; index: number }) {
-  const ref = useRef<THREE.Group>(null);
+function BabyCapy({ position, index }: { position: [number, number, number]; index: number }) {
+  const groupRef = useRef<THREE.Group>(null);
+  const modelRef = useRef<THREE.Group>(null);
   const { scene } = useGLTF(CAPY_MODEL_PATH);
+  const baseY = position[1];
+
+  // Behavior state machine for baby
+  const behaviorRef = useRef<CapyBehavior>(createCapyBehavior(position[0], position[2]));
+  const configRef = useRef<CapyBehaviorConfig>({
+    wanderRadius: 1.5,
+    homeX: position[0],
+    homeZ: position[2],
+    hasHotSpring: false,
+    butterflyCount: 0,
+    isBaby: true,
+    mainCapyX: mainCapyPosRef.x,
+    mainCapyZ: mainCapyPosRef.z,
+  });
+
+  // Particle state
+  const [showHearts, setShowHearts] = useState(false);
 
   const babyScene = useMemo(() => {
     const clone = scene.clone(true);
@@ -899,20 +1209,114 @@ function BabyCapy({ position, rotationY, index }: { position: [number, number, n
     return clone;
   }, [scene]);
 
-  useFrame(() => {
-    if (!ref.current) return;
+  useFrame((_state: unknown, delta: number) => {
+    if (!groupRef.current) return;
     const t = Date.now() * 0.001 + index * 2.1;
-    // Gentle idle sway
-    ref.current.rotation.y = rotationY + Math.sin(t * 0.5) * 0.1;
-    // Tiny hop
-    ref.current.position.y = position[1] + Math.abs(Math.sin(t * 1.5 + index)) * 0.015;
+    const b = behaviorRef.current;
+
+    // Keep main capy position in sync for follow behavior
+    configRef.current.mainCapyX = mainCapyPosRef.x;
+    configRef.current.mainCapyZ = mainCapyPosRef.z;
+
+    // Tick behavior
+    const prevState = b.state;
+    behaviorRef.current = tickCapyBehavior(b, delta, configRef.current);
+    const curr = behaviorRef.current;
+
+    // Apply position
+    groupRef.current.position.x = curr.posX;
+    groupRef.current.position.z = curr.posZ;
+
+    // Y offset for states
+    let yOffset = 0;
+    let extraRotX = 0;
+    let extraRotZ = 0;
+    const isMoving = curr.state === "wander" || curr.state === "splash" || curr.state === "chase_butterfly";
+
+    let extraRotY = 0;
+    let tapScaleX = 0, tapScaleY = 0;
+
+    if (curr.state === "tapped") {
+      const reaction = curr.tapReaction;
+      if (reaction === "squash") {
+        const squash = getTappedSquash(curr.elapsed, curr.duration);
+        tapScaleX = squash.scaleX;
+        tapScaleY = squash.scaleY;
+      } else if (reaction === "wiggle") {
+        extraRotZ = getTappedWiggle(curr.elapsed, curr.duration);
+      } else if (reaction === "nuzzle") {
+        const nuzzle = getNuzzleValues(curr.elapsed, curr.duration);
+        extraRotX = nuzzle.tiltX;
+        yOffset += nuzzle.bobY;
+      } else if (reaction === "look") {
+        const look = getLookValues(curr.elapsed, curr.duration);
+        extraRotY = look.turnY;
+        tapScaleY = 1 + look.earPerk;
+        tapScaleX = 1;
+      }
+      if (prevState !== "tapped" || curr.elapsed < 0.1) setShowHearts(true);
+    } else if (curr.state === "dance") {
+      const dance = getDanceValues(curr.elapsed);
+      yOffset = dance.hopY * 0.6;
+      extraRotZ = dance.wiggleX * 1.2;
+      extraRotX = dance.headBob * 1.2;
+    } else if (curr.state === "eat") {
+      extraRotX = getEatTilt(curr.elapsed) * 0.8;
+      yOffset += getEatYOffset(curr.elapsed) * 0.8;
+    }
+
+    // Waddle animation during movement (babies waddle more)
+    if (isMoving) {
+      const waddle = getWaddleValues(curr.elapsed, true);
+      yOffset += waddle.bobY;
+      extraRotZ += waddle.rollZ;
+      extraRotX += waddle.leanX;
+    }
+
+    if (curr.state !== "tapped" && showHearts) setShowHearts(false);
+
+    groupRef.current.position.y = baseY + yOffset;
+
+    // Rotation
+    const danceSpinExtra = curr.state === "dance" ? getDanceValues(curr.elapsed).spinY : 0;
+    groupRef.current.rotation.y = curr.rotationY + danceSpinExtra;
+
+    // Model sub-group tilt + scale + breathing
+    if (modelRef.current) {
+      modelRef.current.rotation.x = extraRotX;
+      modelRef.current.rotation.z = extraRotZ;
+      modelRef.current.rotation.y = extraRotY;
+
+      if (tapScaleX > 0 && tapScaleY > 0) {
+        modelRef.current.scale.set(tapScaleX, tapScaleY, tapScaleX);
+      } else {
+        const breathScale = 1 + Math.sin(t * 2) * 0.015;
+        modelRef.current.scale.set(breathScale, breathScale, breathScale);
+      }
+
+      if (curr.state === "idle") {
+        modelRef.current.rotation.y = Math.sin(t * 0.5) * 0.04;
+      }
+    }
   });
 
+  const handleClick = useCallback(
+    (e: { stopPropagation: () => void }) => {
+      e.stopPropagation();
+      behaviorRef.current = handleCapyTap(behaviorRef.current);
+    },
+    []
+  );
+
   return (
-    <group ref={ref} position={position} rotation={[0, rotationY, 0]}>
-      <primitive object={babyScene} scale={0.55} position={[0, 0, 0]} />
+    <group ref={groupRef} position={position} onClick={handleClick}>
+      <group ref={modelRef}>
+        <primitive object={babyScene} scale={0.55} position={[0, 0, 0]} />
+      </group>
       {/* Small light so baby is visible at night */}
       <pointLight position={[0, 0.5, 0.3]} intensity={1} distance={2} color="#FFF8F0" />
+      {/* Particle effects */}
+      {showHearts && <HeartParticles />}
     </group>
   );
 }
@@ -1425,8 +1829,8 @@ function GardenScene({ garden, isActive, onCapyTap }: CapyGardenProps) {
         enableZoom={true}
         minDistance={1.0}
         maxDistance={14}
-        minPolarAngle={0.2}
-        maxPolarAngle={Math.PI / 2.1}
+        minPolarAngle={0.4}
+        maxPolarAngle={Math.PI / 2.05}
         enableDamping
         dampingFactor={0.08}
         rotateSpeed={0.5}
@@ -1437,7 +1841,7 @@ function GardenScene({ garden, isActive, onCapyTap }: CapyGardenProps) {
       <Ground health={garden.gardenHealth} />
 
       {/* Capy */}
-      <Capy3D onClick={onCapyTap} />
+      <InteractiveCapy onClick={onCapyTap} hasHotSpring={garden.hasCrown} butterflyCount={garden.butterflies} />
 
       {/* Hot Spring (crown/ultimate achievement) */}
       <HotSpring visible={garden.hasCrown} />
@@ -1494,7 +1898,7 @@ export default function CapyGarden({ garden, isActive, onCapyTap }: CapyGardenPr
       }}
     >
       <Canvas
-        camera={{ position: [4, 3.5, 4], fov: 40 }}
+        camera={{ position: [3, 1.2, 3.5], fov: 38 }}
         frameloop={isActive ? "always" : "never"}
         dpr={[1, 1.5]}
         gl={{ antialias: true, powerPreference: "low-power" }}
