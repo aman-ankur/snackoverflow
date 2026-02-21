@@ -10,7 +10,7 @@ export interface TrackedItem {
   category: "fresh" | "expiring" | "expired" | "unknown";
 }
 
-const STORAGE_KEY = "fridgenius-expiry-tracker";
+const STORAGE_KEY = "snackoverflow-expiry-tracker";
 
 // Default shelf life estimates (days) for common Indian kitchen items
 const SHELF_LIFE: Record<string, number> = {

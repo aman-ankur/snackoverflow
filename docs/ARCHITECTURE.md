@@ -21,7 +21,7 @@
 ## Folder Structure
 
 ```
-fridgenius/
+snackoverflow/
 ├── docs/                          # ← You are here. Project documentation
 ├── certs/                         # SSL certs for local HTTPS proxy
 │   ├── local.pem

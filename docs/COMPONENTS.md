@@ -223,7 +223,7 @@ All components are in `src/components/`. All are `"use client"` components.
 - Add recipes to days from available suggestions
 - Remove individual meals or clear day
 - Copy day's plan to clipboard
-- Persisted in localStorage (`fridgenius-meal-plan`)
+- Persisted in localStorage (`snackoverflow-meal-plan`)
 - Collapsible
 
 ---

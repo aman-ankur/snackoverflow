@@ -15,7 +15,7 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Fridgenius — Smart Kitchen Assistant",
+  title: "SnackOverflow — Smart Kitchen Assistant",
   description: "Point your camera at your fridge and get instant Indian recipe suggestions",
 };
 

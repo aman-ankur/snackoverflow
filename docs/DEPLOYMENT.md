@@ -2,7 +2,7 @@
 
 ## Current Setup
 
-- **Repo**: [github.com/aman-ankur/fridgenius](https://github.com/aman-ankur/fridgenius)
+- **Repo**: [github.com/aman-ankur/snackoverflow](https://github.com/aman-ankur/snackoverflow)
 - **Branch**: `main` (all features merged)
 - **Platform**: Vercel
 - **Framework**: Next.js 16.1.6 (auto-detected by Vercel)
@@ -13,7 +13,7 @@
 
 ### First Time
 1. Go to [vercel.com/new](https://vercel.com/new)
-2. Import `aman-ankur/fridgenius` from GitHub
+2. Import `aman-ankur/snackoverflow` from GitHub
 3. Vercel auto-detects Next.js — no build config needed
 4. Add environment variables (Settings → Environment Variables):
    - `GEMINI_API_KEY`

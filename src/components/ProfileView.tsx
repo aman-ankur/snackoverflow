@@ -50,7 +50,7 @@ export default function ProfileView({
         <div className="animate-breathe">
           <CapyMascot mood="concerned" size={100} />
         </div>
-        <h3 className="text-base font-extrabold text-foreground mt-3">Fridgenius</h3>
+        <h3 className="text-base font-extrabold text-foreground mt-3">SnackOverflow</h3>
         <p className="text-xs text-muted mt-0.5">Your Smart Kitchen Assistant</p>
         {streak.currentStreak > 0 && (
           <div className="flex items-center gap-1 mt-3 rounded-full bg-orange-light border border-orange/20 px-3 py-1">
@@ -133,7 +133,7 @@ export default function ProfileView({
 
       {/* App info */}
       <div className="text-center py-4">
-        <p className="text-[10px] text-muted-light">Fridgenius v2.0 • Made with 🐾 by Capy</p>
+        <p className="text-[10px] text-muted-light">SnackOverflow v2.0 • Made with 🐾 by Capy</p>
       </div>
     </div>
   );

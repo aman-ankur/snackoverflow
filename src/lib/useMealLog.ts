@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DishNutrition, LoggedMeal, MealTotals, MealType } from "@/lib/dishTypes";
 
-const STORAGE_KEY = "fridgenius-meal-log-v1";
-const FRIDGE_SCAN_HISTORY_KEY = "fridgenius-fridge-scan-history";
+const STORAGE_KEY = "snackoverflow-meal-log-v1";
+const FRIDGE_SCAN_HISTORY_KEY = "snackoverflow-fridge-scan-history";
 
 interface FridgeScanSnapshot {
   scannedAt: string;
