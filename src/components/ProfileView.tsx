@@ -41,21 +41,21 @@ export default function ProfileView({
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-bold text-foreground">Profile</h2>
+        <h2 className="text-lg font-extrabold text-foreground">Profile</h2>
         <p className="text-xs text-muted mt-0.5">Your goals and settings</p>
       </div>
 
       {/* Capy Card */}
-      <div className="rounded-2xl bg-card border border-border p-6 flex flex-col items-center text-center">
+      <div className="rounded-2xl bg-gradient-to-br from-accent-light/40 to-card border border-accent/10 p-6 flex flex-col items-center text-center">
         <div className="animate-breathe">
           <CapyMascot mood="happy" size={100} />
         </div>
-        <h3 className="text-base font-bold text-foreground mt-3">Fridgenius</h3>
+        <h3 className="text-base font-extrabold text-foreground mt-3">Fridgenius</h3>
         <p className="text-xs text-muted mt-0.5">Your Smart Kitchen Assistant</p>
         {streak.currentStreak > 0 && (
           <div className="flex items-center gap-1 mt-3 rounded-full bg-orange-light border border-orange/20 px-3 py-1">
             <Flame className="h-3 w-3 text-orange" />
-            <span className="text-xs font-semibold text-orange">{streak.currentStreak} Day Streak</span>
+            <span className="text-xs font-bold text-orange">{streak.currentStreak} Day Streak</span>
           </div>
         )}
       </div>
@@ -66,7 +66,7 @@ export default function ProfileView({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-semibold text-foreground">Body Stats</h3>
+              <h3 className="text-sm font-bold text-foreground">Body Stats</h3>
             </div>
             <button
               onClick={onEditGoals}
@@ -91,7 +91,7 @@ export default function ProfileView({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-accent" />
-            <h3 className="text-sm font-semibold text-foreground">Daily Targets</h3>
+            <h3 className="text-sm font-bold text-foreground">Daily Targets</h3>
           </div>
           <button
             onClick={onEditGoals}
@@ -120,14 +120,14 @@ export default function ProfileView({
           className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-card-hover transition-colors"
         >
           <Settings2 className="h-4 w-4 text-accent" />
-          <span className="text-sm font-medium text-foreground">Re-run Goal Setup</span>
+          <span className="text-sm font-semibold text-foreground">Re-run Goal Setup</span>
         </button>
         <div className="border-t border-border" />
         <button
           onClick={onResetAll}
           className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-card-hover transition-colors"
         >
-          <span className="text-sm font-medium text-red-500">Reset All Data</span>
+          <span className="text-sm font-semibold text-red-500">Reset All Data</span>
         </button>
       </div>
 
@@ -143,7 +143,7 @@ function StatItem({ icon: Icon, label, value }: { icon: typeof User; label: stri
   return (
     <div className="rounded-xl bg-background border border-border px-3 py-2.5">
       <p className="text-[10px] text-muted-light">{label}</p>
-      <p className="text-xs font-semibold text-foreground mt-0.5">{value}</p>
+      <p className="text-xs font-bold text-foreground mt-0.5">{value}</p>
     </div>
   );
 }
@@ -155,7 +155,7 @@ function TargetRow({ label, value, color }: { label: string; value: string; colo
         <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: color }} />
         <span className="text-xs text-foreground">{label}</span>
       </div>
-      <span className="text-xs font-semibold text-foreground">{value}</span>
+      <span className="text-xs font-bold text-foreground">{value}</span>
     </div>
   );
 }

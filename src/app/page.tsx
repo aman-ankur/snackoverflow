@@ -9,9 +9,22 @@ import ProgressView from "@/components/ProgressView";
 import ProfileView from "@/components/ProfileView";
 import FridgeOverlay from "@/components/FridgeOverlay";
 import GoalOnboarding from "@/components/GoalOnboarding";
+import dynamic from "next/dynamic";
 import { useMealLog } from "@/lib/useMealLog";
 import { useUserGoals } from "@/lib/useUserGoals";
 import type { UserProfile, NutritionGoals } from "@/lib/dishTypes";
+
+const CapyView = dynamic(() => import("@/components/CapyView"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex items-center justify-center py-20">
+      <div className="text-center">
+        <div className="animate-breathe inline-block text-4xl mb-2">🌱</div>
+        <p className="text-sm font-semibold text-accent-dim">Loading Capy&apos;s Garden...</p>
+      </div>
+    </div>
+  ),
+});
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState<AppTab>("home");
@@ -68,7 +81,12 @@ export default function Home() {
               exit={{ opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              <ScanView />
+              <ScanView
+                logMeal={mealLog.logMeal}
+                meals={mealLog.meals}
+                refreshStreak={userGoals.refreshStreak}
+                onMealLogged={() => setActiveTab("home")}
+              />
             </motion.div>
           )}
 
@@ -87,6 +105,23 @@ export default function Home() {
                 meals={mealLog.meals}
                 weeklyByDate={mealLog.weeklyByDate}
                 repeatedDishes={mealLog.insights.repeatedDishes}
+              />
+            </motion.div>
+          )}
+
+          {activeTab === "capy" && (
+            <motion.div
+              key="tab-capy"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+            >
+              <CapyView
+                streak={userGoals.streak}
+                todayTotals={mealLog.todayTotals}
+                goals={userGoals.goals}
+                isActive={activeTab === "capy"}
               />
             </motion.div>
           )}

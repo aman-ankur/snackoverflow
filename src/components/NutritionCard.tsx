@@ -80,9 +80,9 @@ export default function NutritionCard({ dish, servingsMultiplier }: NutritionCar
             )}
           </p>
         </div>
-        <div className={`inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[10px] ${confidenceColor}`}>
+        <div className={`inline-flex items-center gap-1 rounded-full border border-border px-2.5 py-1 text-[10px] ${confidenceColor}`} title="AI confidence in dish identification">
           <BadgeCheck className="h-3 w-3" />
-          {dish.confidence}
+          {dish.confidence === "high" ? "Confident" : dish.confidence === "medium" ? "Likely" : "Unsure"}
         </div>
       </div>
 

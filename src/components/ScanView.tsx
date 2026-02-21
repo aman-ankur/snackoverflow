@@ -1,15 +1,20 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calculator, PlusCircle, Sparkles, Pencil, X, Check, Loader2 } from "lucide-react";
+import { Calculator, PlusCircle, Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus } from "lucide-react";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import NutritionCard from "@/components/NutritionCard";
 import CapyMascot from "@/components/CapyMascot";
 import { useDishScanner } from "@/lib/useDishScanner";
-import { useMealLog } from "@/lib/useMealLog";
-import { useUserGoals } from "@/lib/useUserGoals";
-import type { DishNutrition, MealType } from "@/lib/dishTypes";
+import type { DishNutrition, MealType, MealTotals, LoggedMeal } from "@/lib/dishTypes";
+
+interface ScanViewProps {
+  logMeal: (input: { mealType: MealType; servingsMultiplier: number; dishes: DishNutrition[]; totals: MealTotals }) => LoggedMeal;
+  meals: LoggedMeal[];
+  refreshStreak: () => void;
+  onMealLogged?: () => void;
+}
 
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2] as const;
 const MEAL_TYPE_OPTIONS: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
@@ -65,18 +70,49 @@ function deriveTags(dish: DishNutrition): string[] {
   return Array.from(tags);
 }
 
-export default function ScanView() {
+export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }: ScanViewProps) {
   const dish = useDishScanner();
-  const mealLog = useMealLog();
-  const userGoals = useUserGoals();
 
   const [servingsMultiplier, setServingsMultiplier] = useState<number>(1);
   const [logMealType, setLogMealType] = useState<MealType>("lunch");
   const [logSuccess, setLogSuccess] = useState(false);
+  const [removedIndices, setRemovedIndices] = useState<Set<number>>(new Set());
+  const [weightOverrides, setWeightOverrides] = useState<Map<number, number>>(new Map());
+  const [expandedView, setExpandedView] = useState(false);
+  const resultsRef = useRef<HTMLDivElement>(null);
+  const prevAnalysisRef = useRef<typeof dish.analysis>(null);
+
+  // Auto-scroll to results when analysis completes
+  useEffect(() => {
+    if (dish.analysis && dish.analysis !== prevAnalysisRef.current && dish.analysis.dishes.length > 0) {
+      setRemovedIndices(new Set());
+      setWeightOverrides(new Map());
+      setExpandedView(false);
+      setTimeout(() => {
+        resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }, 200);
+    }
+    prevAnalysisRef.current = dish.analysis;
+  }, [dish.analysis]);
+
+  const activeDishes = useMemo(() => {
+    const raw = dish.analysis?.dishes || [];
+    return raw
+      .map((item, i) => ({ item, originalIndex: i }))
+      .filter(({ originalIndex }) => !removedIndices.has(originalIndex));
+  }, [dish.analysis?.dishes, removedIndices]);
 
   const scaledDishes = useMemo(
-    () => (dish.analysis?.dishes || []).map((item) => scaleDish(item, servingsMultiplier)),
-    [dish.analysis?.dishes, servingsMultiplier]
+    () =>
+      activeDishes.map(({ item, originalIndex }) => {
+        const overrideWeight = weightOverrides.get(originalIndex);
+        if (overrideWeight !== undefined && item.estimated_weight_g > 0) {
+          const ratio = overrideWeight / item.estimated_weight_g;
+          return scaleDish(item, servingsMultiplier * ratio);
+        }
+        return scaleDish(item, servingsMultiplier);
+      }),
+    [activeDishes, servingsMultiplier, weightOverrides]
   );
 
   const scaledTotals = useMemo(() => {
@@ -94,7 +130,7 @@ export default function ScanView() {
 
   const dishLastSeenDays = useMemo(() => {
     const lookup = new Map<string, number>();
-    mealLog.meals.forEach((meal) => {
+    meals.forEach((meal) => {
       meal.dishes.forEach((loggedDish) => {
         const key = loggedDish.name.toLowerCase();
         if (lookup.has(key)) return;
@@ -102,19 +138,35 @@ export default function ScanView() {
       });
     });
     return lookup;
-  }, [mealLog.meals]);
+  }, [meals]);
+
+  const handleRemoveDish = useCallback((originalIndex: number) => {
+    setRemovedIndices((prev) => new Set(prev).add(originalIndex));
+  }, []);
+
+  const handleWeightChange = useCallback((originalIndex: number, newWeight: number) => {
+    setWeightOverrides((prev) => {
+      const next = new Map(prev);
+      next.set(originalIndex, Math.max(1, newWeight));
+      return next;
+    });
+  }, []);
 
   const handleLogMeal = () => {
     if (scaledDishes.length === 0) return;
-    mealLog.logMeal({
+    logMeal({
       mealType: logMealType,
       servingsMultiplier,
       dishes: scaledDishes,
       totals: scaledTotals,
     });
     setLogSuccess(true);
-    userGoals.refreshStreak();
-    setTimeout(() => setLogSuccess(false), 1800);
+    refreshStreak();
+    setTimeout(() => {
+      setLogSuccess(false);
+      dish.clearAnalysis();
+      onMealLogged?.();
+    }, 1200);
   };
 
   return (
@@ -186,8 +238,9 @@ export default function ScanView() {
       </div>
 
       {/* Results */}
+      <div ref={resultsRef} />
       <AnimatePresence mode="popLayout">
-        {scaledDishes.length === 0 ? (
+        {scaledDishes.length === 0 && !dish.analysis ? (
           <motion.div
             key="dish-empty"
             initial={{ opacity: 0 }}
@@ -201,6 +254,23 @@ export default function ScanView() {
               Start camera and tap Analyze Dish to get calorie and macro estimates.
             </p>
           </motion.div>
+        ) : scaledDishes.length === 0 && dish.analysis ? (
+          <motion.div
+            key="dish-all-removed"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="rounded-2xl bg-card border border-border py-8 px-6 text-center"
+          >
+            <Trash2 className="h-6 w-6 text-muted/50 mx-auto" />
+            <p className="text-sm font-medium text-muted mt-3">All dishes removed</p>
+            <button
+              onClick={dish.clearAnalysis}
+              className="mt-2 text-xs text-accent font-medium"
+            >
+              Clear & re-scan
+            </button>
+          </motion.div>
         ) : (
           <motion.div
             key="dish-results"
@@ -209,19 +279,28 @@ export default function ScanView() {
             exit={{ opacity: 0, y: 8 }}
             className="space-y-3"
           >
-            {/* Plate total */}
+            {/* Plate total with items list */}
             <div className="rounded-2xl bg-accent-light border border-accent/15 p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold text-foreground">Plate Total</h3>
+                <h3 className="text-sm font-bold text-foreground">Plate Total</h3>
                 <span className="text-[10px] text-muted">
                   {scaledDishes.length} dish{scaledDishes.length === 1 ? "" : "es"}
                 </span>
               </div>
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <p className="text-xs text-foreground">🔥 {scaledTotals.calories} kcal</p>
-                <p className="text-xs text-foreground">💪 {scaledTotals.protein}g</p>
-                <p className="text-xs text-foreground">🍞 {scaledTotals.carbs}g</p>
-                <p className="text-xs text-foreground">🧈 {scaledTotals.fat}g</p>
+                <p className="text-xs font-semibold text-foreground">🔥 {scaledTotals.calories} kcal</p>
+                <p className="text-xs font-semibold text-foreground">💪 {scaledTotals.protein}g protein</p>
+                <p className="text-xs font-semibold text-foreground">🍞 {scaledTotals.carbs}g carbs</p>
+                <p className="text-xs font-semibold text-foreground">🧈 {scaledTotals.fat}g fat</p>
+              </div>
+              {/* Items list */}
+              <div className="mt-3 pt-3 border-t border-accent/10 space-y-1.5">
+                {scaledDishes.map((d, i) => (
+                  <div key={`plate-item-${i}`} className="flex items-center justify-between text-xs">
+                    <span className="text-foreground">{d.name}</span>
+                    <span className="text-muted">{d.calories} kcal · {d.estimated_weight_g}g</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -252,39 +331,85 @@ export default function ScanView() {
               </motion.p>
             </div>
 
-            {/* Individual dishes */}
-            {scaledDishes.map((dishItem, index) => {
-              const tags = deriveTags(dishItem);
-              const seenAgo = dishLastSeenDays.get(dishItem.name.toLowerCase());
-              return (
-                <div key={`${dishItem.name}-${index}`} className="space-y-2">
-                  {typeof seenAgo === "number" && seenAgo > 0 && (
-                    <div className="inline-flex items-center rounded-full border border-accent/20 bg-accent-light px-2.5 py-1 text-[10px] text-accent-dim">
-                      You had this {seenAgo} day{seenAgo === 1 ? "" : "s"} ago
+            {/* Expand/Collapse toggle for individual dishes */}
+            {scaledDishes.length > 1 && (
+              <button
+                onClick={() => setExpandedView(!expandedView)}
+                className="w-full flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-card py-2.5 text-xs font-semibold text-muted hover:text-foreground transition-colors"
+              >
+                {expandedView ? (
+                  <>
+                    <ChevronUp className="h-3.5 w-3.5" />
+                    Hide individual dishes
+                  </>
+                ) : (
+                  <>
+                    <ChevronDown className="h-3.5 w-3.5" />
+                    Show {scaledDishes.length} dishes · Edit quantities
+                  </>
+                )}
+              </button>
+            )}
+
+            {/* Individual dishes — expanded view or single dish always shown */}
+            {(expandedView || scaledDishes.length === 1) &&
+              activeDishes.map(({ item: rawDish, originalIndex }, displayIndex) => {
+                const dishItem = scaledDishes[displayIndex];
+                if (!dishItem) return null;
+                const tags = deriveTags(dishItem);
+                const seenAgo = dishLastSeenDays.get(dishItem.name.toLowerCase());
+                const currentWeight = weightOverrides.get(originalIndex) ?? rawDish.estimated_weight_g;
+                return (
+                  <motion.div
+                    key={`${dishItem.name}-${originalIndex}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="space-y-2"
+                  >
+                    {typeof seenAgo === "number" && seenAgo > 0 && (
+                      <div className="inline-flex items-center rounded-full border border-accent/20 bg-accent-light px-2.5 py-1 text-[10px] text-accent-dim">
+                        You had this {seenAgo} day{seenAgo === 1 ? "" : "s"} ago
+                      </div>
+                    )}
+                    <NutritionCard dish={dishItem} servingsMultiplier={1} />
+
+                    {/* Weight editor + delete row */}
+                    <div className="flex items-center gap-2 px-1">
+                      <WeightEditor
+                        weight={currentWeight}
+                        onChange={(w) => handleWeightChange(originalIndex, w)}
+                      />
+                      <CorrectionChip
+                        dishIndex={originalIndex}
+                        currentName={dishItem.name}
+                        isAnalyzing={dish.isAnalyzing}
+                        onCorrect={dish.correctDish}
+                      />
+                      <button
+                        onClick={() => handleRemoveDish(originalIndex)}
+                        className="ml-auto flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-500 hover:bg-red-100 transition-colors"
+                      >
+                        <Trash2 className="h-3 w-3" />
+                        Remove
+                      </button>
                     </div>
-                  )}
-                  <NutritionCard dish={dishItem} servingsMultiplier={1} />
-                  <CorrectionChip
-                    dishIndex={index}
-                    currentName={dishItem.name}
-                    isAnalyzing={dish.isAnalyzing}
-                    onCorrect={dish.correctDish}
-                  />
-                  {tags.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 px-1">
-                      {tags.map((tag) => (
-                        <span
-                          key={`${dishItem.name}-${tag}`}
-                          className={`rounded-full border px-2 py-0.5 text-[10px] ${getHealthTagColor(tag)}`}
-                        >
-                          {titleCaseTag(tag)}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
+
+                    {tags.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 px-1">
+                        {tags.map((tag) => (
+                          <span
+                            key={`${dishItem.name}-${tag}`}
+                            className={`rounded-full border px-2 py-0.5 text-[10px] ${getHealthTagColor(tag)}`}
+                          >
+                            {titleCaseTag(tag)}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </motion.div>
+                );
+              })}
 
             {/* Log meal */}
             <div className="rounded-2xl bg-card border border-border p-3">
@@ -325,6 +450,83 @@ export default function ScanView() {
           </motion.div>
         )}
       </AnimatePresence>
+    </div>
+  );
+}
+
+function WeightEditor({ weight, onChange }: { weight: number; onChange: (w: number) => void }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputVal, setInputVal] = useState(String(weight));
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  if (!isEditing) {
+    return (
+      <button
+        onClick={() => {
+          setInputVal(String(weight));
+          setIsEditing(true);
+        }}
+        className="flex items-center gap-1 rounded-full border border-border bg-background px-2 py-1 text-[10px] text-muted hover:text-foreground transition-colors"
+      >
+        <Pencil className="h-2.5 w-2.5" />
+        {weight}g
+      </button>
+    );
+  }
+
+  const commitAndClose = () => {
+    const n = parseInt(inputVal, 10);
+    if (n > 0) onChange(n);
+    setIsEditing(false);
+  };
+
+  return (
+    <div ref={containerRef} className="flex items-center gap-1">
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          const next = Math.max(1, weight - 10);
+          onChange(next);
+          setInputVal(String(next));
+        }}
+        className="rounded-full border border-border bg-background p-1 text-muted hover:text-foreground"
+      >
+        <Minus className="h-3 w-3" />
+      </button>
+      <input
+        autoFocus
+        type="number"
+        value={inputVal}
+        onChange={(e) => setInputVal(e.target.value)}
+        onBlur={(e) => {
+          if (containerRef.current?.contains(e.relatedTarget as Node)) return;
+          commitAndClose();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commitAndClose();
+          if (e.key === "Escape") setIsEditing(false);
+        }}
+        className="w-14 rounded-full border border-accent/30 bg-background px-2 py-1 text-center text-[10px] font-semibold text-foreground outline-none"
+      />
+      <span className="text-[10px] text-muted">g</span>
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          const next = weight + 10;
+          onChange(next);
+          setInputVal(String(next));
+        }}
+        className="rounded-full border border-border bg-background p-1 text-muted hover:text-foreground"
+      >
+        <Plus className="h-3 w-3" />
+      </button>
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={commitAndClose}
+        className="rounded-full border border-border p-1 text-muted hover:text-foreground"
+      >
+        <Check className="h-3 w-3" />
+      </button>
     </div>
   );
 }

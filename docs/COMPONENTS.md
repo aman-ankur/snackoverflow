@@ -8,9 +8,10 @@ All components are in `src/components/`. All are `"use client"` components.
 
 ### `BottomTabBar.tsx`
 **Sticky bottom navigation for app-level mode switching.**
-- Props: `activeTab: "fridge" | "dish"`, `onTabChange`
-- Tabs: Fridge and Dish
-- Animated active pill (`layoutId="bottom-tab-bg"`)
+- Props: `activeTab: AppTab`, `onTabChange`
+- AppTab: `"home" | "progress" | "scan" | "capy" | "profile"`
+- 5-column grid with center Scan FAB (h-16 w-16, white ring, green glow shadow)
+- Capy tab uses PawPrint icon from Lucide
 
 ### `FridgeTab.tsx`
 **Fridge workspace container under the Fridge tab.**
@@ -34,18 +35,67 @@ All components are in `src/components/`. All are `"use client"` components.
 - Adds "You had this X days ago" badges for previously logged dishes
 - Refreshes streak on meal log
 
+### `ScanView.tsx`
+**Scan tab — camera, analysis, dish editing, and meal logging.**
+- Props: `logMeal`, `meals`, `refreshStreak`, `onMealLogged?`
+- Uses page-level `mealLog` and `userGoals` (passed as props, not internal hooks) so Home tab sees fresh data instantly
+- Auto-scrolls to results when analysis completes
+- Plate Total card lists individual dishes with calories and weight
+- Collapsed/expanded view: multi-dish plates show summary + "Show N dishes · Edit quantities" toggle
+- Per-dish controls:
+  - **WeightEditor**: tap grams → inline +/- stepper or direct input → macros recalculate proportionally
+  - **CorrectionChip**: "Wrong dish?" → re-analyze with user correction
+  - **Remove button**: red pill to delete a dish from the plate
+- After logging: 1.2s "Logged ✓" animation → clears analysis → calls `onMealLogged` (navigates to Home)
+- Health tags derived per dish (High Protein, High Carb, High Fat, Low Calorie, Fiber Rich)
+
 ### `NutritionCard.tsx`
 **Per-dish nutrition presentation card.**
 - Props: `dish`, `servingsMultiplier`
 - Displays calories, protein, carbs, fat, fiber with icons
-- Shows portion, confidence, ingredients, and health tip
+- Shows portion, confidence badge ("Confident" / "Likely" / "Unsure" with tooltip), ingredients, and health tip
 
 ### `DailySummary.tsx`
 **Today-level nutrition summary for logged dish meals.** *(Replaced by GoalDashboard in DishMode)*
 - Props: `totals`, `mealsCount`
 - Shows calories/protein/carbs/fat with compact ring progress visuals
 
-### `CapyMascot.tsx` (NEW)
+### `CapyGarden.tsx` (NEW)
+**Three.js 3D garden scene — lazy-loaded, renders only on Capy tab.**
+- Props: `garden: GardenState`, `isActive: boolean`, `onCapyTap?: () => void`
+- Loaded via `next/dynamic` with `ssr: false` — zero impact on other tabs
+- `frameloop` set to `"always"` when active, `"never"` when inactive
+- Scene elements:
+  - **Ground**: Circular island, grass color lerps green↔brown based on health
+  - **Capy3D**: Low-poly capybara from spheres/cylinders, idle breathing, tap-to-bounce
+  - **SproutOnHead**: Animated sprout with swaying leaves
+  - **Flowers**: Spiral pattern, count = days goal hit (max 30), droop when wilting
+  - **Trees**: 1-2 trees, level 0-4 (sapling→large), trunk + canopy spheres
+  - **Pond**: Circular water plane with animated opacity, fish at level 3
+  - **Butterflies**: Wing-flap animation on bezier paths (max 5)
+  - **Rainbow**: Semi-transparent torus arc (14+ day streak)
+  - **Crown**: Golden crown on Capy (30+ day streak)
+  - **Sparkles**: Points geometry, golden when healthy, grey when wilting
+  - **FallingLeaves**: Drift-down particles when garden health < 30
+  - **SkyDome**: Canvas-gradient sphere (no external HDR assets)
+- OrbitControls: pan disabled, zoom disabled, tight azimuth/polar limits
+- Performance: low-power GPU preference, dpr [1, 1.5], 512px shadow maps
+
+### `CapyView.tsx` (NEW)
+**Capy's Garden tab — the main container for the garden experience.**
+- Props: `streak: StreakData`, `todayTotals: MealTotals`, `goals: NutritionGoals`, `isActive: boolean`
+- Uses `useGardenState()` hook for garden state computation
+- Uses `getContextualMotivation()` for pre-built motivation lines
+- Layout:
+  - Top: Garden stats bar (🌸 count · 🌳 level · 🦋 count · 🔥 streak)
+  - Center: Three.js canvas (55vh) with motivation bubble overlay
+  - "Talk to Capy" button → cycles motivation lines
+  - Next Unlock progress card (shows next milestone + progress bar)
+  - Achievements grid (8 milestones: First Flower, Sapling, Butterfly, Pond, Fish, Rainbow, Crown, Full Garden)
+  - Garden Journal (last 5 events with timestamps)
+  - Garden Health bar (0-100%, color-coded green/yellow/red)
+
+### `CapyMascot.tsx`
 **SVG capybara mascot with mood-reactive expressions.**
 - Props: `mood: CapyMood`, `size?: number`
 - 5 moods: happy, excited, sleepy, motivated, concerned

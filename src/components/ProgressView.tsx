@@ -70,14 +70,14 @@ export default function ProgressView({
     <div className="space-y-4">
       {/* Header */}
       <div>
-        <h2 className="text-lg font-bold text-foreground">Progress</h2>
+        <h2 className="text-lg font-extrabold text-foreground">Progress</h2>
         <p className="text-xs text-muted mt-0.5">Track your nutrition journey</p>
       </div>
 
       {/* Total Progress Card */}
-      <div className="rounded-2xl bg-card border border-border p-4">
+      <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-white border border-accent/10 p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-sm font-semibold text-foreground">Total Progress</h3>
+          <h3 className="text-sm font-bold text-foreground">Total Progress</h3>
           <div className="rounded-full bg-accent-light border border-accent/20 px-2.5 py-1">
             <span className="text-[10px] font-bold text-accent-dim">{calPercent}%</span>
           </div>
@@ -92,23 +92,23 @@ export default function ProgressView({
 
       {/* Nutrition & Fitness Cards */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-2xl bg-card border border-border p-4">
+        <div className="rounded-2xl bg-gradient-to-br from-accent-light/40 to-white border border-accent/10 p-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent-light">
               <Flame className="h-3.5 w-3.5 text-accent" />
             </div>
-            <span className="text-xs font-semibold text-foreground">Nutrition</span>
+            <span className="text-xs font-bold text-foreground">Nutrition</span>
           </div>
           <p className="text-xl font-bold text-foreground">{Math.round(todayTotals.calories)}</p>
           <p className="text-[10px] text-muted">kcal today</p>
         </div>
 
-        <div className="rounded-2xl bg-card border border-border p-4">
+        <div className="rounded-2xl bg-gradient-to-br from-orange-light/40 to-white border border-orange/10 p-4">
           <div className="flex items-center gap-2 mb-2">
             <div className="flex h-7 w-7 items-center justify-center rounded-full bg-orange-light">
               <TrendingUp className="h-3.5 w-3.5 text-orange" />
             </div>
-            <span className="text-xs font-semibold text-foreground">Average</span>
+            <span className="text-xs font-bold text-foreground">Average</span>
           </div>
           <p className="text-xl font-bold text-foreground">{weeklyAvgCalories}</p>
           <p className="text-[10px] text-muted">kcal / day (7d)</p>
@@ -117,25 +117,25 @@ export default function ProgressView({
 
       {/* Macro Breakdown */}
       <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
-        <h3 className="text-sm font-semibold text-foreground">Today&apos;s Macros</h3>
+        <h3 className="text-sm font-bold text-foreground">Today&apos;s Macros</h3>
         <div className="space-y-2.5">
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-accent-dim font-medium">Protein</span>
+              <span className="text-xs text-accent-dim font-semibold">Protein</span>
               <span className="text-[10px] text-muted">{Math.round(todayTotals.protein)}/{goals.protein}g</span>
             </div>
             <ProgressBar value={todayTotals.protein} max={goals.protein} color="var(--color-accent)" />
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-xs text-orange font-medium">Carbs</span>
+              <span className="text-xs text-orange font-semibold">Carbs</span>
               <span className="text-[10px] text-muted">{Math.round(todayTotals.carbs)}/{goals.carbs}g</span>
             </div>
             <ProgressBar value={todayTotals.carbs} max={goals.carbs} color="var(--color-orange)" />
           </div>
           <div className="space-y-1">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-medium" style={{ color: "#D07A3E" }}>Fat</span>
+              <span className="text-xs font-semibold" style={{ color: "#D87A30" }}>Fat</span>
               <span className="text-[10px] text-muted">{Math.round(todayTotals.fat)}/{goals.fat}g</span>
             </div>
             <ProgressBar value={todayTotals.fat} max={goals.fat} color="#D07A3E" />
@@ -173,7 +173,7 @@ export default function ProgressView({
 
       {/* Weekly Calorie Chart */}
       <div className="rounded-2xl bg-card border border-border p-4">
-        <h3 className="text-sm font-semibold text-foreground mb-3">Weekly Calories</h3>
+        <h3 className="text-sm font-bold text-foreground">Weekly Calories</h3>
         {weeklyByDate.length === 0 ? (
           <p className="text-xs text-muted text-center py-4">No data yet. Start logging meals!</p>
         ) : (
@@ -205,7 +205,7 @@ export default function ProgressView({
         <div className="rounded-2xl bg-card border border-border p-4">
           <div className="flex items-center gap-2 mb-3">
             <Utensils className="h-4 w-4 text-accent" />
-            <h3 className="text-sm font-semibold text-foreground">Patterns</h3>
+            <h3 className="text-sm font-bold text-foreground">Patterns</h3>
           </div>
           <div className="space-y-1.5">
             {repeatedDishes.map((item) => (
@@ -221,7 +221,7 @@ export default function ProgressView({
       <div className="rounded-2xl bg-card border border-border overflow-hidden">
         <div className="flex items-center gap-2 px-4 pt-4 pb-2">
           <History className="h-4 w-4 text-accent" />
-          <h3 className="text-sm font-semibold text-foreground">Meal History</h3>
+          <h3 className="text-sm font-bold text-foreground">Meal History</h3>
         </div>
         <div className="px-4 pb-4 space-y-2">
           {groupedByDate.length === 0 ? (

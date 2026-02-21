@@ -90,10 +90,47 @@ All routes are Next.js App Router API routes in `src/app/api/`.
 }
 ```
 
-**Provider chain**: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout  
+**Provider chain**: Gemini 2.5 Flash → Gemini 2.0 Flash → Groq Llama 4 Maverick/Scout  
 **Safety/normalization**: Strict JSON parsing + numeric normalization + confidence/tag fallback defaults  
 **Cost control**: 2-minute in-memory response cache for repeated near-identical dish scans  
-**Rate limit handling**: Returns 429 with friendly message when providers are exhausted
+**Rate limit handling**: Returns 429 with friendly message when providers are exhausted  
+**Prompt improvements**: 6-step chain-of-thought (visual description → veg/non-veg check → dish ID → weight estimation → nutrition calc → JSON output). Weight estimation includes per-piece counting for small items (chips ≈ 3-5g each, nuggets ≈ 18-20g, momos ≈ 25-30g) to avoid defaulting to packet sizes.
+
+---
+
+## POST `/api/capy-motivation`
+
+**Purpose**: Generate a motivational message from Capy based on current garden/streak state. Used as LLM fallback when pre-built lines are exhausted.
+
+**File**: `src/app/api/capy-motivation/route.ts`
+
+**Input**:
+```json
+{
+  "streak": 7,
+  "flowers": 5,
+  "treeLevel": 2,
+  "todayCalories": 1200,
+  "calorieGoal": 1750,
+  "todayProtein": 80,
+  "proteinGoal": 150,
+  "gardenHealth": 75,
+  "timeOfDay": "afternoon"
+}
+```
+
+**Output**:
+```json
+{
+  "message": "7 days! Look at our beautiful garden growing! 🌸",
+  "mood": "excited"
+}
+```
+
+**Provider chain**: Gemini 2.0 Flash Lite → Groq Llama 3.1 8B Instant  
+**Prompt**: Capy persona, 1-2 sentence max, warm/playful, references garden state  
+**Fallback**: Returns a generic motivational message if both providers fail  
+**Cost**: Free (uses free tier models)
 
 ---
 
