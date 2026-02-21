@@ -45,7 +45,7 @@ export default function ExpiryTracker({
     expired: "bg-red-500/10 border-red-500/20 text-red-400",
     expiring: "bg-yellow-400/10 border-yellow-400/20 text-yellow-400",
     fresh: "bg-green-400/10 border-green-400/20 text-green-400",
-    unknown: "bg-foreground/5 border-foreground/10 text-foreground/40",
+    unknown: "bg-card-hover border-border text-muted",
   };
 
   const categoryIcon = {
@@ -63,7 +63,7 @@ export default function ExpiryTracker({
   }
 
   return (
-    <div className="rounded-2xl bg-surface border border-border overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full px-4 py-3 text-left"
@@ -81,9 +81,9 @@ export default function ExpiryTracker({
           )}
         </div>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-foreground/40" />
+          <ChevronUp className="h-4 w-4 text-muted" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-foreground/40" />
+          <ChevronDown className="h-4 w-4 text-muted" />
         )}
       </button>
 
@@ -98,12 +98,12 @@ export default function ExpiryTracker({
           >
             <div className="px-3 pb-3 border-t border-border pt-3 space-y-1.5">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] text-foreground/25 px-1">
+                <p className="text-[10px] text-muted-light px-1">
                   Tap date to edit expiry. Auto-estimated from typical shelf life.
                 </p>
                 <button
                   onClick={onClearAll}
-                  className="flex items-center gap-1 text-[10px] text-foreground/30 hover:text-red-400 transition-colors shrink-0"
+                  className="flex items-center gap-1 text-[10px] text-muted hover:text-red-400 transition-colors shrink-0"
                 >
                   <Trash2 className="h-3 w-3" />
                   Clear

@@ -28,7 +28,7 @@ export default function DietaryFilter({ value, onChange }: DietaryFilterProps) {
             className={`relative flex items-center gap-1 rounded-full px-3.5 py-2 text-xs font-semibold transition-all whitespace-nowrap active:scale-95 ${
               isActive
                 ? "bg-accent text-background shadow-lg shadow-accent/25"
-                : "bg-foreground/5 text-foreground/50 border border-foreground/10"
+                : "bg-card-hover text-muted border border-border"
             }`}
           >
             {isActive && (

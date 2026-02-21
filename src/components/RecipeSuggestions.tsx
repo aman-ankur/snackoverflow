@@ -44,16 +44,16 @@ export default function RecipeSuggestions({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface border border-border py-10 px-6"
+            className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-card border border-border py-10 px-6"
           >
             <div className="rounded-full bg-orange-glow p-4">
               <UtensilsCrossed className="h-8 w-8 text-orange/60" />
             </div>
             <div className="text-center">
-              <p className="text-sm font-medium text-foreground/50">
+              <p className="text-sm font-medium text-muted">
                 No recipes yet
               </p>
-              <p className="text-xs text-foreground/30 mt-1">
+              <p className="text-xs text-muted mt-1">
                 Scan items in your fridge to get Indian recipe suggestions
               </p>
             </div>

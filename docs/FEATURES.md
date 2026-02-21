@@ -1,10 +1,14 @@
 # Current Features
 
-## 1. Bottom Navigation (Fridge / Dish)
-- Sticky bottom tab bar with two primary workspaces:
-  - 🧊 **Fridge** (existing flow, includes YOLO + Cloud AI switcher)
-  - 🍽️ **Dish** (new calorie/macro scanner)
-- Animated tab transitions via framer-motion
+## 1. Bottom Navigation (4-Tab + Fridge Overlay)
+- Fixed bottom tab bar with four tabs + center FAB:
+  - 🏠 **Home** — dashboard with Capy mascot, daily intake ring, meal slots, fridge scan CTA
+  - 📊 **Progress** — nutrition tracking, macro bars, weekly calories, meal history
+  - 📷 **Scan** (center FAB) — dish scanner with camera, meal context, portion adjuster
+  - 👤 **Profile** — body stats, daily targets, goal setup, reset
+- 🧊 **Fridge Scanner** — full-screen overlay triggered from Home CTA (not a tab)
+- Animated tab transitions via framer-motion `AnimatePresence`
+- Warm Sage & Cream theme (flat, light design)
 
 ## 2. Fridge Scanner (Cloud AI Mode)
 - Point camera at fridge → AI identifies all food items

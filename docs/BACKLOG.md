@@ -2,12 +2,62 @@
 
 ## Priority: High (Next Up)
 
-### Dish Scanner & Calorie Tracker
+### ~~Dish Scanner & Calorie Tracker~~ ✅ SHIPPED
 See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
-- Bottom tab bar (Fridge / Dish)
-- Point camera at dish → instant calorie/macro breakdown
-- Meal logging, daily summary, history
-- Cross-tab intelligence (fridge ↔ dish linking)
+- ~~Bottom tab bar (Fridge / Dish)~~
+- ~~Point camera at dish → instant calorie/macro breakdown~~
+- ~~Meal logging, daily summary, history~~
+- ~~Cross-tab intelligence (fridge ↔ dish linking)~~
+
+### ~~Typography Overhaul~~ ✅ SHIPPED
+- ~~Switched from Geist to DM Sans (weights 400–900) for bolder, punchier text~~
+- ~~Mono font: Geist Mono → JetBrains Mono~~
+- ~~Base body font-weight set to 500 (medium) — all text thicker by default~~
+- ~~Foreground darkened: #1A1A1A → #0D0D0D (near-black)~~
+- ~~Muted text darkened: #6B6560 → #4A4540 (better readability)~~
+- ~~All headings bumped to font-extrabold (800) across Home, Progress, Profile, Scan~~
+- ~~Labels/badges: font-medium → font-semibold, font-semibold → font-bold~~
+- ~~Bottom tab labels bumped to font-bold~~
+
+### ~~Scan UX Improvements~~ ✅ SHIPPED
+- ~~Auto-scroll to results after analysis completes (no more stuck on camera)~~
+- ~~Plate Total card now lists individual dish names with calories and weight~~
+- ~~Improved portion accuracy: AI prompt counts individual pieces for chips/nuggets/momos~~
+- ~~Editable weight per dish: tap grams → +/- buttons or type directly → macros recalculate~~
+- ~~Delete button per dish card (red "Remove" pill)~~
+- ~~Collapsed/expanded card view: multi-dish plates show summary + "Show N dishes · Edit quantities" toggle~~
+- ~~Confidence badge redesigned: "Confident" / "Likely" / "Unsure" instead of raw "high/medium/low"~~
+- ~~Shared state: ScanView uses page-level mealLog (no stale data on Home after logging)~~
+- ~~Auto-navigate to Home tab after meal is logged (1.2s "Logged ✓" → Home with fresh data)~~
+- ~~Analysis cleared after logging so Scan tab is ready for next scan~~
+
+### ~~UI Refresh + Capy's Garden~~ ✅ SHIPPED
+- ~~Punchier color palette (richer greens, darker foreground, warmer orange)~~
+- ~~Bolder fonts across all views (extrabold headings, bold labels)~~
+- ~~Colored gradient card backgrounds (green tint Daily Intake, accent tint Capy card)~~
+- ~~Tinted macro pills (Carbs=orange, Protein=green, Fats=warm)~~
+- ~~Health badges on meal rows (Healthy/Balanced/Moderate/Heavy with Lucide icons)~~
+- ~~Macro mini-pills per meal (P/C/F grams)~~
+- ~~Redesigned Scan FAB (larger h-16, white ring, green glow shadow)~~
+- ~~New "Capy" tab — 5-tab bottom nav (Home/Progress/Scan/Capy/Profile)~~
+- ~~Three.js garden scene: 3D capybara, flowers, trees, pond, butterflies, rainbow, sparkles~~
+- ~~Garden state system tied to meal logging, streaks, and goal achievement~~
+- ~~60+ pre-built motivational lines with context-aware selection~~
+- ~~LLM fallback API for motivation (Gemini → Groq)~~
+- ~~Achievements grid, Garden Journal, Garden Health bar, Next Unlock progress~~
+- ~~Lazy loaded with next/dynamic, frameloop pauses when tab inactive~~
+- New files: `healthRating.ts`, `useGardenState.ts`, `capyMotivation.ts`, `CapyGarden.tsx`, `CapyView.tsx`, `api/capy-motivation/route.ts`
+- New deps: `three`, `@react-three/fiber`, `@react-three/drei`, `@types/three`
+
+### ~~UI Redesign — Sage & Cream Theme~~ ✅ SHIPPED
+- ~~4-tab navigation (Home / Progress / Scan FAB / Profile) + Fridge Overlay~~
+- ~~Warm flat light theme replacing dark theme (bg-card, text-muted, border-border)~~
+- ~~HomeView dashboard with Capy mascot, calorie ring, meal slots~~
+- ~~ProgressView with macro bars, weekly calories, meal history~~
+- ~~ProfileView with body stats, daily targets, reset actions~~
+- ~~Capy SVG overhaul with breathing, blinking, tail wag, floating, sleep animations~~
+- ~~All 25+ components restyled — zero dark-theme remnants~~
+- See [TEST-RESULTS.md](./TEST-RESULTS.md) for E2E verification
 
 ---
 
