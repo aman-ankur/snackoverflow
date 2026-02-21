@@ -96,11 +96,28 @@ All components are in `src/components/`. All are `"use client"` components.
   - Garden Health bar (0-100%, color-coded green/yellow/red)
 
 ### `CapyMascot.tsx`
-**SVG capybara mascot with mood-reactive expressions.**
-- Props: `mood: CapyMood`, `size?: number`
-- 5 moods: happy, excited, sleepy, motivated, concerned
-- Each mood changes eyes, mouth, accessories (sparkles, zzz, stars)
-- Pure SVG — no external assets
+**Image-based capybara mascot with mood-reactive variants.**
+- Props: `mood: CapyMood`, `size?: number`, `className?: string`, `animate?: boolean`
+- 5 moods mapped to 3 kawaii capybara images (transparent PNGs):
+  - `happy`, `excited`, `sleepy` → `capy-happy.png` (bath capy with rubber duck)
+  - `motivated` → `capy-motivated.png` (headphones capy with laptop)
+  - `concerned`, default → `capy-default.png` (orange hat capy)
+- Mood overlays: ✨ bounce for excited, 💤 pulse for sleepy
+- Images at `/public/model/capy-{happy,default,motivated}.png` (300px, transparent background)
+- Uses plain `<img>` tag (not Next.js Image) to preserve PNG alpha channel
+
+### `CapyLottie.tsx` (NEW)
+**Lottie animation player for animated mascots.**
+- Props: `src?: string`, `size?: number`, `className?: string`, `speed?: number`
+- Default src: `/model/capy-mascot.json` (fat capybara logo animation)
+- Also used with `/model/cute-cat.json` and `/model/cute-dog.json`
+- Fetches JSON at runtime, shows fallback 🐹 emoji while loading
+- Uses `lottie-react` library, loops and autoplays
+- Deployed on:
+  - HomeView greeting card (capy Lottie)
+  - HomeView fridge scanner card (dog Lottie)
+  - ProgressView header (cat Lottie)
+  - HomeView streak card (capy Lottie)
 
 ### `GoalOnboarding.tsx` (NEW)
 **5-step animated onboarding wizard with Capy.**

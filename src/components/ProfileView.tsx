@@ -48,7 +48,7 @@ export default function ProfileView({
       {/* Capy Card */}
       <div className="rounded-2xl bg-gradient-to-br from-accent-light/40 to-card border border-accent/10 p-6 flex flex-col items-center text-center">
         <div className="animate-breathe">
-          <CapyMascot mood="happy" size={100} />
+          <CapyMascot mood="concerned" size={100} />
         </div>
         <h3 className="text-base font-extrabold text-foreground mt-3">Fridgenius</h3>
         <p className="text-xs text-muted mt-0.5">Your Smart Kitchen Assistant</p>
