@@ -50,7 +50,7 @@ export default function BottomTabBar({ activeTab, onTabChange }: BottomTabBarPro
             >
               <Camera className="h-7 w-7" />
             </button>
-            <span className={`mt-0.5 text-[10px] font-semibold ${
+            <span className={`mt-0.5 text-[10px] font-bold ${
               activeTab === "scan" ? "text-accent" : "text-muted"
             }`}>
               Scan
@@ -96,7 +96,7 @@ function TabButton({
         strokeWidth={isActive ? 2.2 : 1.8}
       />
       <span
-        className={`text-[10px] font-semibold ${
+        className={`text-[10px] font-bold ${
           isActive ? "text-accent" : "text-muted"
         }`}
       >

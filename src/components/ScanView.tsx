@@ -202,7 +202,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
                 dish.setMealType(option);
                 setLogMealType(option);
               }}
-              className={`rounded-full border px-2 py-1.5 text-[10px] font-medium capitalize transition-colors ${
+              className={`rounded-full border px-2 py-1.5 text-[10px] font-semibold capitalize transition-colors ${
                 dish.mealType === option
                   ? "border-accent/30 bg-accent-light text-accent-dim"
                   : "border-border bg-background text-muted hover:bg-card-hover"
@@ -218,7 +218,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
       <div className="rounded-2xl bg-card border border-border p-3">
         <div className="flex items-center gap-2 mb-2">
           <Calculator className="h-4 w-4 text-accent" />
-          <h3 className="text-sm font-semibold text-foreground">Portion Adjuster</h3>
+          <h3 className="text-sm font-extrabold text-foreground">Portion Adjuster</h3>
         </div>
         <div className="grid grid-cols-4 gap-1.5">
           {SERVING_OPTIONS.map((value) => (
@@ -249,7 +249,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
             className="rounded-2xl bg-card border border-border py-10 px-6 text-center"
           >
             <Sparkles className="h-7 w-7 text-accent/50 mx-auto" />
-            <p className="text-sm font-medium text-muted mt-3">No dish analysis yet</p>
+            <p className="text-sm font-semibold text-muted mt-3">No dish analysis yet</p>
             <p className="text-xs text-muted mt-1">
               Start camera and tap Analyze Dish to get calorie and macro estimates.
             </p>
@@ -263,10 +263,10 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
             className="rounded-2xl bg-card border border-border py-8 px-6 text-center"
           >
             <Trash2 className="h-6 w-6 text-muted/50 mx-auto" />
-            <p className="text-sm font-medium text-muted mt-3">All dishes removed</p>
+            <p className="text-sm font-semibold text-muted mt-3">All dishes removed</p>
             <button
               onClick={dish.clearAnalysis}
-              className="mt-2 text-xs text-accent font-medium"
+              className="mt-2 text-xs text-accent font-semibold"
             >
               Clear & re-scan
             </button>
@@ -282,16 +282,16 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
             {/* Plate total with items list */}
             <div className="rounded-2xl bg-accent-light border border-accent/15 p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-bold text-foreground">Plate Total</h3>
+                <h3 className="text-sm font-extrabold text-foreground">Plate Total</h3>
                 <span className="text-[10px] text-muted">
                   {scaledDishes.length} dish{scaledDishes.length === 1 ? "" : "es"}
                 </span>
               </div>
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <p className="text-xs font-semibold text-foreground">🔥 {scaledTotals.calories} kcal</p>
-                <p className="text-xs font-semibold text-foreground">💪 {scaledTotals.protein}g protein</p>
-                <p className="text-xs font-semibold text-foreground">🍞 {scaledTotals.carbs}g carbs</p>
-                <p className="text-xs font-semibold text-foreground">🧈 {scaledTotals.fat}g fat</p>
+                <p className="text-xs font-bold text-foreground">🔥 {scaledTotals.calories} kcal</p>
+                <p className="text-xs font-bold text-foreground">💪 {scaledTotals.protein}g protein</p>
+                <p className="text-xs font-bold text-foreground">🍞 {scaledTotals.carbs}g carbs</p>
+                <p className="text-xs font-bold text-foreground">🧈 {scaledTotals.fat}g fat</p>
               </div>
               {/* Items list */}
               <div className="mt-3 pt-3 border-t border-accent/10 space-y-1.5">
@@ -335,7 +335,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
             {scaledDishes.length > 1 && (
               <button
                 onClick={() => setExpandedView(!expandedView)}
-                className="w-full flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-card py-2.5 text-xs font-semibold text-muted hover:text-foreground transition-colors"
+                className="w-full flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-card py-2.5 text-xs font-bold text-muted hover:text-foreground transition-colors"
               >
                 {expandedView ? (
                   <>
@@ -436,7 +436,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
                 </select>
                 <button
                   onClick={handleLogMeal}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all active:scale-95 ${
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all active:scale-95 ${
                     logSuccess
                       ? "bg-accent text-white"
                       : "bg-accent-light border border-accent/20 text-accent-dim hover:bg-accent/15"

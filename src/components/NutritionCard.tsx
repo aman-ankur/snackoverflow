@@ -71,12 +71,12 @@ export default function NutritionCard({ dish, servingsMultiplier }: NutritionCar
     <div className="rounded-2xl border border-border bg-card p-4">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <h3 className="text-base font-semibold text-foreground">{dish.name}</h3>
+          <h3 className="text-base font-bold text-foreground">{dish.name}</h3>
           {dish.hindi && <p className="text-xs text-muted mt-0.5">{dish.hindi}</p>}
           <p className="text-[10px] text-muted-light mt-1">
             Estimated for: {dish.portion}
             {dish.estimated_weight_g > 0 && (
-              <span className="ml-1 font-medium">({Math.round(dish.estimated_weight_g * servingsMultiplier)}g)</span>
+              <span className="ml-1 font-semibold">({Math.round(dish.estimated_weight_g * servingsMultiplier)}g)</span>
             )}
           </p>
         </div>
@@ -95,7 +95,7 @@ export default function NutritionCard({ dish, servingsMultiplier }: NutritionCar
                 <Icon className={`h-3.5 w-3.5 ${metric.iconClass}`} />
                 {metric.label}
               </div>
-              <p className="mt-1 text-sm font-semibold text-foreground">{metric.value}</p>
+              <p className="mt-1 text-sm font-bold text-foreground">{metric.value}</p>
             </div>
           );
         })}

@@ -81,10 +81,10 @@ function MacroPill({ label, value, max, color }: { label: string; value: number;
   };
   return (
     <div className={`flex-1 rounded-xl border border-border px-3 py-2.5 text-center ${tintMap[label] || "bg-card"}`}>
-      <p className="text-[10px] font-medium text-muted mb-0.5">{label}</p>
+      <p className="text-[10px] font-semibold text-muted mb-0.5">{label}</p>
       <p className="text-sm font-bold text-foreground">
         {Math.round(value)}
-        <span className="text-muted font-normal text-xs">/{max}g</span>
+        <span className="text-muted font-medium text-xs">/{max}g</span>
       </p>
       <div className="mt-1.5 h-1.5 w-full rounded-full bg-border overflow-hidden">
         <motion.div
@@ -144,7 +144,7 @@ export default function HomeView({
             <CapyMascot mood={capyState.mood} size={64} />
           </motion.div>
           <div className="flex-1 min-w-0">
-            <p className="text-xs font-semibold text-muted">{greeting}</p>
+            <p className="text-xs font-bold text-muted">{greeting}</p>
             <motion.div
               key={capyState.line}
               initial={{ x: 8, opacity: 0 }}
@@ -160,11 +160,11 @@ export default function HomeView({
       {/* Calorie Ring + Macros */}
       <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-white border border-accent/10 p-4">
         <div className="flex items-center justify-between mb-3">
-          <h3 className="text-base font-bold text-foreground">Daily Intake</h3>
+          <h3 className="text-base font-extrabold text-foreground">Daily Intake</h3>
           {streak.currentStreak > 0 && (
             <div className="flex items-center gap-1 rounded-full bg-orange-light border border-orange/20 px-2.5 py-1">
               <Flame className="h-3 w-3 text-orange" />
-              <span className="text-[10px] font-semibold text-orange">{streak.currentStreak} Day</span>
+              <span className="text-[10px] font-bold text-orange">{streak.currentStreak} Day</span>
             </div>
           )}
         </div>
@@ -183,10 +183,10 @@ export default function HomeView({
       {/* Today's Meals */}
       <div className="rounded-2xl bg-card border border-border overflow-hidden">
         <div className="flex items-center justify-between px-4 pt-4 pb-2">
-          <h3 className="text-base font-bold text-foreground">Today Meals</h3>
+          <h3 className="text-base font-extrabold text-foreground">Today Meals</h3>
           <button
             onClick={onScanDish}
-            className="flex items-center gap-1 rounded-full bg-accent-light border border-accent/20 px-2.5 py-1 text-[10px] font-medium text-accent transition-colors hover:bg-accent/15 active:scale-95"
+            className="flex items-center gap-1 rounded-full bg-accent-light border border-accent/20 px-2.5 py-1 text-[10px] font-semibold text-accent transition-colors hover:bg-accent/15 active:scale-95"
           >
             <Plus className="h-3 w-3" />
             Add
@@ -211,7 +211,7 @@ export default function HomeView({
                   <Icon className="h-4 w-4 text-accent" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-foreground capitalize">{mealType}</p>
+                  <p className="text-sm font-extrabold text-foreground capitalize">{mealType}</p>
                   {meals.length > 0 ? (
                     <>
                       <p className="text-[10px] text-muted truncate">
@@ -229,12 +229,12 @@ export default function HomeView({
                   {meals.length > 0 && badge && BadgeIcon ? (
                     <div className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: badge.bgColor }}>
                       <BadgeIcon className="h-3 w-3" style={{ color: badge.color }} />
-                      <span className="text-[10px] font-semibold" style={{ color: badge.color }}>{badge.label}</span>
+                      <span className="text-[10px] font-bold" style={{ color: badge.color }}>{badge.label}</span>
                     </div>
                   ) : (
                     <button
                       onClick={onScanDish}
-                      className="text-[10px] text-accent font-medium"
+                      className="text-[10px] text-accent font-semibold"
                     >
                       Add
                     </button>
@@ -255,7 +255,7 @@ export default function HomeView({
           <Refrigerator className="h-6 w-6 text-accent" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-foreground">Scan Your Fridge</p>
+          <p className="text-sm font-extrabold text-foreground">Scan Your Fridge</p>
           <p className="text-xs text-muted mt-0.5">See what&apos;s inside and get recipe ideas</p>
         </div>
         <ChevronRight className="h-5 w-5 text-muted-light shrink-0" />

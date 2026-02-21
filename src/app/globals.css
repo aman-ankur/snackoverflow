@@ -3,7 +3,7 @@
 @theme inline {
   /* Sage & Cream palette */
   --color-background: #F5F2EB;
-  --color-foreground: #1A1A1A;
+  --color-foreground: #0D0D0D;
   --color-card: #FFFFFF;
   --color-card-hover: #F9F7F3;
   --color-surface: #FFFFFF;
@@ -18,10 +18,10 @@
   --color-orange-dim: #D87A30;
   --color-orange-light: #FDE8D4;
   --color-orange-glow: rgba(232, 148, 90, 0.15);
-  --color-muted: #6B6560;
-  --color-muted-light: #9A9490;
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-muted: #4A4540;
+  --color-muted-light: #7A756F;
+  --font-sans: var(--font-dm-sans);
+  --font-mono: var(--font-jetbrains-mono);
 }
 
 * {
@@ -32,6 +32,7 @@ body {
   background: var(--color-background);
   color: var(--color-foreground);
   font-family: var(--font-sans), system-ui, sans-serif;
+  font-weight: 500;
   overscroll-behavior: none;
   -webkit-font-smoothing: antialiased;
 }

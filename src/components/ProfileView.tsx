@@ -66,11 +66,11 @@ export default function ProfileView({
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <User className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-bold text-foreground">Body Stats</h3>
+              <h3 className="text-sm font-extrabold text-foreground">Body Stats</h3>
             </div>
             <button
               onClick={onEditGoals}
-              className="text-[10px] text-accent font-medium hover:text-accent-dim transition-colors"
+              className="text-[10px] text-accent font-semibold hover:text-accent-dim transition-colors"
             >
               Edit
             </button>
@@ -91,11 +91,11 @@ export default function ProfileView({
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
             <Target className="h-4 w-4 text-accent" />
-            <h3 className="text-sm font-bold text-foreground">Daily Targets</h3>
+            <h3 className="text-sm font-extrabold text-foreground">Daily Targets</h3>
           </div>
           <button
             onClick={onEditGoals}
-            className="text-[10px] text-accent font-medium hover:text-accent-dim transition-colors"
+            className="text-[10px] text-accent font-semibold hover:text-accent-dim transition-colors"
           >
             Edit
           </button>
@@ -120,14 +120,14 @@ export default function ProfileView({
           className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-card-hover transition-colors"
         >
           <Settings2 className="h-4 w-4 text-accent" />
-          <span className="text-sm font-semibold text-foreground">Re-run Goal Setup</span>
+          <span className="text-sm font-bold text-foreground">Re-run Goal Setup</span>
         </button>
         <div className="border-t border-border" />
         <button
           onClick={onResetAll}
           className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-card-hover transition-colors"
         >
-          <span className="text-sm font-semibold text-red-500">Reset All Data</span>
+          <span className="text-sm font-bold text-red-500">Reset All Data</span>
         </button>
       </div>
 
