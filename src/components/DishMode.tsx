@@ -1,16 +1,18 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, PlusCircle, Sparkles, Pencil, X, Check, Loader2 } from "lucide-react";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import NutritionCard from "@/components/NutritionCard";
 import MealLog from "@/components/MealLog";
-import DailySummary from "@/components/DailySummary";
+import GoalDashboard from "@/components/GoalDashboard";
+import GoalOnboarding from "@/components/GoalOnboarding";
 import MealHistory from "@/components/MealHistory";
 import { useDishScanner } from "@/lib/useDishScanner";
 import { useMealLog } from "@/lib/useMealLog";
-import type { DishNutrition, MealType } from "@/lib/dishTypes";
+import { useUserGoals } from "@/lib/useUserGoals";
+import type { DishNutrition, MealType, UserProfile, NutritionGoals } from "@/lib/dishTypes";
 
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2] as const;
 const MEAL_TYPE_OPTIONS: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
@@ -69,10 +71,18 @@ function deriveTags(dish: DishNutrition): string[] {
 export default function DishMode() {
   const dish = useDishScanner();
   const mealLog = useMealLog();
+  const userGoals = useUserGoals();
 
   const [servingsMultiplier, setServingsMultiplier] = useState<number>(1);
   const [logMealType, setLogMealType] = useState<MealType>("lunch");
   const [logSuccess, setLogSuccess] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    if (userGoals.hasLoaded && !userGoals.hasProfile) {
+      setShowOnboarding(true);
+    }
+  }, [userGoals.hasLoaded, userGoals.hasProfile]);
 
   const scaledDishes = useMemo(
     () => (dish.analysis?.dishes || []).map((item) => scaleDish(item, servingsMultiplier)),
@@ -117,11 +127,30 @@ export default function DishMode() {
     });
 
     setLogSuccess(true);
+    userGoals.refreshStreak();
     setTimeout(() => setLogSuccess(false), 1800);
+  };
+
+  const handleOnboardingComplete = (profile: UserProfile, goals: NutritionGoals) => {
+    userGoals.saveProfile(profile);
+    if (goals.isCustom) {
+      userGoals.updateGoals(goals);
+    }
+    setShowOnboarding(false);
   };
 
   return (
     <>
+      <AnimatePresence>
+        {showOnboarding && (
+          <GoalOnboarding
+            existingProfile={userGoals.profile}
+            onComplete={handleOnboardingComplete}
+            onSkip={() => setShowOnboarding(false)}
+          />
+        )}
+      </AnimatePresence>
+
       <GeminiCameraView
         videoRef={dish.videoRef}
         canvasRef={dish.canvasRef}
@@ -294,7 +323,13 @@ export default function DishMode() {
         )}
       </AnimatePresence>
 
-      <DailySummary totals={mealLog.todayTotals} mealsCount={mealLog.todayMeals.length} />
+      <GoalDashboard
+        totals={mealLog.todayTotals}
+        goals={userGoals.goals}
+        streak={userGoals.streak}
+        mealsCount={mealLog.todayMeals.length}
+        onEditGoals={() => setShowOnboarding(true)}
+      />
       <MealLog meals={mealLog.todayMeals} onRemoveMeal={mealLog.removeMeal} onClearAll={mealLog.clearAllMeals} />
       <MealHistory
         meals={mealLog.meals}
