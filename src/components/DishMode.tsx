@@ -218,7 +218,7 @@ export default function DishMode() {
               </div>
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
                 <p className="text-xs text-foreground/70">🔥 {scaledTotals.calories} kcal</p>
-                <p className="text-xs text-foreground/70">🥩 {scaledTotals.protein}g</p>
+                <p className="text-xs text-foreground/70">💪 {scaledTotals.protein}g</p>
                 <p className="text-xs text-foreground/70">🍞 {scaledTotals.carbs}g</p>
                 <p className="text-xs text-foreground/70">🧈 {scaledTotals.fat}g</p>
               </div>
