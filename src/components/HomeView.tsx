@@ -135,25 +135,14 @@ export default function HomeView({
       {/* Greeting + Capy */}
       <div className="rounded-2xl bg-gradient-to-br from-accent-light/40 to-card border border-accent/10 p-4">
         <div className="flex items-center gap-3">
-          <motion.div
-            key={capyState.mood}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: "spring", bounce: 0.4 }}
-            className="shrink-0 animate-breathe"
-          >
+          <div className="shrink-0 animate-breathe">
             <CapyLottie size={64} />
-          </motion.div>
+          </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-muted">{greeting}</p>
-            <motion.div
-              key={capyState.line}
-              initial={{ x: 8, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              className="mt-1 rounded-xl bg-accent-light border border-accent/15 px-3 py-2"
-            >
+            <div className="mt-1 rounded-xl bg-accent-light border border-accent/15 px-3 py-2">
               <p className="text-xs text-foreground leading-relaxed">{capyState.line}</p>
-            </motion.div>
+            </div>
           </div>
         </div>
       </div>
