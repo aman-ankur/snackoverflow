@@ -70,12 +70,13 @@ All components are in `src/components/`. All are `"use client"` components.
   - **InteractiveCapy**: GLB model capybara with full behavior FSM (`capyBehaviors.ts`). States: idle, wander, eat, splash, chase_butterfly, tapped, dance. Wanders with slow waddle animation, eats with forward tilt (Y offset prevents ground clipping), chases butterflies, splashes in hot spring. **Random tap reactions** (one per tap): squash-and-stretch, body wiggle, nose nuzzle, look-at-camera with ear perk. Dance on double-tap. Emits particle effects per state.
   - **BabyCapy**: Up to 3 baby capybaras (scaled 0.55×) using same behavior system + random tap reactions. Smaller wander radius (1.5), 20% chance to follow main capy. Tappable with heart particles.
   - **PlantInPot**: Terracotta pot with growing plant balanced on capybara's head. Gentle wobble animation.
-  - **Flowers**: Spiral pattern, count = days goal hit (max 30), droop when wilting
-  - **Trees**: Multiple tree types (Oak, Pine, Spruce, Birch, Willow, Cherry), level 0-4
-  - **HotSpring**: Steam + warm water (streak ≥30), capybaras splash here
-  - **CozyHome**: Cabin with chimney smoke (based on total meals logged)
-  - **Butterflies**: Wing-flap animation on circular paths (max 5), chased by capybaras
-  - **Rainbow**: Semi-transparent torus arc (14+ day streak)
+  - **Flowers**: Spiral pattern, count = calorie goal days hit (max 30), droop when wilting
+  - **Trees**: Level 0→1 (3d streak) → 2 (14d streak) → 3 (30d streak)
+  - **HotSpring**: Steam + warm water (streak ≥30)
+  - **CozyHome**: Cabin with chimney smoke (15+ calorie goal days)
+  - **Butterflies**: Wing-flap animation on circular paths (streak ≥5, max 5), chased by capybaras
+  - **Rainbow**: Semi-transparent torus arc (14+ day streak, visual bonus with Forest milestone)
+  - **BabyCapybaras**: Up to 3 small capybaras (7+ calorie goal days)
   - **Sparkles**: Points geometry, golden when healthy, grey when wilting
   - **FallingLeaves**: Drift-down particles when garden health < 30
   - **DynamicSkyDome**: Canvas-gradient sphere with time-of-day lighting
@@ -91,13 +92,27 @@ All components are in `src/components/`. All are `"use client"` components.
 - Uses `getContextualMotivation()` for pre-built motivation lines
 - Layout:
   - Top: Garden stats bar (🌸 count · 🌳 level · 🦋 count · 🔥 streak)
+  - **Your Journey** roadmap: horizontal scrollable 8-milestone strip with check marks, "Next" hint, and expandable "How does this work?" section
   - Center: Three.js canvas (55vh) with motivation bubble overlay
-  - "Talk to Capy" button → cycles motivation lines
-  - **Next Unlock card**: Shows next milestone with clear description (e.g. "Log meals 3 more days in a row"), progress bar, and current/target count with unit (streak days, goal days, protein days)
-  - Achievements grid (8 milestones: First Flower, Sapling, Rainbow, Forest, Baby Capy, Cozy Home, Hot Spring, Full Garden)
+  - **Garden Health + Talk to Capy** side-by-side cards (health bar with %, motivation button)
+  - **Preview Garden Stages**: expandable panel with 8 demo presets that swap the 3D scene
+  - **Next Unlock card**: Shows next milestone with clear description (e.g. "Log meals 3 more days in a row"), progress bar, and current/target count with unit (streak days, goal days)
   - Garden Journal (last 5 events with timestamps)
-  - Garden Health bar (0-100%, color-coded green/yellow/red)
-  - **How It Works** (collapsible): Explains streaks, lists all milestones with exact requirements, FAQ (streak loss, what counts as logging, wilting)
+- **8 Milestones (2 tracks)**:
+  - Streak track (disappear on streak break): 🌱 Sapling (3d), 🦋 Butterfly (5d), 🌲 Forest + 🌈 Rainbow (14d), ♨️ Hot Spring (30d)
+  - Calorie goal track (permanent): 🌸 First Flower (3 goals), 🐾 Baby Capy (7 goals), 🏡 Cozy Home (15 goals), 🌻 Full Garden (30 goals)
+- All 4 milestone lists unified: DEMO_PRESETS, ROADMAP_MILESTONES, achievements (removed from UI), NextUnlockCard
+
+### `CalendarProgressView.tsx` (NEW)
+**Calendar-based progress visualization with Apple Fitness-style rings.**
+- Props: `meals: LoggedMeal[]`, `goals: NutritionGoals`
+- Default view: weekly row (7 days) with concentric rings per day
+- Expandable: full month calendar grid
+- Rings: outer green (calories %), middle orange (protein %), inner blue (carbs %)
+- Tap a day → bottom sheet with full macro breakdown
+- Days with no data show empty/grey rings
+- Month navigation with left/right arrows (limited to current year)
+- Integrated at top of ProgressView
 
 ### `CapyMascot.tsx`
 **Image-based capybara mascot with mood-reactive variants.**

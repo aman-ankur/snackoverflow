@@ -129,3 +129,29 @@
 - **Persistence** — localStorage (`snackoverflow-user-goals-v1`): UserProfile (incl. optional name), NutritionGoals, StreakData
 - Auto-shows onboarding on first visit; skip uses sensible defaults (2000 kcal)
 - **Personalized greetings** — if user sets a name during onboarding, Home tab greeting and Capy speech use it (e.g. "Good evening, Ankur!")
+
+## 14. Capy's Garden — 8-Milestone Progression System (NEW)
+- **2-track gamification** designed around habit formation (Duolingo/Apple Fitness inspired):
+  - **Streak track** (disappear on streak break — motivates daily logging):
+    - 🌱 Sapling (3-day streak) → 🦋 Butterfly (5d) → 🌲 Forest + 🌈 Rainbow (14d) → ♨️ Hot Spring (30d)
+  - **Calorie goal track** (permanent — rewards nutrition quality):
+    - 🌸 First Flower (3 goal days) → 🐾 Baby Capy (7d) → 🏡 Cozy Home (15d) → 🌻 Full Garden (30d)
+- Calorie goal = eating within 80–120% of daily calorie target
+- Thresholds are monotonically increasing — later milestones can never unlock before earlier ones
+- **Your Journey** roadmap: horizontal scrollable milestone strip with check marks and "Next" hint
+- **How does this work?** expandable section explains both tracks with milestone-to-unlock mapping
+- **Garden Health + Talk to Capy** combined into side-by-side card row
+- **Preview Garden Stages**: 8 demo presets that swap the 3D scene to show each milestone
+- **Next Unlock card**: progress bar with clear hint text ("Log meals X more days in a row" or "Hit your calorie goal X more days")
+- Three.js visuals map directly to milestone state (treeLevel, flowers, butterflies, hasRainbow, hasCrown, babyCapybaras, homeLevel)
+- Garden health: composite 0–100% score based on streak + goal day bonuses; wilts when streak = 0
+
+## 15. Calendar Progress View (NEW)
+- Apple Fitness-style concentric rings per day showing macro progress
+- Rings: outer green (calories %), middle orange (protein %), inner blue (carbs %)
+- Default: weekly row view (7 days)
+- Expandable: full month calendar grid
+- Tap a day → bottom sheet with full macro breakdown for that day
+- Days with no data show empty/grey rings
+- Month navigation (left/right arrows, limited to current year)
+- Integrated at top of Progress tab
