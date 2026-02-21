@@ -64,8 +64,12 @@ export default function ProfileView({
         <div className="animate-breathe">
           <CapyMascot mood="concerned" size={100} />
         </div>
-        <h3 className="text-base font-extrabold text-foreground mt-3">SnackOverflow</h3>
-        <p className="text-xs text-muted mt-0.5">Your Smart Kitchen Assistant</p>
+        {profile?.name ? (
+          <h3 className="text-base font-extrabold text-foreground mt-3">{profile.name}</h3>
+        ) : (
+          <h3 className="text-base font-extrabold text-foreground mt-3">SnackOverflow</h3>
+        )}
+        <p className="text-xs text-muted mt-0.5">{profile?.name ? "SnackOverflow Member" : "Your Smart Kitchen Assistant"}</p>
         {streak.currentStreak > 0 && (
           <div className="flex items-center gap-1 mt-3 rounded-full bg-orange-light border border-orange/20 px-3 py-1">
             <Flame className="h-3 w-3 text-orange" />

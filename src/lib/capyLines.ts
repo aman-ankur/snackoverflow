@@ -12,11 +12,12 @@ function getTimeOfDay(): "morning" | "afternoon" | "evening" {
   return "evening";
 }
 
-function getGreeting(): string {
+function getGreeting(name?: string): string {
   const time = getTimeOfDay();
-  if (time === "morning") return "Good morning!";
-  if (time === "afternoon") return "Good afternoon!";
-  return "Good evening!";
+  const n = name ? `, ${name}` : "";
+  if (time === "morning") return `Good morning${n}!`;
+  if (time === "afternoon") return `Good afternoon${n}!`;
+  return `Good evening${n}!`;
 }
 
 const MORNING_NO_MEALS = [
@@ -78,7 +79,8 @@ export function getCapyState(
   totals: MealTotals,
   goals: NutritionGoals,
   streak: StreakData,
-  mealsCount: number
+  mealsCount: number,
+  name?: string
 ): CapyState {
   const calPercent = goals.calories > 0 ? totals.calories / goals.calories : 0;
   const proteinPercent = goals.protein > 0 ? totals.protein / goals.protein : 0;
@@ -95,7 +97,7 @@ export function getCapyState(
     if (time === "morning") {
       return { mood: "sleepy", line: pick(MORNING_NO_MEALS) };
     }
-    return { mood: "sleepy", line: "No meals yet today. Let's scan something! 📸" };
+    return { mood: "sleepy", line: name ? `Hey ${name}, no meals yet today. Let's scan something! 📸` : "No meals yet today. Let's scan something! 📸" };
   }
 
   // Over goal

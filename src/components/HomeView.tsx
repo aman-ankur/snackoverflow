@@ -14,6 +14,7 @@ interface HomeViewProps {
   todayTotals: MealTotals;
   goals: NutritionGoals;
   streak: StreakData;
+  userName?: string;
   onOpenFridge: () => void;
   onScanDish: () => void;
   onRemoveMeal: (id: string) => void;
@@ -105,14 +106,15 @@ export default function HomeView({
   todayTotals,
   goals,
   streak,
+  userName,
   onOpenFridge,
   onScanDish,
   onRemoveMeal,
 }: HomeViewProps) {
-  const greeting = getGreeting();
+  const greeting = getGreeting(userName);
   const capyState = useMemo(
-    () => getCapyState(todayTotals, goals, streak, todayMeals.length),
-    [todayTotals, goals, streak, todayMeals.length]
+    () => getCapyState(todayTotals, goals, streak, todayMeals.length, userName),
+    [todayTotals, goals, streak, todayMeals.length, userName]
   );
 
   const mealsByType = useMemo(() => {

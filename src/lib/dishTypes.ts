@@ -62,6 +62,7 @@ export type FitnessGoal =
 export type CapyMood = "happy" | "excited" | "sleepy" | "motivated" | "concerned";
 
 export interface UserProfile {
+  name?: string;
   gender: Gender;
   age: number;
   heightCm: number;

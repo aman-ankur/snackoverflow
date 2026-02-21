@@ -68,6 +68,7 @@ export default function Home() {
                 todayTotals={mealLog.todayTotals}
                 goals={userGoals.goals}
                 streak={userGoals.streak}
+                userName={userGoals.profile?.name}
                 onOpenFridge={() => setShowFridge(true)}
                 onScanDish={() => setActiveTab("scan")}
                 onRemoveMeal={mealLog.removeMeal}
