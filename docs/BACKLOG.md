@@ -9,6 +9,16 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - ~~Meal logging, daily summary, history~~
 - ~~Cross-tab intelligence (fridge ↔ dish linking)~~
 
+### ~~Typography Overhaul~~ ✅ SHIPPED
+- ~~Switched from Geist to DM Sans (weights 400–900) for bolder, punchier text~~
+- ~~Mono font: Geist Mono → JetBrains Mono~~
+- ~~Base body font-weight set to 500 (medium) — all text thicker by default~~
+- ~~Foreground darkened: #1A1A1A → #0D0D0D (near-black)~~
+- ~~Muted text darkened: #6B6560 → #4A4540 (better readability)~~
+- ~~All headings bumped to font-extrabold (800) across Home, Progress, Profile, Scan~~
+- ~~Labels/badges: font-medium → font-semibold, font-semibold → font-bold~~
+- ~~Bottom tab labels bumped to font-bold~~
+
 ### ~~Scan UX Improvements~~ ✅ SHIPPED
 - ~~Auto-scroll to results after analysis completes (no more stuck on camera)~~
 - ~~Plate Total card now lists individual dish names with calories and weight~~
