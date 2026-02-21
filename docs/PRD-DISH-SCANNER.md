@@ -1,6 +1,6 @@
 # PRD: Dish Scanner & Calorie Tracker
 
-## Status: PLANNED (not yet implemented)
+## Status: IMPLEMENTED
 
 ## Problem
 People tracking calories/macros struggle with Indian food because:
@@ -137,11 +137,49 @@ People tracking calories/macros struggle with Indian food because:
 | `src/components/MealHistory.tsx` | Past meals list + insights |
 | `src/components/BottomTabBar.tsx` | New bottom navigation |
 
+### 8. Goal Setting & Capy Mascot (NEW — feat/goal-setting-capy)
+
+**Capy** is a mood-reactive capybara mascot that motivates users daily.
+
+#### Onboarding Wizard (5 steps)
+1. **Welcome** — Capy introduces itself
+2. **About You** — Gender, Age (range slider 14-80), Height (cm/ft), Weight (kg/lbs)
+3. **Activity Level** — 5 options (Sedentary → Athlete)
+4. **Goal** — 7 India-specific options:
+   - 🎯 Lose 2-3 kg (gentle, -250 kcal)
+   - 🔥 Lose 5-7 kg (steady, -500 kcal — most popular)
+   - ⚡ Lose 7-10 kg (aggressive, -750 kcal)
+   - ✨ Tone Up & Recomp (-150 kcal + high protein)
+   - ⚖️ Maintain Weight (0 offset)
+   - 💪 Build Muscle (+300 kcal)
+   - 🏋️ Lean Bulk (+200 kcal)
+5. **Your Plan** — Computed calories/macros with editable values
+
+#### TDEE Calculator
+- Mifflin-St Jeor formula for BMR
+- Activity multiplier (1.2–1.9)
+- Goal-specific calorie offset and protein targets (1.6–2.2 g/kg)
+- Fat = 25% of target calories; carbs = remainder
+- Minimum floor: 1200 kcal
+
+#### GoalDashboard (replaces DailySummary)
+- Greeting + Capy with mood-reactive SVG (happy/excited/sleepy/motivated/concerned)
+- Speech bubble with context-aware motivational lines
+- Calorie progress bar + macro bars (protein/carbs/fat)
+- Streak counter (current + longest)
+- Edit goals button re-opens onboarding
+
+#### Persistence
+- localStorage key: `fridgenius-user-goals-v1`
+- Stores: UserProfile, NutritionGoals, StreakData
+- Streak refreshes on meal log
+
 ## Implementation Order
 
-1. Bottom tab bar (replace ModeSwitcher)
-2. Dish scanner core (API route + hook + DishMode)
-3. Nutrition card UI (NutritionCard + portion adjuster + health tags)
-4. Meal logging (useMealLog + MealLog + DailySummary)
-5. History & cross-tab intelligence (MealHistory + badges + linking)
-6. Polish & ship (animations, push, deploy)
+1. Bottom tab bar (replace ModeSwitcher) ✅
+2. Dish scanner core (API route + hook + DishMode) ✅
+3. Nutrition card UI (NutritionCard + portion adjuster + health tags) ✅
+4. Meal logging (useMealLog + MealLog + DailySummary) ✅
+5. History & cross-tab intelligence (MealHistory + badges + linking) ✅
+6. Goal setting & Capy mascot (TDEE, onboarding, dashboard) ✅
+7. Polish & ship (animations, push, deploy)

@@ -48,3 +48,40 @@ export interface LoggedMeal {
     matchedItems: string[];
   };
 }
+
+export type Gender = "male" | "female" | "other";
+export type ActivityLevel = "sedentary" | "light" | "moderate" | "very_active" | "athlete";
+export type FitnessGoal =
+  | "lose_mild"
+  | "lose_moderate"
+  | "lose_aggressive"
+  | "maintain"
+  | "tone_up"
+  | "build_muscle"
+  | "lean_bulk";
+export type CapyMood = "happy" | "excited" | "sleepy" | "motivated" | "concerned";
+
+export interface UserProfile {
+  gender: Gender;
+  age: number;
+  heightCm: number;
+  weightKg: number;
+  activityLevel: ActivityLevel;
+  goal: FitnessGoal;
+  completedAt: string;
+}
+
+export interface NutritionGoals {
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+  tdee: number;
+  isCustom: boolean;
+}
+
+export interface StreakData {
+  currentStreak: number;
+  lastLogDate: string;
+  longestStreak: number;
+}

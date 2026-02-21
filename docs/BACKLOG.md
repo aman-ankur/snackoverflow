@@ -46,10 +46,11 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - Use Open Food Facts API or similar
 - Complement the AI-based dish scanning
 
-### Goal Setting
-- Daily calorie/protein targets
-- Progress tracking against goals
-- Weekly/monthly trends
+### ~~Goal Setting~~ ✅ SHIPPED (feat/goal-setting-capy)
+- ~~Daily calorie/protein targets~~
+- ~~Progress tracking against goals~~
+- ~~Weekly/monthly trends~~
+- See implementation: TDEE calculator, Capy mascot onboarding, GoalDashboard
 
 ### Share Daily Log
 - Share day's meal log as formatted text/image

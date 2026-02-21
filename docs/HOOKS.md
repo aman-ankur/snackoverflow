@@ -188,6 +188,50 @@ Common Indian kitchen items with default days:
 
 ---
 
+## `useUserGoals()` — Goal Setting & Streak Hook (NEW)
+
+**File**: `src/lib/useUserGoals.ts`
+
+### localStorage Key
+`fridgenius-user-goals-v1`
+
+### State & Methods
+| Return | Type | Description |
+|---|---|---|
+| `profile` | UserProfile \| null | Saved user profile |
+| `goals` | NutritionGoals | Active nutrition goals (computed or custom) |
+| `streak` | StreakData | Current streak, last log date, longest streak |
+| `hasLoaded` | boolean | Whether localStorage has been read |
+| `hasProfile` | boolean | Whether a profile exists |
+| `saveProfile(p)` | function | Save profile and compute goals from TDEE |
+| `updateGoals(g)` | function | Override computed goals with custom values |
+| `refreshStreak()` | function | Update streak based on today's meal log |
+
+### Key Behaviors
+- On mount, reads profile/goals/streak from localStorage
+- If no profile, returns DEFAULT_GOALS (2000 kcal, 120g P, 250g C, 70g F)
+- `saveProfile` computes goals via `calculateGoals()` and persists both
+- `refreshStreak` checks today's date against `lastLogDate` to increment/reset streak
+
+---
+
+## Utility Modules (NEW)
+
+### `tdeeCalculator.ts`
+Pure functions for nutrition math:
+- `calculateBMR(gender, weight, height, age)` — Mifflin-St Jeor formula
+- `calculateTDEE(bmr, activityLevel)` — BMR × activity multiplier (1.2–1.9)
+- `calculateGoals(gender, weight, height, age, activity, goal)` — full pipeline → NutritionGoals
+- `DEFAULT_GOALS` — fallback when no profile exists
+
+### `capyLines.ts`
+Motivational line picker for Capy mascot:
+- `getCapyState(totals, goals, streak, mealsCount)` → `{ mood: CapyMood, line: string }`
+- Context-aware: time of day, calorie %, protein %, streak milestones
+- `getGreeting()` → "Good morning/afternoon/evening!"
+
+---
+
 ## `useYoloDetection()` — YOLO On-Device Hook
 
 **File**: `src/lib/useYoloDetection.ts`
