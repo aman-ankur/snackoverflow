@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Flame, Drumstick, Wheat, Droplets, Leaf, BadgeCheck, ChevronDown, ChevronUp, Brain } from "lucide-react";
+import { Flame, Dumbbell, Wheat, Droplets, Leaf, BadgeCheck, ChevronDown, ChevronUp, Brain } from "lucide-react";
 import type { DishNutrition } from "@/lib/dishTypes";
 
 interface NutritionCardProps {
@@ -41,7 +41,7 @@ export default function NutritionCard({ dish, servingsMultiplier }: NutritionCar
       key: "protein",
       label: "Protein",
       value: `${scaled.protein}g`,
-      icon: Drumstick,
+      icon: Dumbbell,
       iconClass: "text-accent",
     },
     {

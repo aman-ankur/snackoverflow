@@ -54,7 +54,7 @@ export default function GeminiCameraView({
   return (
     <div className="relative w-full overflow-hidden rounded-2xl bg-surface border border-border">
       {/* Camera Feed — near full-screen when streaming */}
-      <div className={`relative w-full bg-black transition-all duration-300 ${isStreaming ? "h-[65vh]" : "aspect-[4/3]"}`}>
+      <div className={`relative w-full bg-black transition-all duration-300 ${isStreaming ? "h-[50vh]" : "aspect-[4/3]"}`}>
         <video
           ref={videoRef}
           className="absolute inset-0 h-full w-full object-cover"
