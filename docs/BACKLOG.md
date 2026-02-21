@@ -49,6 +49,20 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - New files: `healthRating.ts`, `useGardenState.ts`, `capyMotivation.ts`, `CapyGarden.tsx`, `CapyView.tsx`, `api/capy-motivation/route.ts`
 - New deps: `three`, `@react-three/fiber`, `@react-three/drei`, `@types/three`
 
+### ~~Garden Visuals & Mascot Refinement~~ ✅ SHIPPED
+- ~~Reordered achievement unlocks: First Flower → Sapling → Rainbow → Forest → Baby Capy → Cozy Home → Hot Spring → Full Garden~~
+- ~~Added coniferous/varied tree shapes in forest levels~~
+- ~~Butterflies appear at Sapling stage~~
+- ~~Rainbow position fixed (fully visible, softer colors)~~
+- ~~Full Garden icon changed to 🌻 sunflower~~
+- ~~30-second auto-revert for garden stage previews (+ tab-change detection)~~
+- ~~Replaced SVG mascot with kawaii PNG images (3 mood variants: bath/orange-hat/headphones)~~
+- ~~Transparent backgrounds on all mascot PNGs~~
+- ~~Integrated Lottie animations: fat capybara (Home), cute cat (Progress), cute dog (Home fridge card)~~
+- ~~Different mascot images used contextually across pages~~
+- New deps: `lottie-react`
+- New assets: `capy-{happy,default,motivated}.png`, `capy-mascot.json`, `cute-cat.json`, `cute-dog.json`
+
 ### ~~UI Redesign — Sage & Cream Theme~~ ✅ SHIPPED
 - ~~4-tab navigation (Home / Progress / Scan FAB / Profile) + Fridge Overlay~~
 - ~~Warm flat light theme replacing dark theme (bg-card, text-muted, border-border)~~

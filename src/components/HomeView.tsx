@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Flame, Refrigerator, ChevronRight, Plus, Coffee, Sun, Moon, Sunset, ShieldCheck, CheckCircle2, AlertTriangle, Circle } from "lucide-react";
 import { getMealHealthRating, type HealthRating } from "@/lib/healthRating";
 import CapyMascot from "@/components/CapyMascot";
+import CapyLottie from "@/components/CapyLottie";
 import { getCapyState, getGreeting } from "@/lib/capyLines";
 import type { LoggedMeal, MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
 
@@ -141,7 +142,7 @@ export default function HomeView({
             transition={{ type: "spring", bounce: 0.4 }}
             className="shrink-0 animate-breathe"
           >
-            <CapyMascot mood={capyState.mood} size={64} />
+            <CapyLottie size={64} />
           </motion.div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-bold text-muted">{greeting}</p>
@@ -251,8 +252,8 @@ export default function HomeView({
         onClick={onOpenFridge}
         className="w-full rounded-2xl bg-card border border-border p-4 flex items-center gap-4 text-left transition-colors hover:bg-card-hover active:scale-[0.98]"
       >
-        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-light">
-          <Refrigerator className="h-6 w-6 text-accent" />
+        <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-accent-light shrink-0">
+          <CapyLottie src="/model/cute-dog.json" size={40} />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-extrabold text-foreground">Scan Your Fridge</p>
@@ -269,7 +270,7 @@ export default function HomeView({
           className="rounded-2xl bg-gradient-to-r from-accent-light to-orange-light border border-accent/15 p-4 flex items-center gap-3"
         >
           <div className="animate-breathe">
-            <CapyMascot mood="excited" size={48} />
+            <CapyLottie size={48} speed={1.3} />
           </div>
           <div>
             <p className="text-sm font-extrabold text-foreground">

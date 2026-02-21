@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { motion } from "framer-motion";
 import { Flame, TrendingUp, Utensils, Link2, History } from "lucide-react";
 import CapyMascot from "@/components/CapyMascot";
+import CapyLottie from "@/components/CapyLottie";
 import type { LoggedMeal, MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
 
 interface ProgressViewProps {
@@ -69,9 +70,12 @@ export default function ProgressView({
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div>
-        <h2 className="text-lg font-extrabold text-foreground">Progress</h2>
-        <p className="text-xs text-muted mt-0.5">Track your nutrition journey</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-extrabold text-foreground">Progress</h2>
+          <p className="text-xs text-muted mt-0.5">Track your nutrition journey</p>
+        </div>
+        <CapyLottie src="/model/cute-cat.json" size={48} />
       </div>
 
       {/* Total Progress Card */}
@@ -151,7 +155,7 @@ export default function ProgressView({
           className="rounded-2xl bg-gradient-to-r from-accent-light to-orange-light border border-accent/15 p-4 flex items-center gap-3 overflow-hidden relative"
         >
           <div className="animate-breathe shrink-0">
-            <CapyMascot mood="excited" size={56} />
+            <CapyMascot mood="motivated" size={56} />
           </div>
           <div>
             <p className="text-lg font-extrabold text-foreground">
