@@ -17,7 +17,18 @@ const jetBrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: "SnackOverflow — Smart Kitchen Assistant",
-  description: "Point your camera at your fridge and get instant Indian recipe suggestions",
+  description: "AI-powered kitchen assistant that identifies ingredients and suggests personalized Indian recipes with a fun capybara companion",
+  openGraph: {
+    title: "SnackOverflow — Smart Kitchen Assistant",
+    description: "AI-powered kitchen assistant that identifies ingredients and suggests personalized Indian recipes with a fun capybara companion",
+    siteName: "SnackOverflow",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "SnackOverflow — Smart Kitchen Assistant",
+    description: "AI-powered kitchen assistant that identifies ingredients and suggests personalized Indian recipes with a fun capybara companion",
+  },
 };
 
 export const viewport: Viewport = {
