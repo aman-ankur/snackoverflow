@@ -31,12 +31,20 @@ fridgenius/
 │   ├── app/
 │   │   ├── api/
 │   │   │   ├── analyze/route.ts       # Fridge image analysis (Gemini → Groq)
+│   │   │   ├── analyze-dish/route.ts  # Dish nutrition analysis (Gemini → Groq)
 │   │   │   ├── hindi-message/route.ts # Hindi text generation (Groq)
 │   │   │   └── hindi-tts/route.ts     # Hindi audio generation (Sarvam AI)
 │   │   ├── globals.css                # Tailwind theme, CSS vars, animations
 │   │   ├── layout.tsx                 # Root layout, fonts, metadata
-│   │   └── page.tsx                   # Main page — header, tab switcher, mode rendering
+│   │   └── page.tsx                   # Main page — header + bottom tab shell (Fridge/Dish)
 │   ├── components/
+│   │   ├── BottomTabBar.tsx           # Sticky bottom navigation (Fridge/Dish)
+│   │   ├── FridgeTab.tsx              # Fridge workspace container (keeps YOLO + Cloud AI switcher)
+│   │   ├── DishMode.tsx               # Dish scanner orchestrator
+│   │   ├── NutritionCard.tsx          # Per-dish calorie/macro card
+│   │   ├── DailySummary.tsx           # Today's nutrition summary
+│   │   ├── MealLog.tsx                # Logged meals list
+│   │   ├── MealHistory.tsx            # History + weekly insights
 │   │   ├── ApiKeyInput.tsx            # (Legacy) API key input field
 │   │   ├── CameraView.tsx            # Generic camera view (used by YOLO mode)
 │   │   ├── DetectedItems.tsx         # Generic detected items display (YOLO mode)
@@ -55,10 +63,13 @@ fridgenius/
 │   │   ├── YoloCameraView.tsx        # Camera view for YOLO mode
 │   │   └── YoloMode.tsx              # YOLO on-device mode orchestrator
 │   └── lib/
+│       ├── dishTypes.ts              # Shared dish scanner domain types
 │       ├── recipes.ts                # Static recipe database (YOLO mode fallback)
 │       ├── useDetection.ts           # (Legacy) Generic detection hook
+│       ├── useDishScanner.ts         # Dish camera + analysis hook
 │       ├── useExpiryTracker.ts       # Expiry tracker hook (localStorage)
 │       ├── useGeminiVision.ts        # Main Cloud AI hook (camera, analysis, state)
+│       ├── useMealLog.ts             # Dish meal logging + insights hook
 │       ├── useYoloDetection.ts       # YOLO detection hook
 │       ├── yoloInference.ts          # ONNX Runtime YOLO inference logic
 │       └── yoloLabels.ts             # COCO class labels for YOLO
@@ -72,7 +83,10 @@ fridgenius/
 ## Data Flow
 
 ```
-User opens app → page.tsx renders header + ModeSwitcher + active mode
+User opens app → page.tsx renders header + BottomTabBar + active tab
+
+Fridge Tab (FridgeTab.tsx):
+  ModeSwitcher (YOLO or Cloud AI) → existing fridge flows
 
 Cloud AI Mode (GeminiMode.tsx):
   Camera → captureFrame() → /api/analyze → Gemini/Groq → JSON response
@@ -90,6 +104,13 @@ Send to Cook flow:
 YOLO Mode (YoloMode.tsx):
   Camera → ONNX Runtime (YOLOv8n WASM) → bounding boxes on canvas
   → items matched to static recipe database (recipes.ts)
+
+Dish Tab (DishMode.tsx):
+  Camera → captureFrame() → /api/analyze-dish → Gemini/Groq → nutrition JSON
+  → per-dish NutritionCard + portion scaling
+  → Log This Meal (useMealLog)
+  → DailySummary + MealLog + MealHistory insights
+  → optional Fridge↔Dish linkage from recent fridge scan snapshots
 ```
 
 ## Two Detection Modes

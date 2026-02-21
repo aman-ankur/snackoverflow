@@ -32,19 +32,19 @@ export default function MealPlanner({
   detectedItemNames,
 }: MealPlannerProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [plan, setPlan] = useState<MealPlan>({});
-  const [addingTo, setAddingTo] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
-
-  // Load from localStorage
-  useEffect(() => {
+  const [plan, setPlan] = useState<MealPlan>(() => {
+    if (typeof window === "undefined") return {};
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) setPlan(JSON.parse(stored));
+      if (!stored) return {};
+      const parsed = JSON.parse(stored);
+      return parsed && typeof parsed === "object" ? (parsed as MealPlan) : {};
     } catch {
-      // ignore
+      return {};
     }
-  }, []);
+  });
+  const [addingTo, setAddingTo] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
 
   // Save to localStorage
   useEffect(() => {

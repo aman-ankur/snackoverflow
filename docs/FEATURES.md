@@ -1,6 +1,12 @@
 # Current Features
 
-## 1. Fridge Scanner (Cloud AI Mode)
+## 1. Bottom Navigation (Fridge / Dish)
+- Sticky bottom tab bar with two primary workspaces:
+  - 🧊 **Fridge** (existing flow, includes YOLO + Cloud AI switcher)
+  - 🍽️ **Dish** (new calorie/macro scanner)
+- Animated tab transitions via framer-motion
+
+## 2. Fridge Scanner (Cloud AI Mode)
 - Point camera at fridge → AI identifies all food items
 - Each item shows: English name, Hindi name, quantity, confidence level (high/medium/low)
 - Items accumulate across multiple scans (deduplication by name, keeps highest confidence)
@@ -9,20 +15,35 @@
 - Auto-scan mode: analyzes every 4 seconds automatically
 - Flip camera button (front/rear)
 
-## 2. AI Recipe Suggestions
+## 3. AI Recipe Suggestions
 - Exactly **5 Indian lunch/dinner recipes** per scan
 - Recipes use detected ingredients, suggest common pantry staples as "also needed"
 - Each recipe card shows: name (English + Hindi), cook time, difficulty, diet badge, description
 - Expandable steps section
 - Tags: vegetarian, north-indian, south-indian, etc.
 
-## 3. Dietary Filters
+## 4. Dish Scanner & Nutrition Tracking (new)
+- Manual scan only (no auto-scan) for low API cost
+- Reuses camera UI with dish-specific labels
+- Supports single dish or multi-dish plate/thali response
+- Per-dish nutrition card: calories, protein, carbs, fat, fiber
+- Portion adjuster: `0.5x`, `1x`, `1.5x`, `2x` (client-side scaling)
+- Health tags: high-protein, high-carb, high-fat, low/high-calorie, fiber-rich
+- "Log This Meal" flow with meal type picker (Breakfast/Lunch/Snack/Dinner)
+- Daily summary cards with progress rings for calories/protein/carbs/fat
+- Meal history with:
+  - "You had this X days ago" badge
+  - Weekly calorie summary
+  - Repeated dish pattern insights
+  - Fridge↔Dish linkage badge when ingredients match recent fridge scan
+
+## 5. Dietary Filters
 - Filter pills at top: All, Veg, Vegan, Egg, Jain
 - Selected pill has solid green accent background
 - Filter is passed to AI prompt — recipes respect the constraint
 - Jain = no onion, garlic, root vegetables
 
-## 4. Send to Cook (ShareRecipe)
+## 6. Send to Cook (ShareRecipe)
 - "Send to Cook" button on each recipe card
 - Dropdown with serving size picker (1-4 people)
 - **Hindi section** (top):
@@ -36,20 +57,20 @@
 - Hindi messages are casual: "भैया, आज 2 लोगों के लिए पनीर मटर बना दीजिए। सब सामान फ्रिज में है।"
 - Serving count changes regenerate the Hindi text (cache invalidated)
 
-## 5. Freshness / Expiry Tracker
+## 7. Freshness / Expiry Tracker
 - Auto-adds detected items with estimated shelf life (e.g., milk=3d, paneer=5d, onion=14d)
 - Color-coded: 🟢 Fresh, 🟡 Expiring (≤2 days), 🔴 Expired
 - Tap date to manually edit expiry
 - Persisted in localStorage (`fridgenius-expiry-tracker`)
 - Collapsible section, shows warning count badge
 
-## 6. Shopping List
+## 8. Shopping List
 - Auto-generated from recipe `ingredients_needed` minus detected items
 - Shows which recipe each item is needed for
 - Copy to clipboard button
 - Collapsible section
 
-## 7. Meal Planner
+## 9. Meal Planner
 - Weekly grid (Mon-Sun)
 - Add recipes from suggestions to specific days
 - Remove meals, clear day
@@ -57,7 +78,7 @@
 - Persisted in localStorage (`fridgenius-meal-plan`)
 - Collapsible section
 
-## 8. YOLO On-Device Mode
+## 10. YOLO On-Device Mode
 - YOLOv8n running via ONNX Runtime Web (WASM)
 - Real-time bounding boxes on camera feed (5-15 FPS)
 - 80 COCO object classes (limited for food)
@@ -65,8 +86,14 @@
 - Fully offline — no API calls
 - Experimental/demo mode — Cloud AI is the primary mode
 
-## 9. Multi-Provider AI Fallback
+## 11. Multi-Provider AI Fallback
 - Fridge analysis: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout
+- Dish analysis: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout
 - If all rate-limited, shows friendly "wait 30s" message and stops auto-scan
 - Hindi text: Groq only (free, fast)
 - Hindi TTS: Sarvam AI only (native Hindi voice)
+
+## 12. Cost Controls
+- Image downscaling to max width 512px and JPEG compression before AI requests
+- Dish scan endpoint includes short-lived in-memory cache for repeated near-identical scans
+- Manual-scan-only dish mode avoids uncontrolled background token usage

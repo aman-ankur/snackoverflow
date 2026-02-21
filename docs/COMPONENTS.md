@@ -6,6 +6,53 @@ All components are in `src/components/`. All are `"use client"` components.
 
 ## Core — Cloud AI Mode
 
+### `BottomTabBar.tsx`
+**Sticky bottom navigation for app-level mode switching.**
+- Props: `activeTab: "fridge" | "dish"`, `onTabChange`
+- Tabs: Fridge and Dish
+- Animated active pill (`layoutId="bottom-tab-bg"`)
+
+### `FridgeTab.tsx`
+**Fridge workspace container under the Fridge tab.**
+- Keeps existing YOLO/Cloud AI switcher behavior via `ModeSwitcher`
+- Lazy-loads `YoloMode` so ONNX model doesn’t load when not needed
+- Renders mode-specific footer text
+
+### `DishMode.tsx`
+**Main Dish scanner orchestrator (manual scan).**
+- Uses `useDishScanner()` for camera + API analysis flow
+- Uses `useMealLog()` for local meal logging + daily/weekly insights
+- Renders sequence:
+  - camera (manual analyze only),
+  - meal type context picker,
+  - portion adjuster,
+  - per-dish nutrition cards,
+  - log-this-meal action,
+  - daily summary, meal log, and history insights
+- Adds “You had this X days ago” badges for previously logged dishes
+
+### `NutritionCard.tsx`
+**Per-dish nutrition presentation card.**
+- Props: `dish`, `servingsMultiplier`
+- Displays calories, protein, carbs, fat, fiber with icons
+- Shows portion, confidence, ingredients, and health tip
+
+### `DailySummary.tsx`
+**Today-level nutrition summary for logged dish meals.**
+- Props: `totals`, `mealsCount`
+- Shows calories/protein/carbs/fat with compact ring progress visuals
+
+### `MealLog.tsx`
+**Collapsible list of today’s logged meals.**
+- Props: `meals`, `onRemoveMeal`, `onClearAll`
+- Displays meal type, timestamp, dishes, and macro totals per entry
+
+### `MealHistory.tsx`
+**Historical nutrition log with weekly insights.**
+- Props: `meals`, `weeklyByDate`, `repeatedDishes`
+- Shows grouped history by date, repeated-dish patterns, and weekly calorie chips
+- Displays Fridge↔Dish linkage badge when a logged dish matches recent fridge scan ingredients
+
 ### `GeminiMode.tsx`
 **The main orchestrator for Cloud AI mode.** Wires together camera, detected items, recipes, filters, expiry tracker, shopping list, and meal planner.
 - Uses `useGeminiVision()` hook for camera + analysis state
@@ -16,6 +63,7 @@ All components are in `src/components/`. All are `"use client"` components.
 ### `GeminiCameraView.tsx`
 **Camera feed with controls for Cloud AI mode.**
 - Props: `videoRef`, `canvasRef`, `isStreaming`, `isAnalyzing`, `autoScan`, `error`, `onStart`, `onStop`, `onFlip`, `onAnalyze`, `onToggleAutoScan`, `hasApiKey`
+- Optional props now support UI reuse in Dish mode: `showAutoScan`, custom labels/title/subtitle
 - Camera height: `h-[65vh]` when streaming, `aspect-[4/3]` when idle
 - Overlay: corner brackets, analyzing pulse animation, status badge (Analyzing/Auto-scanning/Ready)
 - Controls: Start Camera, Flip, Analyze, Auto-scan toggle, Stop

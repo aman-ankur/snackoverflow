@@ -49,6 +49,54 @@ All routes are Next.js App Router API routes in `src/app/api/`.
 
 ---
 
+## POST `/api/analyze-dish`
+
+**Purpose**: Analyze a plated meal (single dish or thali) and return nutrition estimates.
+
+**File**: `src/app/api/analyze-dish/route.ts`
+
+**Input**:
+```json
+{
+  "image": "data:image/jpeg;base64,...",
+  "mealType": "lunch"
+}
+```
+
+**Output**:
+```json
+{
+  "dishes": [
+    {
+      "name": "Paneer Butter Masala",
+      "hindi": "पनीर बटर मसाला",
+      "portion": "1 katori (~200g)",
+      "calories": 380,
+      "protein_g": 18,
+      "carbs_g": 12,
+      "fat_g": 28,
+      "fiber_g": 2,
+      "ingredients": ["Paneer", "Butter", "Cream", "Tomato", "Cashew"],
+      "confidence": "medium",
+      "tags": ["high-fat", "high-protein"],
+      "healthTip": "High in fat due to butter/cream. Pair with roti instead of naan."
+    }
+  ],
+  "totalCalories": 380,
+  "totalProtein": 18,
+  "totalCarbs": 12,
+  "totalFat": 28,
+  "totalFiber": 2
+}
+```
+
+**Provider chain**: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout  
+**Safety/normalization**: Strict JSON parsing + numeric normalization + confidence/tag fallback defaults  
+**Cost control**: 2-minute in-memory response cache for repeated near-identical dish scans  
+**Rate limit handling**: Returns 429 with friendly message when providers are exhausted
+
+---
+
 ## POST `/api/hindi-message`
 
 **Purpose**: Generate a short, casual Hindi message for a cook.

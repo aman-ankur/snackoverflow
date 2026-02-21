@@ -69,19 +69,18 @@ function getDaysLeft(expiresAt?: string): number | null {
 export function useExpiryTracker() {
   const [items, setItems] = useState<TrackedItem[]>([]);
 
-  // Load from localStorage on mount
+  // Load from localStorage only after mount to keep server/client markup stable.
   useEffect(() => {
     try {
       const stored = localStorage.getItem(STORAGE_KEY);
-      if (stored) {
-        const parsed: TrackedItem[] = JSON.parse(stored);
-        // Recalculate categories
-        const updated = parsed.map((item) => ({
-          ...item,
-          category: getCategory(item.expiresAt) as TrackedItem["category"],
-        }));
-        setItems(updated);
-      }
+      if (!stored) return;
+      const parsed: TrackedItem[] = JSON.parse(stored);
+      const updated = parsed.map((item) => ({
+        ...item,
+        category: getCategory(item.expiresAt) as TrackedItem["category"],
+      }));
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setItems(updated);
     } catch {
       // Ignore parse errors
     }

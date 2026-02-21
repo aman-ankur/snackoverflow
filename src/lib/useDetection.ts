@@ -37,7 +37,7 @@ export function useDetection() {
           modelRef.current = model;
           setIsLoading(false);
         }
-      } catch (err) {
+      } catch {
         if (!cancelled) {
           setError("Failed to load AI model. Please refresh.");
           setIsLoading(false);
@@ -48,16 +48,18 @@ export function useDetection() {
     return () => { cancelled = true; };
   }, []);
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (mode?: "user" | "environment") => {
     try {
       // Stop existing stream
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((t) => t.stop());
       }
 
+      const nextMode = mode ?? facingMode;
+
       const stream = await navigator.mediaDevices.getUserMedia({
         video: {
-          facingMode,
+          facingMode: nextMode,
           width: { ideal: 640 },
           height: { ideal: 480 },
         },
@@ -72,7 +74,7 @@ export function useDetection() {
         setIsStreaming(true);
         setError(null);
       }
-    } catch (err) {
+    } catch {
       setError("Camera access denied. Please allow camera permissions.");
     }
   }, [facingMode]);
@@ -91,15 +93,12 @@ export function useDetection() {
   }, []);
 
   const flipCamera = useCallback(() => {
-    setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
-  }, []);
-
-  // Restart camera when facing mode changes
-  useEffect(() => {
+    const nextMode = facingMode === "user" ? "environment" : "user";
+    setFacingMode(nextMode);
     if (isStreaming) {
-      startCamera();
+      void startCamera(nextMode);
     }
-  }, [facingMode]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [facingMode, isStreaming, startCamera]);
 
   // Detection loop
   useEffect(() => {

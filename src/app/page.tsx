@@ -1,23 +1,14 @@
 "use client";
 
 import { useState } from "react";
-import dynamic from "next/dynamic";
-import GeminiMode from "@/components/GeminiMode";
-import ModeSwitcher, { DetectionMode } from "@/components/ModeSwitcher";
+import { AnimatePresence, motion } from "framer-motion";
 import { Scan } from "lucide-react";
-
-// Lazy-load YOLO mode — prevents loading 12MB ONNX model + WASM when in Gemini mode
-const YoloMode = dynamic(() => import("@/components/YoloMode"), {
-  ssr: false,
-  loading: () => (
-    <div className="flex items-center justify-center py-20 text-sm text-foreground/40">
-      Loading YOLO engine...
-    </div>
-  ),
-});
+import BottomTabBar, { AppTab } from "@/components/BottomTabBar";
+import FridgeTab from "@/components/FridgeTab";
+import DishMode from "@/components/DishMode";
 
 export default function Home() {
-  const [mode, setMode] = useState<DetectionMode>("gemini");
+  const [activeTab, setActiveTab] = useState<AppTab>("fridge");
 
   return (
     <div className="min-h-screen bg-background">
@@ -38,8 +29,14 @@ export default function Home() {
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="rounded-full bg-accent/10 border border-accent/20 px-2.5 py-1 text-[10px] font-medium text-accent">
-              {mode === "yolo" ? "On-Device" : "Cloud AI"}
+            <span
+              className={`rounded-full px-2.5 py-1 text-[10px] font-medium border ${
+                activeTab === "dish"
+                  ? "bg-orange/10 border-orange/20 text-orange"
+                  : "bg-accent/10 border-accent/20 text-accent"
+              }`}
+            >
+              {activeTab === "dish" ? "Dish Scanner" : "Fridge Scanner"}
             </span>
           </div>
         </div>
@@ -47,22 +44,34 @@ export default function Home() {
 
       {/* Main Content */}
       <main className="mx-auto max-w-lg px-4 py-4 pb-20 space-y-4">
-        {/* Mode Switcher */}
-        <ModeSwitcher mode={mode} onModeChange={setMode} />
-
-        {/* Render only the active mode */}
-        {mode === "gemini" && <GeminiMode />}
-        {mode === "yolo" && <YoloMode />}
-
-        {/* Footer */}
-        <div className="text-center pt-4 pb-2">
-          <p className="text-[10px] text-foreground/20">
-            {mode === "yolo"
-              ? "YOLOv8n via ONNX Runtime • Runs entirely on your device"
-              : "Powered by Fridgenius AI • Your images are not stored"}
-          </p>
-        </div>
+        <AnimatePresence mode="wait">
+          {activeTab === "fridge" ? (
+            <motion.div
+              key="tab-fridge"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4"
+            >
+              <FridgeTab />
+            </motion.div>
+          ) : (
+            <motion.div
+              key="tab-dish"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-4"
+            >
+              <DishMode />
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
+
+      <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
     </div>
   );
 }

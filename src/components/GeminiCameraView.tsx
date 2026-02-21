@@ -25,6 +25,11 @@ interface GeminiCameraViewProps {
   onAnalyze: () => void;
   onToggleAutoScan: () => void;
   hasApiKey: boolean;
+  showAutoScan?: boolean;
+  analyzeButtonLabel?: string;
+  readyLabel?: string;
+  placeholderTitle?: string;
+  placeholderSubtitle?: string;
 }
 
 export default function GeminiCameraView({
@@ -40,6 +45,11 @@ export default function GeminiCameraView({
   onAnalyze,
   onToggleAutoScan,
   hasApiKey,
+  showAutoScan = true,
+  analyzeButtonLabel = "Analyze",
+  readyLabel = "Ready — tap Analyze",
+  placeholderTitle = "Point your camera at your fridge",
+  placeholderSubtitle = "AI will identify items and suggest recipes",
 }: GeminiCameraViewProps) {
   return (
     <div className="relative w-full overflow-hidden rounded-2xl bg-surface border border-border">
@@ -101,7 +111,7 @@ export default function GeminiCameraView({
                     Analyzing...
                   </span>
                 </>
-              ) : autoScan ? (
+              ) : showAutoScan && autoScan ? (
                 <>
                   <span className="relative flex h-2 w-2">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-accent opacity-75" />
@@ -117,7 +127,7 @@ export default function GeminiCameraView({
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-white/50" />
                   </span>
                   <span className="text-xs font-medium text-white/70">
-                    Ready — tap Analyze
+                    {readyLabel}
                   </span>
                 </>
               )}
@@ -133,10 +143,10 @@ export default function GeminiCameraView({
             </div>
             <div className="text-center px-6">
               <p className="text-sm font-medium text-foreground/80">
-                Point your camera at your fridge
+                {placeholderTitle}
               </p>
               <p className="text-xs text-foreground/40 mt-1">
-                AI will identify items and suggest recipes
+                {placeholderSubtitle}
               </p>
             </div>
           </div>
@@ -181,25 +191,27 @@ export default function GeminiCameraView({
               ) : (
                 <ScanSearch className="h-4 w-4" />
               )}
-              {isAnalyzing ? "Analyzing..." : "Analyze"}
+              {isAnalyzing ? "Analyzing..." : analyzeButtonLabel}
             </button>
 
-            <button
-              onClick={onToggleAutoScan}
-              disabled={!hasApiKey}
-              className={`flex items-center justify-center rounded-full border p-2.5 transition-all active:scale-95 ${
-                autoScan
-                  ? "bg-accent/20 border-accent/30 text-accent"
-                  : "bg-surface-hover border-border text-foreground/70 hover:bg-border"
-              }`}
-              title={autoScan ? "Stop auto-scan" : "Auto-scan every 4s"}
-            >
-              {autoScan ? (
-                <ZapOff className="h-4 w-4" />
-              ) : (
-                <Zap className="h-4 w-4" />
-              )}
-            </button>
+            {showAutoScan && (
+              <button
+                onClick={onToggleAutoScan}
+                disabled={!hasApiKey}
+                className={`flex items-center justify-center rounded-full border p-2.5 transition-all active:scale-95 ${
+                  autoScan
+                    ? "bg-accent/20 border-accent/30 text-accent"
+                    : "bg-surface-hover border-border text-foreground/70 hover:bg-border"
+                }`}
+                title={autoScan ? "Stop auto-scan" : "Auto-scan every 4s"}
+              >
+                {autoScan ? (
+                  <ZapOff className="h-4 w-4" />
+                ) : (
+                  <Zap className="h-4 w-4" />
+                )}
+              </button>
+            )}
 
             <button
               onClick={onStop}
