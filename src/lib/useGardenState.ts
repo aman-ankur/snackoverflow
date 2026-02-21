@@ -18,6 +18,9 @@ export interface GardenState {
   daysGoalHit: number;
   lastComputedDate: string;
   journal: GardenEvent[];
+  // New homestead elements
+  babyCapybaras: number;
+  homeLevel: number;
 }
 
 export interface GardenEvent {
@@ -39,6 +42,8 @@ const DEFAULT_STATE: GardenState = {
   daysGoalHit: 0,
   lastComputedDate: "",
   journal: [],
+  babyCapybaras: 0,
+  homeLevel: 0,
 };
 
 function loadGarden(): GardenState {
@@ -146,16 +151,30 @@ export function computeGarden(
     }
   }
 
-  // Pond: based on streak (7+ days)
-  let pondLevel = 0;
-  if (streak.currentStreak >= 21) pondLevel = 3;
-  else if (streak.currentStreak >= 14) pondLevel = 2;
-  else if (streak.currentStreak >= 7) pondLevel = 1;
+  // Baby capybaras: based on streak (5+ days, max 3)
+  let babyCapybaras = 0;
+  if (streak.currentStreak >= 15) babyCapybaras = 3;
+  else if (streak.currentStreak >= 10) babyCapybaras = 2;
+  else if (streak.currentStreak >= 5) babyCapybaras = 1;
 
-  if (pondLevel > prev.pondLevel) {
-    const pondNames = ["", "A pond appeared in your garden!", "The pond is filling up!", "Fish are swimming in your pond!"];
-    journal = addEvent(journal, pondNames[pondLevel] || "Pond grew!", "🌊");
+  if (babyCapybaras > prev.babyCapybaras) {
+    const babyNames = ["", "A baby capybara joined the family!", "Another baby capybara appeared!", "The capybara family is complete!"];
+    journal = addEvent(journal, babyNames[babyCapybaras] || "New baby!", "🐾");
   }
+
+  // Cozy home: based on total meals logged
+  let homeLevel = 0;
+  if (totalMeals >= 30) homeLevel = 3;
+  else if (totalMeals >= 15) homeLevel = 2;
+  else if (totalMeals >= 5) homeLevel = 1;
+
+  if (homeLevel > prev.homeLevel) {
+    const homeNames = ["", "A small shelter appeared in the garden!", "The cabin is growing cozier!", "A beautiful home with a chimney!"];
+    journal = addEvent(journal, homeNames[homeLevel] || "Home upgraded!", "�");
+  }
+
+  // Keep pondLevel for backward compat (mapped from homeLevel)
+  const pondLevel = homeLevel;
 
   // Butterflies: based on streak (3+ days, max 5)
   const butterflies = Math.min(Math.max(0, Math.floor((streak.currentStreak - 1) / 2)), 5);
@@ -172,7 +191,7 @@ export function computeGarden(
   // Crown: 30+ day streak
   const hasCrown = streak.currentStreak >= 30;
   if (hasCrown && !prev.hasCrown) {
-    journal = addEvent(journal, "Capy earned a golden crown!", "👑");
+    journal = addEvent(journal, "A hot spring appeared in the garden!", "♨️");
   }
 
   // Garden health: composite score 0-100
@@ -183,7 +202,8 @@ export function computeGarden(
   if (newFlowers >= 5) health += 5;
   if (newFlowers >= 15) health += 5;
   if (treeLevel >= 2) health += 5;
-  if (pondLevel >= 1) health += 5;
+  if (homeLevel >= 1) health += 3;
+  if (babyCapybaras >= 1) health += 2;
 
   // Wilting: missed days reduce health
   if (streak.currentStreak === 0 && prev.gardenHealth > 0) {
@@ -207,6 +227,8 @@ export function computeGarden(
     daysGoalHit,
     lastComputedDate: today,
     journal,
+    babyCapybaras,
+    homeLevel,
   };
 
   return state;
@@ -222,15 +244,15 @@ export interface NextUnlock {
 export function getNextUnlock(state: GardenState, streak: StreakData): NextUnlock | null {
   if (!state.hasCrown && streak.currentStreak < 30) {
     if (!state.hasRainbow && streak.currentStreak < 14) {
-      if (state.pondLevel < 1 && streak.currentStreak < 7) {
+      if (state.babyCapybaras < 1 && streak.currentStreak < 5) {
         if (state.butterflies < 1 && streak.currentStreak < 3) {
           return { label: "First Butterfly", icon: "🦋", current: streak.currentStreak, target: 3 };
         }
-        return { label: "Pond Appears", icon: "🌊", current: streak.currentStreak, target: 7 };
+        return { label: "Baby Capybara", icon: "🐾", current: streak.currentStreak, target: 5 };
       }
       return { label: "Rainbow Arc", icon: "🌈", current: streak.currentStreak, target: 14 };
     }
-    return { label: "Golden Crown", icon: "👑", current: streak.currentStreak, target: 30 };
+    return { label: "Hot Spring", icon: "♨️", current: streak.currentStreak, target: 30 };
   }
   if (state.flowers < 30) {
     return { label: "Full Garden (30 flowers)", icon: "🌸", current: state.flowers, target: 30 };
