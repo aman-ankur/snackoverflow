@@ -30,6 +30,8 @@ export interface AnalysisResult {
   tip: string;
 }
 
+const FRIDGE_SCAN_HISTORY_KEY = "fridgenius-fridge-scan-history";
+
 export function useGeminiVision() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -163,6 +165,23 @@ export function useGeminiVision() {
 
       const result = data as AnalysisResult;
       setAnalysis(result);
+
+      // Persist lightweight fridge scan snapshots for Dish-mode linkage.
+      try {
+        const existingRaw = localStorage.getItem(FRIDGE_SCAN_HISTORY_KEY);
+        const existing = existingRaw ? JSON.parse(existingRaw) : [];
+        const snapshots = Array.isArray(existing) ? existing : [];
+        snapshots.push({
+          scannedAt: new Date().toISOString(),
+          itemNames: result.items.map((item) => item.name),
+        });
+        localStorage.setItem(
+          FRIDGE_SCAN_HISTORY_KEY,
+          JSON.stringify(snapshots.slice(-30))
+        );
+      } catch {
+        // Ignore localStorage failures.
+      }
 
       // Accumulate items across scans (deduplicate by name, keep highest confidence)
       setAllItems((prev) => {

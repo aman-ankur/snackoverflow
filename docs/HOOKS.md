@@ -77,6 +77,7 @@ interface AnalysisResult {
 - Items accumulate across scans — deduplication by lowercase name, keeps highest confidence
 - On 429 rate limit, auto-scan is stopped automatically
 - Camera restarts when facingMode changes (if already streaming)
+- Stores recent fridge scan snapshots in localStorage (`fridgenius-fridge-scan-history`) for Dish-mode linkage
 
 ---
 
@@ -124,6 +125,66 @@ Common Indian kitchen items with default days:
 - `expiring`: daysLeft ≤ 2
 - `fresh`: daysLeft > 2
 - `unknown`: no expiresAt set
+
+---
+
+## `useDishScanner()` — Dish Nutrition Scanner Hook
+
+**File**: `src/lib/useDishScanner.ts`
+
+### Purpose
+- Camera lifecycle for Dish mode (manual scan only)
+- Captures frame and calls `POST /api/analyze-dish`
+- Normalizes API output to typed `DishAnalysisResult`
+
+### State & Methods
+| Return | Type | Description |
+|---|---|---|
+| `isStreaming` | boolean | Camera active state |
+| `isAnalyzing` | boolean | In-flight dish analysis request |
+| `error` | string \| null | Current scanner error |
+| `analysis` | DishAnalysisResult \| null | Latest dish analysis result |
+| `mealType` | MealType | Meal context sent to API |
+| `setMealType` | function | Update meal context |
+| `scanCount` | number | Successful manual scans count |
+| `lastAnalyzedAt` | Date \| null | Last successful analysis time |
+| `startCamera()` | function | Start camera |
+| `stopCamera()` | function | Stop camera |
+| `flipCamera()` | function | Toggle front/rear camera |
+| `analyzeFrame()` | function | Capture frame and call `/api/analyze-dish` |
+| `clearAnalysis()` | function | Reset analysis state |
+
+### Key Behaviors
+- Frame capture downscales to max 512px wide with JPEG 0.6 compression
+- Manual-scan-only pattern (no auto-scan interval)
+- Defensive normalization for malformed AI responses
+
+---
+
+## `useMealLog()` — Dish Meal Logging + Insights Hook
+
+**File**: `src/lib/useMealLog.ts`
+
+### localStorage Keys
+- `fridgenius-meal-log-v1`
+- Reads optional fridge snapshot linkage from `fridgenius-fridge-scan-history`
+
+### State & Methods
+| Return | Type | Description |
+|---|---|---|
+| `meals` | LoggedMeal[] | All logged meals (latest first) |
+| `todayMeals` | LoggedMeal[] | Meals logged today |
+| `todayTotals` | MealTotals | Aggregated macros for today |
+| `weeklyByDate` | array | Last 7-day calorie/macro summary by date |
+| `insights` | object | Weekly calories + repeated dish patterns |
+| `logMeal(input)` | function | Add a meal log entry |
+| `removeMeal(id)` | function | Remove single meal |
+| `clearAllMeals()` | function | Clear full meal log |
+
+### Key Behaviors
+- Adds optional fridge→dish linkage metadata when dish ingredients match recent fridge scan items
+- Parses/normalizes persisted data defensively
+- Computes repeated dish insights for Meal History UI
 
 ---
 
