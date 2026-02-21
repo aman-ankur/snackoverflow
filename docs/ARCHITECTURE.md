@@ -44,7 +44,8 @@ snackoverflow/
 │   ├── components/
 │   │   ├── BottomTabBar.tsx           # 5-tab bottom nav (Home/Progress/Scan FAB/Capy/Profile)
 │   │   ├── CapyGarden.tsx             # Three.js 3D garden scene (lazy-loaded)
-│   │   ├── CapyView.tsx               # Capy's Garden tab (garden stats, 3D canvas, motivation)
+│   │   ├── CalendarProgressView.tsx   # Calendar with Apple Fitness rings (weekly/monthly)
+│   │   ├── CapyView.tsx               # Capy's Garden tab (garden stats, 3D canvas, milestones)
 │   │   ├── HomeView.tsx               # Home dashboard (Capy, intake ring, meal slots, health badges)
 │   │   ├── ScanView.tsx               # Dish scanner view (camera, meal context, portion adjuster)
 │   │   ├── ProgressView.tsx           # Progress tracking (macros, weekly, history)
@@ -83,7 +84,7 @@ snackoverflow/
 │       ├── capyLines.ts              # Motivational line picker + mood logic
 │       ├── capyMotivation.ts         # 60+ contextual motivation lines + LLM fallback
 │       ├── healthRating.ts           # Evidence-based meal health classification
-│       ├── useGardenState.ts         # Garden state hook (flowers, trees, pond, streak-based)
+│       ├── useGardenState.ts         # Garden state hook (2-track: streak + calorie goal days)
 │       ├── useUserGoals.ts           # Goal setting + streak hook (localStorage)
 │       ├── recipes.ts                # Static recipe database (YOLO mode fallback)
 │       ├── useDetection.ts           # (Legacy) Generic detection hook
@@ -142,7 +143,10 @@ Scan Tab (ScanView.tsx — center FAB):
   → Capy mood + motivational lines based on progress vs goals
 
 Progress Tab (ProgressView.tsx):
-  Total progress bar (% of calorie goal)
+  CalendarProgressView (top) — weekly row with Apple Fitness rings (expandable to month)
+  → Rings per day: calories (green), protein (orange), carbs (blue)
+  → Tap day → bottom sheet with full macro breakdown
+  → Total progress bar (% of calorie goal)
   → Nutrition + Average stat cards
   → Today's Macros (protein/carbs/fat bars)
   → Weekly Calories chart
@@ -150,29 +154,30 @@ Progress Tab (ProgressView.tsx):
 
 Capy Tab (CapyView.tsx — lazy-loaded with next/dynamic, ssr: false):
   Garden stats bar (flowers, tree level, butterflies, streak)
+  → Your Journey roadmap (8-milestone horizontal strip with check marks + "Next" hint)
+  → Expandable "How does this work?" (explains streak + calorie goal tracks)
   → Three.js Canvas (CapyGarden.tsx — 55vh, frameloop pauses when inactive)
      → 3D capybara (GLB model) with full behavior FSM (capyBehaviors.ts):
        States: idle, wander, eat, splash, chase_butterfly, tapped, dance
        Tap reactions (random per tap): squash, wiggle, nuzzle, look-at-camera
        Dance on double-tap, waddle animation during movement
-       Eat animation raises Y to prevent ground clipping
      → PlantInPot balanced on capybara's head (terracotta pot + growing plant)
-     → BabyCapy: up to 3 babies (streak-based), same FSM, follow main capy
+     → BabyCapy: up to 3 babies (7+ calorie goal days), same FSM, follow main capy
      → Ground island (plain green surface, color lerps with garden health)
-     → Flowers (spiral pattern, count = days goal hit, max 30)
-     → Trees (multiple types, level 0-4 based on protein goals)
-     → HotSpring (streak ≥30), CozyHome (total meals), Butterflies (streak)
-     → Rainbow (14+ day streak)
+     → Flowers (spiral pattern, count = calorie goal days hit, max 30)
+     → Trees (level 0→1 at 3d streak, →2 at 14d, →3 at 30d)
+     → HotSpring (streak ≥30), CozyHome (15+ goal days), Butterflies (streak ≥5)
+     → Rainbow (14+ day streak, visual bonus with Forest milestone)
      → Sparkles, FallingLeaves, DynamicSkyDome (time-of-day lighting)
      → Particle effects: hearts (tap), sparkles (dance), nibble (eat), splash
-  → Motivation speech bubble overlay (tap Capy or "Talk to Capy")
-  → "Talk to Capy" button → getContextualMotivation()
-  → Next Unlock card (clear text: "Log meals X more days in a row" + progress/target)
-  → Achievements grid (8 milestones, greyed when locked)
+  → Garden Health + Talk to Capy (side-by-side cards)
+  → Preview Garden Stages (8 demo presets that swap 3D scene)
+  → Next Unlock card ("Log meals X more days in a row" or "Hit calorie goal X more days")
   → Garden Journal (last 5 events with timestamps)
-  → Garden Health bar (0-100%, color-coded)
-  → How It Works (collapsible): milestone explanations + FAQ
-  State: useGardenState() computes from meals + streak + goals → localStorage
+  State: useGardenState() — 2 inputs: streak.currentStreak + daysGoalHit → localStorage
+  8 milestones, 2 tracks:
+    Streak (disappear on break): 🌱 Sapling (3d), 🦋 Butterfly (5d), 🌲 Forest (14d), ♨️ Hot Spring (30d)
+    Goal (permanent): 🌸 Flower (3 goals), 🐾 Baby Capy (7), 🏡 Home (15), 🌻 Full Garden (30)
   Motivation: 60+ pre-built lines (capyMotivation.ts) → LLM fallback (/api/capy-motivation)
 
 Profile Tab (ProfileView.tsx):
