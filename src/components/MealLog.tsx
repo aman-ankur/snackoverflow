@@ -15,7 +15,7 @@ export default function MealLog({ meals, onRemoveMeal, onClearAll }: MealLogProp
   const [isOpen, setIsOpen] = useState(false);
 
   return (
-    <div className="rounded-2xl border border-border bg-surface overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
         className="flex w-full items-center justify-between px-4 py-3 text-left"
@@ -30,9 +30,9 @@ export default function MealLog({ meals, onRemoveMeal, onClearAll }: MealLogProp
           )}
         </div>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-foreground/40" />
+          <ChevronUp className="h-4 w-4 text-muted" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-foreground/40" />
+          <ChevronDown className="h-4 w-4 text-muted" />
         )}
       </button>
 
@@ -46,13 +46,13 @@ export default function MealLog({ meals, onRemoveMeal, onClearAll }: MealLogProp
           >
             <div className="p-3 space-y-2">
               {meals.length === 0 ? (
-                <p className="text-xs text-foreground/35 py-2 text-center">No meals logged today.</p>
+                <p className="text-xs text-muted py-2 text-center">No meals logged today.</p>
               ) : (
                 <>
                   <div className="flex justify-end">
                     <button
                       onClick={onClearAll}
-                      className="text-[10px] text-foreground/35 hover:text-red-400 transition-colors"
+                      className="text-[10px] text-muted-light hover:text-red-400 transition-colors"
                     >
                       Clear all
                     </button>
@@ -65,23 +65,23 @@ export default function MealLog({ meals, onRemoveMeal, onClearAll }: MealLogProp
                     return (
                       <div
                         key={meal.id}
-                        className="rounded-xl border border-border/70 bg-background/40 px-3 py-2"
+                        className="rounded-xl border border-border bg-background px-3 py-2"
                       >
                         <div className="flex items-start justify-between gap-3">
                           <div>
-                            <p className="text-[10px] uppercase tracking-wide text-foreground/35">
+                            <p className="text-[10px] uppercase tracking-wide text-muted-light">
                               {meal.mealType} • {time}
                             </p>
-                            <p className="text-xs text-foreground/70 mt-1">
+                            <p className="text-xs text-foreground mt-1">
                               {meal.dishes.map((dish) => dish.name).join(" • ")}
                             </p>
-                            <p className="text-[10px] text-foreground/40 mt-1">
+                            <p className="text-[10px] text-muted mt-1">
                               {meal.totals.calories} kcal • P {meal.totals.protein}g • C {meal.totals.carbs}g • F {meal.totals.fat}g
                             </p>
                           </div>
                           <button
                             onClick={() => onRemoveMeal(meal.id)}
-                            className="rounded-full p-1.5 text-foreground/35 hover:text-red-400 hover:bg-red-500/10 transition-colors"
+                            className="rounded-full p-1.5 text-muted-light hover:text-red-400 hover:bg-red-500/10 transition-colors"
                             aria-label="Remove meal"
                           >
                             <Trash2 className="h-3.5 w-3.5" />

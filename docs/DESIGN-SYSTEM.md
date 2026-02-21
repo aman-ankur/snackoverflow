@@ -1,6 +1,6 @@
 # Design System
 
-## Theme — Dark Only
+## Theme — Sage & Cream (Warm Light)
 
 Defined in `src/app/globals.css` using Tailwind CSS 4 `@theme inline` syntax.
 
@@ -8,39 +8,39 @@ Defined in `src/app/globals.css` using Tailwind CSS 4 `@theme inline` syntax.
 
 | Token | Value | Usage |
 |---|---|---|
-| `--color-background` | `#0a0a0a` | Page background |
-| `--color-foreground` | `#f5f5f5` | Primary text |
-| `--color-surface` | `#141414` | Card/section backgrounds |
-| `--color-surface-hover` | `#1e1e1e` | Hover state for surfaces |
-| `--color-border` | `#262626` | Borders, dividers |
-| `--color-accent` | `#22c55e` | Primary accent (green) — buttons, badges, active states |
-| `--color-accent-dim` | `#16a34a` | Darker accent for hover |
-| `--color-accent-glow` | `rgba(34, 197, 94, 0.15)` | Glow effect behind accent elements |
-| `--color-orange` | `#f97316` | Secondary accent — recipes, tips, shopping |
-| `--color-orange-dim` | `#ea580c` | Darker orange for hover |
-| `--color-orange-glow` | `rgba(249, 115, 22, 0.15)` | Glow effect behind orange elements |
+| `--color-background` | `#faf6f1` | Page background (warm cream) |
+| `--color-foreground` | `#2d2a26` | Primary text (warm charcoal) |
+| `--color-card` | `#ffffff` | Card/section backgrounds |
+| `--color-card-hover` | `#f5f0ea` | Hover state for cards |
+| `--color-border` | `#e8e0d8` | Borders, dividers (warm taupe) |
+| `--color-muted` | `#8a8279` | Secondary text |
+| `--color-muted-light` | `#b5ada5` | Tertiary/hint text |
+| `--color-accent` | `#6b9e78` | Primary accent (sage green) — buttons, badges, active states |
+| `--color-accent-dim` | `#5a8a66` | Darker accent for hover |
+| `--color-accent-light` | `#eef4ef` | Light accent background |
+| `--color-orange` | `#d4874d` | Secondary accent — recipes, tips, shopping (warm amber) |
+| `--color-orange-dim` | `#c07840` | Darker orange for hover |
+| `--color-orange-light` | `#fdf3eb` | Light orange background |
 
 ### Fonts
 - `--font-sans`: Geist Sans (via `next/font/google`)
 - `--font-mono`: Geist Mono (via `next/font/google`)
 
 ### Semantic Color Usage
-- **Green accent** (`accent`): Camera controls, detected items, "you have" ingredients, active filters, primary buttons
-- **Orange** (`orange`): Recipes, cooking tips, shopping list, "also need" ingredients, Hindi section labels
+- **Sage green** (`accent`): Camera controls, detected items, "you have" ingredients, active filters, primary buttons, bottom nav active state
+- **Warm amber** (`orange`): Recipes, cooking tips, shopping list, "also need" ingredients, Hindi section labels
 - **Red**: Expired items, stop button, error states
 - **Yellow**: Expiring items, medium confidence, medium difficulty
 - **Purple**: Jain diet badge, read aloud button
 - **Green-400**: WhatsApp buttons, fresh items
 
-### Opacity Patterns
-Text uses opacity variants of foreground:
-- `text-foreground` — full brightness (headings)
-- `text-foreground/80` — primary body text
-- `text-foreground/50` — secondary text
-- `text-foreground/40` — tertiary/muted text
-- `text-foreground/30` — labels, hints
-- `text-foreground/25` — very subtle hints
-- `text-foreground/20` — footer text
+### Text Color Hierarchy
+Text uses semantic tokens (no opacity variants):
+- `text-foreground` — primary text (headings, body)
+- `text-muted` — secondary text (labels, descriptions)
+- `text-muted-light` — tertiary text (hints, placeholders)
+- `text-accent` — accent-colored text (active states, links)
+- `text-orange` — secondary accent text
 
 ## Custom Animations
 
@@ -51,29 +51,35 @@ Defined in `globals.css`:
 | `.animate-fade-in-up` | Fade in + translate up 8px, 0.3s | General entrance |
 | `.animate-scan` | Translate Y -100% → 100%, 2s infinite | YOLO scan line |
 | `.animate-pulse-glow` | Opacity 0.6 → 1 → 0.6, 2s infinite | Glow effects |
+| `.animate-capy-blink` | Scale Y 1→0.1→1, 0.2s | Capy eye blink |
+| `.animate-capy-breathe` | Scale 1→1.02→1, 3s infinite | Capy body breathing |
+| `.animate-capy-tail` | Rotate -5°→5°, 2s infinite | Capy tail wag |
+| `.animate-capy-float` | Translate Y 0→-3px→0, 4s infinite | Capy floating |
+| `.animate-capy-sleep` | Opacity + translate Y cycle, 2s infinite | Capy sleep z-z-z |
 
 ### Framer Motion Patterns
 - **layoutId animations**: Used for mode switcher pill (`mode-bg`) and diet filter pill (`diet-pill`) — spring transitions
 - **Staggered cards**: Recipe cards use `delay: index * 0.08` for sequential entrance
-- **AnimatePresence**: Used for all conditional renders (dropdowns, expandable sections, overlays)
+- **AnimatePresence**: Used for all conditional renders (dropdowns, expandable sections, overlays, tab transitions)
 - **popLayout mode**: Used for detected item chips (smooth removal)
+- **Tab transitions**: `AnimatePresence` with x-axis slide for view switching
 
 ## Component Patterns
 
 ### Cards
 ```
-rounded-2xl bg-surface border border-border overflow-hidden
+rounded-2xl bg-card border border-border overflow-hidden
 ```
 
 ### Buttons (Primary)
 ```
-rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-black
+rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white
 hover:bg-accent-dim active:scale-95
 ```
 
 ### Buttons (Ghost/Secondary)
 ```
-rounded-full bg-surface-hover border border-border p-2.5
+rounded-full bg-card-hover border border-border p-2.5
 hover:bg-border active:scale-95
 ```
 
@@ -106,7 +112,7 @@ body { overscroll-behavior: none; }               /* No pull-to-refresh */
 .scrollbar-hide { scrollbar-width: none; }        /* Hidden scrollbars */
 ```
 
-## Goal Setting UI Patterns (NEW)
+## Goal Setting UI Patterns
 
 ### Onboarding Overlay
 ```
@@ -119,8 +125,8 @@ fixed inset-0 z-[100] bg-background/98 backdrop-blur-xl
 ### Goal Option Cards
 ```
 w-full flex items-start gap-3 rounded-xl border px-4 py-3 text-left
-Selected: border-accent/40 bg-accent/10
-Unselected: border-border bg-surface hover:bg-surface-hover
+Selected: border-accent/40 bg-accent-light text-accent-dim
+Unselected: border-border bg-card hover:bg-card-hover
 ```
 - Each option: emoji + label + description + detail line
 - Checkmark on selected option
@@ -147,13 +153,30 @@ h-2.5 rounded-full bg-accent (fill, width via style)
 
 ### Capy Speech Bubble
 ```
-rounded-2xl bg-surface border border-border p-3
+rounded-xl bg-accent-light border border-accent/15 px-3 py-2
 ```
 - Positioned next to CapyMascot SVG
 - Context-aware text from `capyLines.ts`
 
+## Navigation
+
+### Bottom Tab Bar (4 tabs)
+```
+fixed bottom-0 w-full bg-card/80 backdrop-blur-xl border-t border-border
+```
+- **Home** — house icon, dashboard view
+- **Progress** — bar chart icon, nutrition tracking
+- **Scan** — center elevated FAB (camera icon, accent background, -12px offset)
+- **Profile** — user icon, settings & goals
+
+### Fridge Overlay
+- Triggered from Home "Scan Your Fridge" CTA
+- Full-screen overlay with close button
+- Contains the full fridge scanner flow (mode switcher, camera, recipes, etc.)
+
 ## Layout
 - Max width: `max-w-lg` (32rem / 512px) — centered on larger screens
-- Padding: `px-4 py-4 pb-20`
-- Header: sticky top, backdrop blur, border bottom
+- Padding: `px-4 py-4 pb-24` (extra bottom padding for tab bar)
+- No sticky header — clean edge-to-edge content
 - All spacing between sections: `space-y-4`
+- Tab bar height: ~64px with safe area padding

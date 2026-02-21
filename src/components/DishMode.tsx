@@ -27,7 +27,7 @@ function getHealthTagColor(tag: string): string {
   if (tag.includes("fat") || tag.includes("high-calorie")) {
     return "bg-red-500/10 border-red-500/20 text-red-400";
   }
-  return "bg-foreground/8 border-border text-foreground/50";
+  return "bg-card-hover border-border text-muted";
 }
 
 function titleCaseTag(tag: string): string {
@@ -171,8 +171,8 @@ export default function DishMode() {
         placeholderSubtitle="AI will estimate calories and macros"
       />
 
-      <div className="rounded-2xl border border-border bg-surface p-3">
-        <p className="text-[10px] text-foreground/30 mb-2 px-1">Meal context</p>
+      <div className="rounded-2xl border border-border bg-card p-3">
+        <p className="text-[10px] text-muted mb-2 px-1">Meal context</p>
         <div className="grid grid-cols-4 gap-1.5">
           {MEAL_TYPE_OPTIONS.map((option) => (
             <button
@@ -184,7 +184,7 @@ export default function DishMode() {
               className={`rounded-full border px-2 py-1.5 text-[10px] font-medium capitalize transition-colors ${
                 dish.mealType === option
                   ? "border-orange/30 bg-orange/15 text-orange"
-                  : "border-border bg-background/50 text-foreground/45 hover:bg-background/70"
+                  : "border-border bg-background text-muted hover:bg-card-hover"
               }`}
             >
               {option}
@@ -193,7 +193,7 @@ export default function DishMode() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-surface p-3">
+      <div className="rounded-2xl border border-border bg-card p-3">
         <div className="flex items-center gap-2 mb-2">
           <Calculator className="h-4 w-4 text-orange" />
           <h3 className="text-sm font-semibold">Portion Adjuster</h3>
@@ -206,7 +206,7 @@ export default function DishMode() {
               className={`rounded-full border px-2 py-1.5 text-[10px] font-semibold transition-colors ${
                 servingsMultiplier === value
                   ? "border-accent/30 bg-accent/15 text-accent"
-                  : "border-border bg-background/50 text-foreground/45 hover:bg-background/70"
+                  : "border-border bg-background text-muted hover:bg-card-hover"
               }`}
             >
               {value}x
@@ -222,11 +222,11 @@ export default function DishMode() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-2xl border border-border bg-surface py-10 px-6 text-center"
+            className="rounded-2xl border border-border bg-card py-10 px-6 text-center"
           >
             <Sparkles className="h-7 w-7 text-orange/60 mx-auto" />
-            <p className="text-sm font-medium text-foreground/55 mt-3">No dish analysis yet</p>
-            <p className="text-xs text-foreground/35 mt-1">
+            <p className="text-sm font-medium text-muted mt-3">No dish analysis yet</p>
+            <p className="text-xs text-muted mt-1">
               Start camera and tap Analyze Dish to get calorie and macro estimates.
             </p>
           </motion.div>
@@ -238,18 +238,18 @@ export default function DishMode() {
             exit={{ opacity: 0, y: 8 }}
             className="space-y-3"
           >
-            <div className="rounded-2xl border border-accent/20 bg-accent/5 p-4">
+            <div className="rounded-2xl border border-accent/20 bg-accent-light p-4">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold">Plate Total</h3>
-                <span className="text-[10px] text-foreground/35">
+                <span className="text-[10px] text-muted">
                   {scaledDishes.length} dish{scaledDishes.length === 1 ? "" : "es"}
                 </span>
               </div>
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <p className="text-xs text-foreground/70">🔥 {scaledTotals.calories} kcal</p>
-                <p className="text-xs text-foreground/70">💪 {scaledTotals.protein}g</p>
-                <p className="text-xs text-foreground/70">🍞 {scaledTotals.carbs}g</p>
-                <p className="text-xs text-foreground/70">🧈 {scaledTotals.fat}g</p>
+                <p className="text-xs text-foreground">🔥 {scaledTotals.calories} kcal</p>
+                <p className="text-xs text-foreground">💪 {scaledTotals.protein}g</p>
+                <p className="text-xs text-foreground">🍞 {scaledTotals.carbs}g</p>
+                <p className="text-xs text-foreground">🧈 {scaledTotals.fat}g</p>
               </div>
             </div>
 
@@ -286,12 +286,12 @@ export default function DishMode() {
               );
             })}
 
-            <div className="rounded-2xl border border-border bg-surface p-3">
+            <div className="rounded-2xl border border-border bg-card p-3">
               <div className="flex items-center justify-between gap-2 mb-2">
-                <p className="text-xs text-foreground/55">Log this scan as a meal</p>
+                <p className="text-xs text-muted">Log this scan as a meal</p>
                 <button
                   onClick={dish.clearAnalysis}
-                  className="text-[10px] text-foreground/35 hover:text-foreground/60 transition-colors"
+                  className="text-[10px] text-muted-light hover:text-foreground transition-colors"
                 >
                   Clear analysis
                 </button>
@@ -301,7 +301,7 @@ export default function DishMode() {
                 <select
                   value={logMealType}
                   onChange={(event) => setLogMealType(event.target.value as MealType)}
-                  className="flex-1 rounded-full border border-border bg-background/60 px-3 py-2 text-xs text-foreground/75"
+                  className="flex-1 rounded-full border border-border bg-background px-3 py-2 text-xs text-foreground"
                 >
                   {MEAL_TYPE_OPTIONS.map((option) => (
                     <option key={option} value={option}>
@@ -368,7 +368,7 @@ function CorrectionChip({
 
   if (isAnalyzing) {
     return (
-      <div className="flex items-center gap-1.5 px-1 text-[10px] text-foreground/35">
+      <div className="flex items-center gap-1.5 px-1 text-[10px] text-muted">
         <Loader2 className="h-3 w-3 animate-spin" />
         Re-analyzing…
       </div>
@@ -382,7 +382,7 @@ function CorrectionChip({
           setValue(currentName);
           setIsEditing(true);
         }}
-        className="flex items-center gap-1 px-1 text-[10px] text-foreground/35 hover:text-foreground/55 transition-colors"
+        className="flex items-center gap-1 px-1 text-[10px] text-muted hover:text-foreground transition-colors"
       >
         <Pencil className="h-3 w-3" />
         Wrong dish?
@@ -405,7 +405,7 @@ function CorrectionChip({
           }
         }}
         placeholder="Correct dish name"
-        className="flex-1 rounded-full border border-border bg-background/60 px-3 py-1.5 text-xs text-foreground/75 outline-none focus:border-accent/40"
+        className="flex-1 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-foreground outline-none focus:border-accent/40"
       />
       <button
         onClick={handleSubmit}
@@ -418,7 +418,7 @@ function CorrectionChip({
           setIsEditing(false);
           setValue("");
         }}
-        className="rounded-full border border-border p-1.5 text-foreground/40 hover:text-foreground/60 transition-colors"
+        className="rounded-full border border-border p-1.5 text-muted hover:text-foreground transition-colors"
       >
         <X className="h-3 w-3" />
       </button>

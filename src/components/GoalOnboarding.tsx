@@ -202,7 +202,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/98 backdrop-blur-xl"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-background/[0.97] backdrop-blur-xl"
       onClick={(e) => e.stopPropagation()}
     >
       <div className="w-full max-w-lg mx-auto px-5 py-6 flex flex-col h-full max-h-[100dvh]">
@@ -212,7 +212,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
             <div
               key={i}
               className={`h-2 rounded-full transition-all duration-300 ${
-                i === step ? "w-6 bg-accent" : i < step ? "w-2 bg-accent/50" : "w-2 bg-border"
+                i === step ? "w-6 bg-accent" : i < step ? "w-2 bg-accent/50" : "w-2 bg-border/80"
               }`}
             />
           ))}
@@ -237,7 +237,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                     transition={{ delay: 0.3 }}
                   >
                     <h2 className="text-xl font-bold">Hi! I&apos;m Capy 👋</h2>
-                    <p className="text-sm text-foreground/55 mt-2 max-w-xs mx-auto">
+                    <p className="text-sm text-muted mt-2 max-w-xs mx-auto">
                       Your food buddy! Let&apos;s set up your nutrition goals in 60 seconds.
                     </p>
                   </motion.div>
@@ -246,14 +246,14 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                     animate={{ y: 0, opacity: 1 }}
                     transition={{ delay: 0.5 }}
                     onClick={next}
-                    className="flex items-center gap-2 rounded-full bg-accent px-8 py-3 text-sm font-bold text-black transition-all hover:bg-accent-dim active:scale-95"
+                    className="flex items-center gap-2 rounded-full bg-accent px-8 py-3 text-sm font-bold text-white transition-all hover:bg-accent-dim active:scale-95"
                   >
                     <Sparkles className="h-4 w-4" />
                     Get Started
                   </motion.button>
                   <button
                     onClick={onSkip}
-                    className="text-xs text-foreground/30 hover:text-foreground/50 transition-colors"
+                    className="text-xs text-muted-light hover:text-muted transition-colors"
                   >
                     Skip for now
                   </button>
@@ -269,7 +269,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
 
                   {/* Gender */}
                   <div className="w-full">
-                    <p className="text-xs text-foreground/40 mb-2 px-1">Gender</p>
+                    <p className="text-xs text-muted mb-2 px-1">Gender</p>
                     <div className="grid grid-cols-3 gap-2">
                       {(["male", "female", "other"] as Gender[]).map((g) => (
                         <button
@@ -277,8 +277,8 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                           onClick={() => setGender(g)}
                           className={`rounded-xl border px-3 py-2.5 text-xs font-semibold capitalize transition-all active:scale-95 ${
                             gender === g
-                              ? "border-accent/40 bg-accent/15 text-accent"
-                              : "border-border bg-surface text-foreground/50 hover:bg-surface-hover"
+                              ? "border-accent/40 bg-accent-light text-accent-dim"
+                              : "border-border bg-card text-muted hover:bg-card-hover"
                           }`}
                         >
                           {g === "male" ? "♂️ Male" : g === "female" ? "♀️ Female" : "⚧️ Other"}
@@ -290,7 +290,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                   {/* Age — slider + display */}
                   <div className="w-full">
                     <div className="flex items-center justify-between mb-1 px-1">
-                      <p className="text-xs text-foreground/40">Age</p>
+                      <p className="text-xs text-muted">Age</p>
                       <p className="text-sm font-bold text-accent">{age} years</p>
                     </div>
                     <input
@@ -299,21 +299,21 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                       max={80}
                       value={age}
                       onChange={(e) => setAge(Number(e.target.value))}
-                      className="w-full h-2 rounded-full appearance-none bg-border cursor-pointer accent-accent"
+                      className="w-full h-2 rounded-full appearance-none bg-border/80 cursor-pointer accent-accent"
                     />
                     <div className="flex justify-between px-1 mt-1">
-                      <span className="text-[9px] text-foreground/25">14</span>
-                      <span className="text-[9px] text-foreground/25">80</span>
+                      <span className="text-[9px] text-muted-light">14</span>
+                      <span className="text-[9px] text-muted-light">80</span>
                     </div>
                   </div>
 
                   {/* Height */}
                   <div className="w-full">
                     <div className="flex items-center justify-between mb-2 px-1">
-                      <p className="text-xs text-foreground/40">Height</p>
+                      <p className="text-xs text-muted">Height</p>
                       <button
                         onClick={() => setUseFeet((f) => !f)}
-                        className="text-[10px] text-accent/70 hover:text-accent"
+                        className="text-[10px] text-accent hover:text-accent-dim"
                       >
                         {useFeet ? "Switch to cm" : "Switch to ft/in"}
                       </button>
@@ -330,9 +330,9 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                             setHeightCm(newCm);
                             setHeightInput(String(newCm));
                           }}
-                          className="w-16 rounded-xl border border-border bg-surface px-3 py-2.5 text-center text-sm font-semibold text-foreground outline-none focus:border-accent/40"
+                          className="w-16 rounded-xl border border-border bg-card px-3 py-2.5 text-center text-sm font-semibold text-foreground outline-none focus:border-accent/40"
                         />
-                        <span className="text-xs text-foreground/40">ft</span>
+                        <span className="text-xs text-muted">ft</span>
                         <input
                           type="number"
                           inputMode="numeric"
@@ -343,9 +343,9 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                             setHeightCm(newCm);
                             setHeightInput(String(newCm));
                           }}
-                          className="w-16 rounded-xl border border-border bg-surface px-3 py-2.5 text-center text-sm font-semibold text-foreground outline-none focus:border-accent/40"
+                          className="w-16 rounded-xl border border-border bg-card px-3 py-2.5 text-center text-sm font-semibold text-foreground outline-none focus:border-accent/40"
                         />
-                        <span className="text-xs text-foreground/40">in</span>
+                        <span className="text-xs text-muted">in</span>
                       </div>
                     ) : (
                       <div className="flex items-center justify-center gap-2">
@@ -355,9 +355,9 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                           value={heightInput}
                           onChange={(e) => setHeightInput(e.target.value)}
                           onBlur={handleHeightBlur}
-                          className="w-24 rounded-xl border border-border bg-surface px-3 py-2.5 text-center text-sm font-semibold text-foreground outline-none focus:border-accent/40"
+                          className="w-24 rounded-xl border border-border bg-card px-3 py-2.5 text-center text-sm font-semibold text-foreground outline-none focus:border-accent/40"
                         />
-                        <span className="text-xs text-foreground/40">cm</span>
+                        <span className="text-xs text-muted">cm</span>
                       </div>
                     )}
                   </div>
@@ -365,10 +365,10 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                   {/* Weight */}
                   <div className="w-full">
                     <div className="flex items-center justify-between mb-2 px-1">
-                      <p className="text-xs text-foreground/40">Weight</p>
+                      <p className="text-xs text-muted">Weight</p>
                       <button
                         onClick={() => setUseLbs((l) => !l)}
-                        className="text-[10px] text-accent/70 hover:text-accent"
+                        className="text-[10px] text-accent hover:text-accent-dim"
                       >
                         {useLbs ? "Switch to kg" : "Switch to lbs"}
                       </button>
@@ -380,9 +380,9 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                         value={weightInput}
                         onChange={(e) => setWeightInput(e.target.value)}
                         onBlur={handleWeightBlur}
-                        className="w-24 rounded-xl border border-border bg-surface px-3 py-2.5 text-center text-sm font-semibold text-foreground outline-none focus:border-accent/40"
+                        className="w-24 rounded-xl border border-border bg-card px-3 py-2.5 text-center text-sm font-semibold text-foreground outline-none focus:border-accent/40"
                       />
-                      <span className="text-xs text-foreground/40">{useLbs ? "lbs" : "kg"}</span>
+                      <span className="text-xs text-muted">{useLbs ? "lbs" : "kg"}</span>
                     </div>
                   </div>
                 </div>
@@ -401,16 +401,16 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                         onClick={() => setActivityLevel(opt.value)}
                         className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98] ${
                           activityLevel === opt.value
-                            ? "border-accent/40 bg-accent/10"
-                            : "border-border bg-surface hover:bg-surface-hover"
+                            ? "border-accent/40 bg-accent-light"
+                            : "border-border bg-card hover:bg-card-hover"
                         }`}
                       >
                         <span className="text-xl">{opt.emoji}</span>
                         <div>
-                          <p className={`text-sm font-semibold ${activityLevel === opt.value ? "text-accent" : "text-foreground/75"}`}>
+                          <p className={`text-sm font-semibold ${activityLevel === opt.value ? "text-accent-dim" : "text-foreground"}`}>
                             {opt.label}
                           </p>
-                          <p className="text-[10px] text-foreground/40">{opt.desc}</p>
+                          <p className="text-[10px] text-muted">{opt.desc}</p>
                         </div>
                       </button>
                     ))}
@@ -425,7 +425,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                   <CapyMascot mood="happy" size={64} />
                   <div className="text-center">
                     <h2 className="text-lg font-bold">What&apos;s Your Goal? 🎯</h2>
-                    <p className="text-[10px] text-foreground/35 mt-1">Pick what feels right — you can always change later</p>
+                    <p className="text-[10px] text-muted mt-1">Pick what feels right — you can always change later</p>
                   </div>
                   <div className="w-full space-y-2">
                     {GOAL_OPTIONS.map((opt) => (
@@ -434,17 +434,17 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                         onClick={() => setGoal(opt.value)}
                         className={`w-full flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98] ${
                           goal === opt.value
-                            ? "border-accent/40 bg-accent/10"
-                            : "border-border bg-surface hover:bg-surface-hover"
+                            ? "border-accent/40 bg-accent-light text-accent-dim"
+                            : "border-border bg-card hover:bg-card-hover text-foreground"
                         }`}
                       >
                         <span className="text-lg mt-0.5">{opt.emoji}</span>
                         <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-semibold ${goal === opt.value ? "text-accent" : "text-foreground/75"}`}>
+                          <p className={`text-sm font-semibold ${goal === opt.value ? "text-accent-dim" : "text-foreground"}`}>
                             {opt.label}
                           </p>
-                          <p className="text-[10px] text-foreground/50">{opt.desc}</p>
-                          <p className={`text-[9px] mt-0.5 ${goal === opt.value ? "text-accent/60" : "text-foreground/25"}`}>
+                          <p className="text-[10px] text-muted">{opt.desc}</p>
+                          <p className={`text-[9px] mt-0.5 ${goal === opt.value ? "text-accent" : "text-muted-light"}`}>
                             {opt.detail}
                           </p>
                         </div>
@@ -469,12 +469,12 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                     <CapyMascot mood="excited" size={100} />
                   </motion.div>
                   <h2 className="text-lg font-bold">Your Personalized Plan ✨</h2>
-                  <p className="text-xs text-foreground/40 -mt-3">Tap any number to adjust</p>
+                  <p className="text-xs text-muted -mt-3">Tap any number to adjust</p>
 
                   {/* Calorie ring */}
                   <div className="relative flex flex-col items-center">
                     <svg width="120" height="120" viewBox="0 0 120 120">
-                      <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="8" />
+                      <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-border)" strokeWidth="8" />
                       <circle
                         cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="8"
                         strokeLinecap="round" strokeDasharray={2 * Math.PI * 50}
@@ -499,11 +499,11 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                           <AnimatedNumber value={displayGoals.calories} className="text-2xl font-bold" />
                         </button>
                       )}
-                      <span className="text-[10px] text-foreground/40">kcal / day</span>
+                      <span className="text-[10px] text-muted">kcal / day</span>
                     </div>
                   </div>
 
-                  <p className="text-[10px] text-foreground/30">
+                  <p className="text-[10px] text-muted-light">
                     TDEE: {computedGoals.tdee} kcal
                   </p>
 
@@ -541,8 +541,8 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                     />
                   </div>
 
-                  <div className="rounded-xl border border-accent/20 bg-accent/5 px-4 py-2.5 w-full">
-                    <p className="text-xs text-foreground/55 text-center">
+                  <div className="rounded-xl border border-accent/20 bg-accent-light px-4 py-2.5 w-full">
+                    <p className="text-xs text-muted text-center">
                       🐾 Capy says: Based on your profile, this plan is perfect for your{" "}
                       <span className="text-accent font-medium">
                         {GOAL_LABEL_MAP[goal]}
@@ -561,7 +561,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
           {step > 0 ? (
             <button
               onClick={prev}
-              className="flex items-center gap-1 rounded-full border border-border px-4 py-2.5 text-xs font-medium text-foreground/50 hover:bg-surface-hover active:scale-95"
+              className="flex items-center gap-1 rounded-full border border-border px-4 py-2.5 text-xs font-medium text-muted hover:bg-card-hover active:scale-95"
             >
               <ChevronLeft className="h-3.5 w-3.5" />
               Back
@@ -573,7 +573,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
           {step > 0 && step < TOTAL_STEPS - 1 && (
             <button
               onClick={next}
-              className="flex items-center gap-1 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-black hover:bg-accent-dim active:scale-95"
+              className="flex items-center gap-1 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-white hover:bg-accent-dim active:scale-95"
             >
               Next
               <ChevronRight className="h-3.5 w-3.5" />
@@ -585,7 +585,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
               initial={{ scale: 0.9 }}
               animate={{ scale: 1 }}
               onClick={handleComplete}
-              className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-black hover:bg-accent-dim active:scale-95"
+              className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-bold text-white hover:bg-accent-dim active:scale-95"
             >
               <Sparkles className="h-4 w-4" />
               Let&apos;s Go!

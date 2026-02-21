@@ -46,8 +46,8 @@ export default function GeminiMode() {
       />
 
       {/* Dietary Filter */}
-      <div className="rounded-2xl bg-surface border border-border p-3">
-        <p className="text-[10px] text-foreground/30 mb-2 px-1">Diet Preference</p>
+      <div className="rounded-2xl bg-card border border-border p-3">
+        <p className="text-[10px] text-muted mb-2 px-1">Diet Preference</p>
         <DietaryFilter value={gemini.dietaryFilter} onChange={gemini.setDietaryFilter} />
       </div>
 
@@ -78,7 +78,7 @@ export default function GeminiMode() {
             className="flex items-start gap-3 rounded-2xl bg-orange/5 border border-orange/15 p-4"
           >
             <Lightbulb className="h-4 w-4 text-orange shrink-0 mt-0.5" />
-            <p className="text-xs text-foreground/60 leading-relaxed">
+            <p className="text-xs text-foreground leading-relaxed">
               {gemini.analysis.tip}
             </p>
           </motion.div>
@@ -115,14 +115,14 @@ export default function GeminiMode() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-surface border border-border py-10 px-6"
+              className="flex flex-col items-center justify-center gap-3 rounded-2xl bg-card border border-border py-10 px-6"
             >
               <div className="rounded-full bg-orange-glow p-4">
                 <UtensilsCrossed className="h-8 w-8 text-orange/60" />
               </div>
               <div className="text-center">
-                <p className="text-sm font-medium text-foreground/50">No recipes yet</p>
-                <p className="text-xs text-foreground/30 mt-1">
+                <p className="text-sm font-medium text-muted">No recipes yet</p>
+                <p className="text-xs text-muted mt-1">
                   Scan your fridge to get AI-powered Indian recipe suggestions
                 </p>
               </div>

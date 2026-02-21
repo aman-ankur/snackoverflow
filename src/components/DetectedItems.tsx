@@ -12,7 +12,7 @@ export default function DetectedItems({ items, onClear }: DetectedItemsProps) {
   const sortedItems = Array.from(items.entries()).sort((a, b) => b[1] - a[1]);
 
   return (
-    <div className="rounded-2xl bg-surface border border-border overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border">
         <div className="flex items-center gap-2">
@@ -27,7 +27,7 @@ export default function DetectedItems({ items, onClear }: DetectedItemsProps) {
         {sortedItems.length > 0 && (
           <button
             onClick={onClear}
-            className="flex items-center gap-1 text-xs text-foreground/40 hover:text-red-400 transition-colors"
+            className="flex items-center gap-1 text-xs text-muted hover:text-red-400 transition-colors"
           >
             <Trash2 className="h-3 w-3" />
             Clear
@@ -38,7 +38,7 @@ export default function DetectedItems({ items, onClear }: DetectedItemsProps) {
       {/* Items */}
       <div className="p-3 min-h-[60px]">
         {sortedItems.length === 0 ? (
-          <p className="text-xs text-foreground/30 text-center py-3">
+          <p className="text-xs text-muted text-center py-3">
             Point camera at items to detect them
           </p>
         ) : (

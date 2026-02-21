@@ -61,7 +61,7 @@ export default function ShoppingList({ recipes, detectedItemNames }: ShoppingLis
   };
 
   return (
-    <div className="rounded-2xl bg-surface border border-border overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full px-4 py-3 text-left"
@@ -74,9 +74,9 @@ export default function ShoppingList({ recipes, detectedItemNames }: ShoppingLis
           </span>
         </div>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-foreground/40" />
+          <ChevronUp className="h-4 w-4 text-muted" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-foreground/40" />
+          <ChevronDown className="h-4 w-4 text-muted" />
         )}
       </button>
 
@@ -90,19 +90,19 @@ export default function ShoppingList({ recipes, detectedItemNames }: ShoppingLis
             className="overflow-hidden"
           >
             <div className="px-4 pb-3 border-t border-border pt-3">
-              <p className="text-[10px] text-foreground/25 mb-2">
+              <p className="text-[10px] text-muted-light mb-2">
                 Items you need to buy for the suggested recipes
               </p>
               <div className="space-y-1.5">
                 {neededItems.map((item) => (
                   <div
                     key={item.name}
-                    className="flex items-center justify-between rounded-lg bg-background/50 px-3 py-2"
+                    className="flex items-center justify-between rounded-lg bg-background px-3 py-2"
                   >
-                    <span className="text-xs font-medium text-foreground/70">
+                    <span className="text-xs font-medium text-foreground">
                       {item.name}
                     </span>
-                    <span className="text-[10px] text-foreground/30 max-w-[50%] text-right truncate">
+                    <span className="text-[10px] text-muted max-w-[50%] text-right truncate">
                       for {item.forRecipes.join(", ")}
                     </span>
                   </div>

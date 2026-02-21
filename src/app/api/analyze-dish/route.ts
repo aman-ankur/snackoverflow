@@ -74,6 +74,13 @@ Estimate portion weight in grams using visual anchors:
 - 1 dosa ≈ 80-120g
 Compare the food to the plate/bowl size to estimate grams.
 
+CRITICAL for small/countable items (chips, nuggets, biscuits, momos, pieces of fruit, etc.):
+- COUNT the individual pieces visible in the image first.
+- State the count explicitly in your reasoning (e.g. "I count approximately 8-10 potato chips").
+- Use per-piece weight: 1 potato chip ≈ 3-5g, 1 chicken nugget ≈ 18-20g, 1 momo ≈ 25-30g, 1 samosa ≈ 50-60g, 1 pakora ≈ 20-25g.
+- Multiply count × per-piece weight. Do NOT default to "1 serving" from a packet.
+- For chips specifically: 8 chips ≈ 25-35g (NOT 110g which would be a full packet).
+
 Step 5 — NUTRITION CALCULATION:
 For each dish:
 a) Recall the approximate per-100g macros for this dish (from standard Indian nutrition data).

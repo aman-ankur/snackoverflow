@@ -15,7 +15,7 @@ export default function ApiKeyInput({
   const [showKey, setShowKey] = useState(false);
 
   return (
-    <div className="rounded-2xl bg-surface border border-border overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       <div className="flex items-center gap-2 px-4 py-3 border-b border-border">
         <Key className="h-4 w-4 text-accent" />
         <h2 className="text-sm font-semibold">Gemini API Key</h2>
@@ -32,11 +32,11 @@ export default function ApiKeyInput({
             value={apiKey}
             onChange={(e) => onApiKeyChange(e.target.value)}
             placeholder="Paste your Gemini API key..."
-            className="w-full rounded-xl bg-background border border-border px-4 py-2.5 pr-10 text-sm text-foreground placeholder:text-foreground/25 focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-all"
+            className="w-full rounded-xl bg-background border border-border px-4 py-2.5 pr-10 text-sm text-foreground placeholder:text-muted-light focus:outline-none focus:border-accent/50 focus:ring-1 focus:ring-accent/20 transition-all"
           />
           <button
             onClick={() => setShowKey(!showKey)}
-            className="absolute right-3 top-1/2 -translate-y-1/2 text-foreground/30 hover:text-foreground/60 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted hover:text-foreground transition-colors"
           >
             {showKey ? (
               <EyeOff className="h-4 w-4" />
@@ -46,7 +46,7 @@ export default function ApiKeyInput({
           </button>
         </div>
         <div className="flex items-center justify-between">
-          <p className="text-[10px] text-foreground/25">
+          <p className="text-[10px] text-muted-light">
             Free tier: 15 requests/min • Key stays in your browser
           </p>
           <a
