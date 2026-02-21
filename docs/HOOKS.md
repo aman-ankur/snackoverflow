@@ -185,15 +185,42 @@ Common Indian kitchen items with default days:
 - Adds optional fridge→dish linkage metadata when dish ingredients match recent fridge scan items
 - Parses/normalizes persisted data defensively
 - Computes repeated dish insights for Meal History UI
+- If logged in, pulls meals from Supabase on mount and syncs on every change (debounced)
 
 ---
 
-## `useUserGoals()` — Goal Setting & Streak Hook (NEW)
+## `useAuth()` — Supabase Auth Hook
+
+**File**: `src/lib/useAuth.ts`
+
+### State & Methods
+| Return | Type | Description |
+|---|---|---|
+| `user` | User \| null | Supabase user object (includes `id`, `email`) |
+| `isLoggedIn` | boolean | Whether a session exists |
+| `isLoading` | boolean | Whether initial session check is in progress |
+| `signInWithMagicLink(email)` | function | Send magic link email |
+| `signUp(email, password)` | function | Create account with password |
+| `signInWithPassword(email, password)` | function | Sign in with existing password |
+| `signOut()` | function | End session |
+
+### Key Behaviors
+- On mount, checks for existing session via `supabase.auth.getSession()`
+- Listens to `onAuthStateChange` for login/logout events
+- On `SIGNED_IN` event, triggers `migrateLocalStorageToCloud()` to push local data to Supabase (only if cloud row is empty)
+- Used via `useAuthContext()` from `AuthProvider.tsx` (React context)
+
+---
+
+## `useUserGoals()` — Goal Setting & Streak Hook
 
 **File**: `src/lib/useUserGoals.ts`
 
 ### localStorage Key
 `snackoverflow-user-goals-v1`
+
+### Supabase Columns
+`profile`, `goals`, `streak` in `user_data` table
 
 ### State & Methods
 | Return | Type | Description |
@@ -209,6 +236,8 @@ Common Indian kitchen items with default days:
 
 ### Key Behaviors
 - On mount, reads profile/goals/streak from localStorage
+- If logged in, pulls from Supabase and overrides localStorage (cloud is source of truth)
+- On state change, saves to localStorage + debounced push to Supabase
 - If no profile, returns DEFAULT_GOALS (2000 kcal, 120g P, 250g C, 70g F)
 - `saveProfile` computes goals via `calculateGoals()` and persists both
 - `refreshStreak` checks today's date against `lastLogDate` to increment/reset streak

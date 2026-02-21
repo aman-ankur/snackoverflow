@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { DM_Sans, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
+import { AuthProvider } from "@/components/AuthProvider";
 
 const dmSans = DM_Sans({
   variable: "--font-dm-sans",
@@ -38,7 +39,7 @@ export default function RootLayout({
         className={`${dmSans.variable} ${jetBrainsMono.variable} antialiased`}
         suppressHydrationWarning
       >
-        {children}
+        <AuthProvider>{children}</AuthProvider>
       </body>
     </html>
   );

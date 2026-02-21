@@ -256,5 +256,21 @@ Legacy recipe display components for YOLO mode. Uses static recipe database.
 - Description text below changes per mode
 - `DetectionMode = "yolo" | "gemini"`
 
+### `AuthProvider.tsx`
+**Auth context provider — wraps the entire app in `layout.tsx`.**
+- Provides `useAuthContext()` hook to all components
+- Exposes: `user`, `isLoggedIn`, `isLoading`, `signInWithMagicLink`, `signUp`, `signInWithPassword`, `signOut`
+- Uses `useAuth()` hook internally
+
+### `AuthScreen.tsx`
+**Capy-themed login UI with magic link + password modes.**
+- Props: `onMagicLink`, `onSignUp`, `onSignInPassword`
+- Three modes: `magic` (default), `password-login`, `password-signup`
+- States: email input → loading → "Check your email" success (for magic link/signup)
+- Error display with AlertCircle icon
+- Mode switcher links at bottom to toggle between magic link / password / signup
+- Animated with Framer Motion
+- Rendered in ProfileView when user is not logged in
+
 ### `ApiKeyInput.tsx`
 Legacy API key input component. Currently not used (API keys are in .env.local server-side).
