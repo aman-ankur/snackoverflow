@@ -93,6 +93,67 @@ const SAD_LINES: MotivationLine[] = [
   { text: "Some leaves are falling... but it's not too late! 🍂", mood: "concerned", context: "sad" },
 ];
 
+// ── Garden wish lines — Capy talks about what it wants next ──────────
+
+const WISH_BUTTERFLY_LINES: MotivationLine[] = [
+  { text: "I'd love to see butterflies here! Log meals 3 days in a row and they'll come! 🦋", mood: "happy", context: "wish-butterfly" },
+  { text: "The garden feels empty without butterflies... just a few more days of logging! 🦋", mood: "concerned", context: "wish-butterfly" },
+  { text: "I keep looking up hoping to see a butterfly. Keep your streak going! 🦋", mood: "happy", context: "wish-butterfly" },
+];
+
+const WISH_BABY_LINES: MotivationLine[] = [
+  { text: "It's a bit lonely being the only capybara... a 5-day streak would bring a friend! 🐾", mood: "concerned", context: "wish-baby" },
+  { text: "I heard baby capybaras appear when you log meals 5 days straight! I'd love company! 🐾", mood: "happy", context: "wish-baby" },
+  { text: "Imagine tiny capybaras running around! Keep that streak going! 🐾", mood: "excited", context: "wish-baby" },
+];
+
+const WISH_RAINBOW_LINES: MotivationLine[] = [
+  { text: "I've always dreamed of seeing a rainbow over our garden... 14-day streak! 🌈", mood: "happy", context: "wish-rainbow" },
+  { text: "A rainbow would make this garden magical! Keep logging every day! 🌈", mood: "motivated", context: "wish-rainbow" },
+];
+
+const WISH_HOTSPRING_LINES: MotivationLine[] = [
+  { text: "I'd love a hot spring to relax in! 30-day streak and it'll appear! ♨️", mood: "happy", context: "wish-hotspring" },
+  { text: "Imagine me soaking in a warm hot spring... just keep going! ♨️", mood: "sleepy", context: "wish-hotspring" },
+];
+
+const WISH_FLOWERS_LINES: MotivationLine[] = [
+  { text: "More flowers would make the garden gorgeous! Hit your calorie goal today! 🌸", mood: "happy", context: "wish-flowers" },
+  { text: "Each time you hit your calorie goal, a new flower blooms! Let's grow more! 🌺", mood: "motivated", context: "wish-flowers" },
+];
+
+const WISH_TREE_LINES: MotivationLine[] = [
+  { text: "The tree could grow taller! Eat enough protein and watch it reach the sky! 🌳", mood: "happy", context: "wish-tree" },
+  { text: "I love sitting under the tree. Hit your protein goal so it grows bigger! 🌲", mood: "happy", context: "wish-tree" },
+];
+
+const WISH_HOME_LINES: MotivationLine[] = [
+  { text: "I wish I had a cozy home! Log 5 meals total and a little shelter will appear! 🏡", mood: "happy", context: "wish-home" },
+  { text: "A cabin would be so nice when it rains... keep logging meals! 🏡", mood: "concerned", context: "wish-home" },
+];
+
+// ── Celebration lines for recently unlocked items ────────────────────
+
+const CELEBRATE_LINES: MotivationLine[] = [
+  { text: "Look! Butterflies! They came because of your dedication! 🦋✨", mood: "excited", context: "celebrate-butterfly" },
+  { text: "A baby capybara! I'm not alone anymore! Thank you! 🐾💕", mood: "excited", context: "celebrate-baby" },
+  { text: "TWO babies! We're becoming a family! 🐾🐾", mood: "excited", context: "celebrate-baby2" },
+  { text: "Three baby capybaras! The family is complete! I'm so happy! 🐾🐾🐾", mood: "excited", context: "celebrate-baby3" },
+  { text: "A RAINBOW! This is the most beautiful thing I've ever seen! 🌈😍", mood: "excited", context: "celebrate-rainbow" },
+  { text: "A hot spring! *splashes happily* This is paradise! ♨️🥰", mood: "excited", context: "celebrate-hotspring" },
+  { text: "We have a little home now! It's so cozy! 🏡💚", mood: "happy", context: "celebrate-home" },
+  { text: "The tree grew! I can feel the shade already! 🌳🌿", mood: "happy", context: "celebrate-tree" },
+];
+
+// ── Health-specific nudges ───────────────────────────────────────────
+
+const HEALTH_NUDGE_LINES: MotivationLine[] = [
+  { text: "The garden is at {health}%... I could be happier if you log a meal! 🌱", mood: "concerned", context: "health-nudge" },
+  { text: "I can feel the garden getting stronger! We're at {health}% health! 💪", mood: "happy", context: "health-good" },
+  { text: "Garden health is great! Keep it up and amazing things will happen! 🌟", mood: "excited", context: "health-great" },
+  { text: "We're almost at full health! Just a bit more care! 🌿", mood: "motivated", context: "health-almost" },
+];
+
 const ALL_LINES: MotivationLine[] = [
   ...STREAK_LINES,
   ...GOAL_HIT_LINES,
@@ -104,6 +165,15 @@ const ALL_LINES: MotivationLine[] = [
   ...GARDEN_LINES,
   ...EMOTIONAL_LINES,
   ...SAD_LINES,
+  ...WISH_BUTTERFLY_LINES,
+  ...WISH_BABY_LINES,
+  ...WISH_RAINBOW_LINES,
+  ...WISH_HOTSPRING_LINES,
+  ...WISH_FLOWERS_LINES,
+  ...WISH_TREE_LINES,
+  ...WISH_HOME_LINES,
+  ...CELEBRATE_LINES,
+  ...HEALTH_NUDGE_LINES,
 ];
 
 // ── Selection logic ───────────────────────────────────────────────────
@@ -204,6 +274,89 @@ export function getContextualMotivation(
     candidates = GARDEN_LINES;
     const pick = pickUnseen(candidates);
     if (pick) { markSeen(pick.text); return pick; }
+  }
+
+  // Celebration lines for recently unlocked items
+  if (garden.butterflies > 0 && garden.butterflies <= 2) {
+    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-butterfly"));
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.babyCapybaras === 1) {
+    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-baby"));
+    if (pick) { markSeen(pick.text); return pick; }
+  } else if (garden.babyCapybaras === 2) {
+    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-baby2"));
+    if (pick) { markSeen(pick.text); return pick; }
+  } else if (garden.babyCapybaras >= 3) {
+    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-baby3"));
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.hasRainbow) {
+    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-rainbow"));
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.hasCrown) {
+    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-hotspring"));
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.homeLevel >= 1) {
+    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-home"));
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.treeLevel >= 1) {
+    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-tree"));
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+
+  // Wish lines — Capy tells you what it wants next
+  if (garden.butterflies === 0 && streak < 3) {
+    const pick = pickUnseen(WISH_BUTTERFLY_LINES);
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.babyCapybaras === 0 && streak < 5 && streak >= 1) {
+    const pick = pickUnseen(WISH_BABY_LINES);
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (!garden.hasRainbow && streak >= 5 && streak < 14) {
+    const pick = pickUnseen(WISH_RAINBOW_LINES);
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (!garden.hasCrown && streak >= 14 && streak < 30) {
+    const pick = pickUnseen(WISH_HOTSPRING_LINES);
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.flowers < 10) {
+    const pick = pickUnseen(WISH_FLOWERS_LINES);
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.treeLevel < 2) {
+    const pick = pickUnseen(WISH_TREE_LINES);
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+  if (garden.homeLevel === 0) {
+    const pick = pickUnseen(WISH_HOME_LINES);
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+
+  // Health-based nudges
+  if (garden.gardenHealth >= 80) {
+    const pick = pickUnseen(HEALTH_NUDGE_LINES.filter(l => l.context === "health-great"));
+    if (pick) { markSeen(pick.text); return pick; }
+  } else if (garden.gardenHealth >= 60) {
+    const pick = pickUnseen(HEALTH_NUDGE_LINES.filter(l => l.context === "health-almost"));
+    if (pick) { markSeen(pick.text); return pick; }
+  } else if (garden.gardenHealth >= 40) {
+    const line = HEALTH_NUDGE_LINES.find(l => l.context === "health-good");
+    if (line) {
+      const resolved = { ...line, text: line.text.replace("{health}", String(garden.gardenHealth)) };
+      markSeen(resolved.text); return resolved;
+    }
+  } else if (garden.gardenHealth < 40 && garden.gardenHealth > 10) {
+    const line = HEALTH_NUDGE_LINES.find(l => l.context === "health-nudge");
+    if (line) {
+      const resolved = { ...line, text: line.text.replace("{health}", String(garden.gardenHealth)) };
+      markSeen(resolved.text); return resolved;
+    }
   }
 
   // Time-of-day
