@@ -119,14 +119,16 @@ Auth Flow:
   → Debounced pushes (800ms) to avoid hammering Supabase
 
 Home Tab (HomeView.tsx):
-  Capy mascot + greeting + speech bubble (context-aware from capyLines.ts)
+  Capy mascot + personalized greeting ("Good evening, Ankur!") + speech bubble (context-aware from capyLines.ts)
+  → userName prop from profile.name (optional, set during onboarding)
   → Daily Intake ring (calorie progress) + macro breakdown
   → Today Meals (4 meal slots: breakfast/lunch/snack/dinner)
   → "Scan Your Fridge" CTA → opens FridgeOverlay
 
 Scan Tab (ScanView.tsx — center FAB):
   First visit → GoalOnboarding (useUserGoals checks localStorage)
-  → 5-step wizard → TDEE calculation → save profile + goals
+  → 5-step wizard (name, body stats, activity, goal, plan with rotary calorie dial)
+  → TDEE calculation → save profile (incl. optional name) + goals
   Camera → captureFrame() → /api/analyze-dish → Gemini/Groq → nutrition JSON
   → Auto-scroll to Plate Total (items list + macro summary)
   → Collapsed view for multi-dish plates ("Show N dishes · Edit quantities")

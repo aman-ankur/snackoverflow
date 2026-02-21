@@ -225,7 +225,7 @@ Common Indian kitchen items with default days:
 ### State & Methods
 | Return | Type | Description |
 |---|---|---|
-| `profile` | UserProfile \| null | Saved user profile |
+| `profile` | UserProfile \| null | Saved user profile (includes optional `name` field) |
 | `goals` | NutritionGoals | Active nutrition goals (computed or custom) |
 | `streak` | StreakData | Current streak, last log date, longest streak |
 | `hasLoaded` | boolean | Whether localStorage has been read |
@@ -240,6 +240,7 @@ Common Indian kitchen items with default days:
 - On state change, saves to localStorage + debounced push to Supabase
 - If no profile, returns DEFAULT_GOALS (2000 kcal, 120g P, 250g C, 70g F)
 - `saveProfile` computes goals via `calculateGoals()` and persists both
+- `profile.name` is optional; used for personalized greetings in HomeView and capyLines
 - `refreshStreak` checks today's date against `lastLogDate` to increment/reset streak
 
 ---

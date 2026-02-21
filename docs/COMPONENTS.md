@@ -124,9 +124,11 @@ All components are in `src/components/`. All are `"use client"` components.
 - Props: `existingProfile?`, `onComplete`, `onSkip`
 - Steps: Welcome → About You → Activity → Goal → Plan
 - Framer Motion slide transitions between steps
-- Age: range slider (14-80); Height/Weight: free-type with onBlur validation
-- 7 goal options (India-specific with detailed descriptions)
-- Final step shows computed TDEE + editable calorie/macro targets
+- Step 1 (About You): optional name field ("What should Capy call you?"), gender, age slider (14-80), height/weight with unit toggles
+- Step 2 (Activity): 5 options with **Lucide icons** (Sofa, Footprints, Bike, Dumbbell, Flame) in circular icon backgrounds
+- Step 3 (Goal): 7 India-specific options with **Lucide icons** (Target, TrendingDown, Zap, RotateCcw, Scale, Dumbbell, ArrowUpCircle) + Check icon on selected
+- Step 4 (Plan): **CalorieRingDial** — rotary drag gesture to adjust calories by rotating the ring, tap number to type directly, ±25 kcal stepper buttons, progress arc + draggable thumb, clamped 800–5000 kcal. Editable macro pills (protein/carbs/fat).
+- All headings use `font-extrabold text-foreground` for consistency with rest of app
 - Locks body scroll when open (`fixed inset-0 z-[100]`)
 
 ### `GoalDashboard.tsx` (NEW)

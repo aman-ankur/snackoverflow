@@ -126,5 +126,6 @@
   - Streak counter (current + longest)
   - Edit goals button re-opens onboarding
 - **Streak tracking** — consecutive days with logged meals
-- **Persistence** — localStorage (`snackoverflow-user-goals-v1`): UserProfile, NutritionGoals, StreakData
+- **Persistence** — localStorage (`snackoverflow-user-goals-v1`): UserProfile (incl. optional name), NutritionGoals, StreakData
 - Auto-shows onboarding on first visit; skip uses sensible defaults (2000 kcal)
+- **Personalized greetings** — if user sets a name during onboarding, Home tab greeting and Capy speech use it (e.g. "Good evening, Ankur!")
