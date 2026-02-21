@@ -14,7 +14,7 @@
 | **Hindi TTS** | Sarvam AI Bulbul v3 (speaker: "kabir", male North Indian) |
 | **On-Device Detection** | YOLOv8n via ONNX Runtime Web (WASM) |
 | **State** | React hooks + localStorage (no database) |
-| **Fonts** | Geist Sans, Geist Mono (via next/font/google) |
+| **Fonts** | DM Sans (400–900), JetBrains Mono (via next/font/google) |
 | **Dev Tools** | local-ssl-proxy (HTTPS for mobile camera testing) |
 | **Deployment** | Vercel |
 
