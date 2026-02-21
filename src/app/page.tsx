@@ -12,6 +12,7 @@ import GoalOnboarding from "@/components/GoalOnboarding";
 import dynamic from "next/dynamic";
 import { useMealLog } from "@/lib/useMealLog";
 import { useUserGoals } from "@/lib/useUserGoals";
+import { useAuthContext } from "@/components/AuthProvider";
 import type { UserProfile, NutritionGoals } from "@/lib/dishTypes";
 
 const CapyView = dynamic(() => import("@/components/CapyView"), {
@@ -33,6 +34,7 @@ export default function Home() {
 
   const mealLog = useMealLog();
   const userGoals = useUserGoals();
+  const auth = useAuthContext();
 
   useEffect(() => {
     if (userGoals.hasLoaded && !userGoals.hasProfile) {
@@ -140,6 +142,12 @@ export default function Home() {
                 streak={userGoals.streak}
                 onEditGoals={() => setShowOnboarding(true)}
                 onResetAll={userGoals.resetAll}
+                authUser={auth.user}
+                isLoggedIn={auth.isLoggedIn}
+                onMagicLink={auth.signInWithMagicLink}
+                onSignUp={auth.signUp}
+                onSignInPassword={auth.signInWithPassword}
+                onSignOut={auth.signOut}
               />
             </motion.div>
           )}

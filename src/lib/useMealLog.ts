@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { DishNutrition, LoggedMeal, MealTotals, MealType } from "@/lib/dishTypes";
+import { useAuthContext } from "@/components/AuthProvider";
+import { pullUserData, pushUserData } from "@/lib/supabase/sync";
 
 const STORAGE_KEY = "snackoverflow-meal-log-v1";
 const FRIDGE_SCAN_HISTORY_KEY = "snackoverflow-fridge-scan-history";
@@ -181,9 +183,34 @@ export function useMealLog() {
     }
   });
 
+  const { user, isLoggedIn } = useAuthContext();
+  const hasPulledCloud = useRef(false);
+
+  // Pull from Supabase when user logs in
+  useEffect(() => {
+    if (!isLoggedIn || !user || hasPulledCloud.current) return;
+    hasPulledCloud.current = true;
+    pullUserData(user.id).then((cloud) => {
+      if (!cloud) return;
+      const cloudMeals = cloud.meals;
+      if (Array.isArray(cloudMeals) && cloudMeals.length > 0) {
+        const normalized = cloudMeals
+          .map(normalizeMeal)
+          .filter((m): m is LoggedMeal => Boolean(m))
+          .sort((a, b) => (a.loggedAt < b.loggedAt ? 1 : -1));
+        if (normalized.length > 0) setMeals(normalized);
+      }
+    }).catch(() => {});
+  }, [isLoggedIn, user]);
+
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(meals));
-  }, [meals]);
+
+    // Sync to Supabase
+    if (isLoggedIn && user) {
+      pushUserData(user.id, "meals", meals);
+    }
+  }, [meals, isLoggedIn, user]);
 
   const logMeal = useCallback(
     (input: {

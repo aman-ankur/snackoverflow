@@ -1,7 +1,9 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
+import { useAuthContext } from "@/components/AuthProvider";
+import { pullUserData, pushUserData } from "@/lib/supabase/sync";
 
 const STORAGE_KEY = "snackoverflow-garden-v1";
 const MEAL_LOG_KEY = "snackoverflow-meal-log-v1";
@@ -270,11 +272,25 @@ export function useGardenState(
 ) {
   const [garden, setGarden] = useState<GardenState>(DEFAULT_STATE);
   const [hasLoaded, setHasLoaded] = useState(false);
+  const { user, isLoggedIn } = useAuthContext();
+  const hasPulledCloud = useRef(false);
 
   useEffect(() => {
     setGarden(loadGarden());
     setHasLoaded(true);
   }, []);
+
+  // Pull from Supabase when user logs in
+  useEffect(() => {
+    if (!isLoggedIn || !user || !hasLoaded || hasPulledCloud.current) return;
+    hasPulledCloud.current = true;
+    pullUserData(user.id).then((cloud) => {
+      if (!cloud || !cloud.garden) return;
+      const cloudGarden = { ...DEFAULT_STATE, ...(cloud.garden as Partial<GardenState>) };
+      setGarden(cloudGarden);
+      saveGarden(cloudGarden);
+    }).catch(() => {});
+  }, [isLoggedIn, user, hasLoaded]);
 
   useEffect(() => {
     if (!hasLoaded) return;
@@ -282,6 +298,11 @@ export function useGardenState(
     if (JSON.stringify(updated) !== JSON.stringify(garden)) {
       setGarden(updated);
       saveGarden(updated);
+
+      // Sync to Supabase
+      if (isLoggedIn && user) {
+        pushUserData(user.id, "garden", updated);
+      }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasLoaded, streak.currentStreak, todayTotals.calories, todayTotals.protein]);
@@ -292,7 +313,11 @@ export function useGardenState(
     const updated = computeGarden(garden, streak, todayTotals, goals);
     setGarden(updated);
     saveGarden(updated);
-  }, [garden, streak, todayTotals, goals]);
+
+    if (isLoggedIn && user) {
+      pushUserData(user.id, "garden", updated);
+    }
+  }, [garden, streak, todayTotals, goals, isLoggedIn, user]);
 
   return { garden, nextUnlock, hasLoaded, refresh };
 }

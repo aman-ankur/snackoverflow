@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useAuthContext } from "@/components/AuthProvider";
+import { pullUserData, pushUserData } from "@/lib/supabase/sync";
 
 export interface TrackedItem {
   name: string;
@@ -68,6 +70,8 @@ function getDaysLeft(expiresAt?: string): number | null {
 
 export function useExpiryTracker() {
   const [items, setItems] = useState<TrackedItem[]>([]);
+  const { user, isLoggedIn } = useAuthContext();
+  const hasPulledCloud = useRef(false);
 
   // Load from localStorage only after mount to keep server/client markup stable.
   useEffect(() => {
@@ -86,12 +90,34 @@ export function useExpiryTracker() {
     }
   }, []);
 
+  // Pull from Supabase when user logs in
+  useEffect(() => {
+    if (!isLoggedIn || !user || hasPulledCloud.current) return;
+    hasPulledCloud.current = true;
+    pullUserData(user.id).then((cloud) => {
+      if (!cloud) return;
+      const cloudItems = cloud.expiry_tracker;
+      if (Array.isArray(cloudItems) && cloudItems.length > 0) {
+        const updated = (cloudItems as TrackedItem[]).map((item) => ({
+          ...item,
+          category: getCategory(item.expiresAt) as TrackedItem["category"],
+        }));
+        setItems(updated);
+      }
+    }).catch(() => {});
+  }, [isLoggedIn, user]);
+
   // Save to localStorage on change
   useEffect(() => {
     if (items.length > 0) {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     }
-  }, [items]);
+
+    // Sync to Supabase
+    if (isLoggedIn && user) {
+      pushUserData(user.id, "expiry_tracker", items);
+    }
+  }, [items, isLoggedIn, user]);
 
   const addItems = useCallback((newItems: { name: string; hindi?: string }[]) => {
     setItems((prev) => {

@@ -29,6 +29,26 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
 
 ---
 
+## Supabase (Auth + Cloud Sync)
+
+### `NEXT_PUBLIC_SUPABASE_URL`
+- **Purpose**: Supabase project URL for auth and database
+- **Get it**: [supabase.com/dashboard](https://supabase.com/dashboard) → Settings → API → Project URL
+- **Cost**: Free tier — 500MB DB, 50K MAU
+- **Prefix**: `NEXT_PUBLIC_` — safe to expose (identifies project only, RLS protects data)
+- **Used in**: Browser Supabase client (`src/lib/supabase/client.ts`)
+
+### `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- **Purpose**: Supabase anonymous (public) API key
+- **Get it**: Same dashboard → Settings → API → `anon` `public` key
+- **Cost**: Free (included with project)
+- **Prefix**: `NEXT_PUBLIC_` — safe to expose (Row Level Security protects data, not this key)
+- **Used in**: Browser Supabase client (`src/lib/supabase/client.ts`)
+
+> **Note**: Both Supabase keys are optional. Without them, the app works in guest mode (localStorage only). With them, users can sign in and sync data across devices.
+
+---
+
 ## Optional / Legacy
 
 ### `OPENAI_API_KEY`
@@ -69,6 +89,7 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
 | Gemini | 1M tokens/day free | $0.075/M input tokens |
 | Groq | 14,400 requests/day free | Pay-as-you-go |
 | Sarvam AI | ₹1000 free credits (~600 msgs) | ₹15/10K characters |
+| Supabase | 500MB DB, 50K MAU free | Pay-as-you-go |
 | **Total for typical use** | **₹0/month** | **< ₹100/month** |
 
 For personal/household use, free tiers are more than sufficient.
