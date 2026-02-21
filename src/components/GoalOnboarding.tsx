@@ -1,8 +1,8 @@
 "use client";
 
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronLeft, ChevronRight, Sparkles, Sofa, Footprints, Bike, Dumbbell, Flame, Target, TrendingDown, Zap, RotateCcw, Scale, ArrowUpCircle, ArrowDownCircle, Check } from "lucide-react";
 import CapyMascot from "@/components/CapyMascot";
 import type { UserProfile, Gender, ActivityLevel, FitnessGoal, NutritionGoals } from "@/lib/dishTypes";
 import { calculateGoals } from "@/lib/tdeeCalculator";
@@ -15,60 +15,71 @@ interface GoalOnboardingProps {
 
 const TOTAL_STEPS = 5;
 
-const ACTIVITY_OPTIONS: { value: ActivityLevel; emoji: string; label: string; desc: string }[] = [
-  { value: "sedentary", emoji: "🛋️", label: "Couch Potato", desc: "Desk job, minimal exercise" },
-  { value: "light", emoji: "🚶", label: "Lightly Active", desc: "Walking, light exercise 1-3x/week" },
-  { value: "moderate", emoji: "🏃", label: "Active", desc: "Moderate exercise 3-5x/week" },
-  { value: "very_active", emoji: "💪", label: "Very Active", desc: "Hard exercise 6-7x/week" },
-  { value: "athlete", emoji: "🔥", label: "Athlete", desc: "Training twice a day" },
+const ACTIVITY_ICONS: Record<ActivityLevel, typeof Sofa> = {
+  sedentary: Sofa,
+  light: Footprints,
+  moderate: Bike,
+  very_active: Dumbbell,
+  athlete: Flame,
+};
+
+const ACTIVITY_OPTIONS: { value: ActivityLevel; label: string; desc: string }[] = [
+  { value: "sedentary", label: "Couch Potato", desc: "Desk job, minimal exercise" },
+  { value: "light", label: "Lightly Active", desc: "Walking, light exercise 1-3x/week" },
+  { value: "moderate", label: "Active", desc: "Moderate exercise 3-5x/week" },
+  { value: "very_active", label: "Very Active", desc: "Hard exercise 6-7x/week" },
+  { value: "athlete", label: "Athlete", desc: "Training twice a day" },
 ];
 
-const GOAL_OPTIONS: { value: FitnessGoal; emoji: string; label: string; desc: string; detail: string }[] = [
+const GOAL_ICONS: Record<FitnessGoal, typeof Target> = {
+  lose_mild: Target,
+  lose_moderate: TrendingDown,
+  lose_aggressive: Zap,
+  tone_up: RotateCcw,
+  maintain: Scale,
+  build_muscle: Dumbbell,
+  lean_bulk: ArrowUpCircle,
+};
+
+const GOAL_OPTIONS: { value: FitnessGoal; label: string; desc: string; detail: string }[] = [
   {
     value: "lose_mild",
-    emoji: "🎯",
     label: "Lose 2-3 kg",
     desc: "Gentle cut, no crash dieting",
     detail: "~0.25 kg/week • Keep energy for daily life",
   },
   {
     value: "lose_moderate",
-    emoji: "🔥",
     label: "Lose 5-7 kg",
     desc: "Steady fat loss, preserve muscle",
     detail: "~0.5 kg/week • Most popular in India",
   },
   {
     value: "lose_aggressive",
-    emoji: "⚡",
     label: "Lose 7-10 kg",
     desc: "Aggressive cut in 2-3 months",
     detail: "~0.75 kg/week • High protein to save muscle",
   },
   {
     value: "tone_up",
-    emoji: "✨",
     label: "Tone Up & Recomp",
     desc: "Lose fat, build muscle simultaneously",
     detail: "Slight deficit + high protein • Great for beginners",
   },
   {
     value: "maintain",
-    emoji: "⚖️",
     label: "Maintain Weight",
     desc: "Happy where I am, eat balanced",
     detail: "No deficit or surplus • Focus on nutrition quality",
   },
   {
     value: "build_muscle",
-    emoji: "💪",
     label: "Build Muscle",
     desc: "Gain strength and size",
     detail: "+300 kcal surplus • High protein for growth",
   },
   {
     value: "lean_bulk",
-    emoji: "🏋️",
     label: "Lean Bulk",
     desc: "Slow, clean gains — minimal fat",
     detail: "+200 kcal surplus • Controlled muscle gain",
@@ -267,7 +278,7 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
               <StepWrapper key="step-1" direction={direction}>
                 <div className="flex flex-col items-center gap-5 pt-2">
                   <CapyMascot mood="happy" size={64} />
-                  <h2 className="text-lg font-bold">About You 📏</h2>
+                  <h2 className="text-lg font-extrabold text-foreground">About You</h2>
 
                   {/* Name */}
                   <div className="w-full">
@@ -408,27 +419,34 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
               <StepWrapper key="step-2" direction={direction}>
                 <div className="flex flex-col items-center gap-4 pt-2">
                   <CapyMascot mood="motivated" size={64} />
-                  <h2 className="text-lg font-bold">How Active Are You? 🏃</h2>
+                  <h2 className="text-lg font-extrabold text-foreground">How Active Are You?</h2>
                   <div className="w-full space-y-2">
-                    {ACTIVITY_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setActivityLevel(opt.value)}
-                        className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98] ${
-                          activityLevel === opt.value
-                            ? "border-accent/40 bg-accent-light"
-                            : "border-border bg-card hover:bg-card-hover"
-                        }`}
-                      >
-                        <span className="text-xl">{opt.emoji}</span>
-                        <div>
-                          <p className={`text-sm font-semibold ${activityLevel === opt.value ? "text-accent-dim" : "text-foreground"}`}>
-                            {opt.label}
-                          </p>
-                          <p className="text-[10px] text-muted">{opt.desc}</p>
-                        </div>
-                      </button>
-                    ))}
+                    {ACTIVITY_OPTIONS.map((opt) => {
+                      const Icon = ACTIVITY_ICONS[opt.value];
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setActivityLevel(opt.value)}
+                          className={`w-full flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98] ${
+                            activityLevel === opt.value
+                              ? "border-accent/40 bg-accent-light"
+                              : "border-border bg-card hover:bg-card-hover"
+                          }`}
+                        >
+                          <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 ${
+                            activityLevel === opt.value ? "bg-accent/15" : "bg-border/30"
+                          }`}>
+                            <Icon className={`h-4.5 w-4.5 ${activityLevel === opt.value ? "text-accent" : "text-muted"}`} />
+                          </div>
+                          <div>
+                            <p className={`text-sm font-bold ${activityLevel === opt.value ? "text-accent-dim" : "text-foreground"}`}>
+                              {opt.label}
+                            </p>
+                            <p className="text-xs text-muted">{opt.desc}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </StepWrapper>
@@ -439,35 +457,42 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                 <div className="flex flex-col items-center gap-4 pt-2">
                   <CapyMascot mood="happy" size={64} />
                   <div className="text-center">
-                    <h2 className="text-lg font-bold">What&apos;s Your Goal? 🎯</h2>
-                    <p className="text-[10px] text-muted mt-1">Pick what feels right — you can always change later</p>
+                    <h2 className="text-lg font-extrabold text-foreground">What&apos;s Your Goal?</h2>
+                    <p className="text-xs text-muted mt-1">Pick what feels right — you can always change later</p>
                   </div>
                   <div className="w-full space-y-2">
-                    {GOAL_OPTIONS.map((opt) => (
-                      <button
-                        key={opt.value}
-                        onClick={() => setGoal(opt.value)}
-                        className={`w-full flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98] ${
-                          goal === opt.value
-                            ? "border-accent/40 bg-accent-light text-accent-dim"
-                            : "border-border bg-card hover:bg-card-hover text-foreground"
-                        }`}
-                      >
-                        <span className="text-lg mt-0.5">{opt.emoji}</span>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm font-semibold ${goal === opt.value ? "text-accent-dim" : "text-foreground"}`}>
-                            {opt.label}
-                          </p>
-                          <p className="text-[10px] text-muted">{opt.desc}</p>
-                          <p className={`text-[9px] mt-0.5 ${goal === opt.value ? "text-accent" : "text-muted-light"}`}>
-                            {opt.detail}
-                          </p>
-                        </div>
-                        {goal === opt.value && (
-                          <span className="text-accent text-xs mt-1">✓</span>
-                        )}
-                      </button>
-                    ))}
+                    {GOAL_OPTIONS.map((opt) => {
+                      const Icon = GOAL_ICONS[opt.value];
+                      return (
+                        <button
+                          key={opt.value}
+                          onClick={() => setGoal(opt.value)}
+                          className={`w-full flex items-start gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98] ${
+                            goal === opt.value
+                              ? "border-accent/40 bg-accent-light"
+                              : "border-border bg-card hover:bg-card-hover"
+                          }`}
+                        >
+                          <div className={`flex h-9 w-9 items-center justify-center rounded-full shrink-0 mt-0.5 ${
+                            goal === opt.value ? "bg-accent/15" : "bg-border/30"
+                          }`}>
+                            <Icon className={`h-4.5 w-4.5 ${goal === opt.value ? "text-accent" : "text-muted"}`} />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className={`text-sm font-bold ${goal === opt.value ? "text-accent-dim" : "text-foreground"}`}>
+                              {opt.label}
+                            </p>
+                            <p className="text-xs text-muted">{opt.desc}</p>
+                            <p className={`text-[10px] mt-0.5 ${goal === opt.value ? "text-accent" : "text-muted-light"}`}>
+                              {opt.detail}
+                            </p>
+                          </div>
+                          {goal === opt.value && (
+                            <Check className="h-4 w-4 text-accent mt-1 shrink-0" />
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               </StepWrapper>
@@ -483,42 +508,18 @@ export default function GoalOnboarding({ existingProfile, onComplete, onSkip }: 
                   >
                     <CapyMascot mood="excited" size={100} />
                   </motion.div>
-                  <h2 className="text-lg font-bold">Your Personalized Plan ✨</h2>
-                  <p className="text-xs text-muted -mt-3">Tap any number to adjust</p>
+                  <h2 className="text-lg font-extrabold text-foreground">Your Personalized Plan</h2>
+                  <p className="text-xs text-muted -mt-3">Tap the number or drag the ring to adjust</p>
 
-                  {/* Calorie ring */}
-                  <div className="relative flex flex-col items-center">
-                    <svg width="120" height="120" viewBox="0 0 120 120">
-                      <circle cx="60" cy="60" r="50" fill="none" stroke="var(--color-border)" strokeWidth="8" />
-                      <circle
-                        cx="60" cy="60" r="50" fill="none" stroke="currentColor" strokeWidth="8"
-                        strokeLinecap="round" strokeDasharray={2 * Math.PI * 50}
-                        strokeDashoffset={0} className="text-accent"
-                        transform="rotate(-90 60 60)"
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex flex-col items-center justify-center">
-                      {editingCalories ? (
-                        <input
-                          autoFocus
-                          type="number"
-                          inputMode="numeric"
-                          value={displayGoals.calories}
-                          onChange={(e) => setCustomGoals((p) => ({ ...p, calories: Number(e.target.value) || 0 }))}
-                          onBlur={() => setEditingCalories(false)}
-                          onKeyDown={(e) => e.key === "Enter" && setEditingCalories(false)}
-                          className="w-20 bg-transparent text-center text-2xl font-bold text-foreground outline-none"
-                        />
-                      ) : (
-                        <button onClick={() => setEditingCalories(true)} className="text-center">
-                          <AnimatedNumber value={displayGoals.calories} className="text-2xl font-bold" />
-                        </button>
-                      )}
-                      <span className="text-[10px] text-muted">kcal / day</span>
-                    </div>
-                  </div>
+                  {/* Calorie ring — tap to edit or drag to adjust */}
+                  <CalorieRingDial
+                    value={displayGoals.calories}
+                    onChange={(v) => setCustomGoals((p) => ({ ...p, calories: v }))}
+                    editing={editingCalories}
+                    onToggleEdit={() => setEditingCalories((e) => !e)}
+                  />
 
-                  <p className="text-[10px] text-muted-light">
+                  <p className="text-[10px] text-muted-light -mt-2">
                     TDEE: {computedGoals.tdee} kcal
                   </p>
 
@@ -638,6 +639,146 @@ function AnimatedNumber({ value, className = "" }: { value: number; className?: 
     >
       {value}
     </motion.span>
+  );
+}
+
+const RING_SIZE = 160;
+const RING_CENTER = RING_SIZE / 2;
+const RING_RADIUS = 62;
+const MIN_CAL = 800;
+const MAX_CAL = 5000;
+const CAL_STEP = 25;
+
+function CalorieRingDial({
+  value,
+  onChange,
+  editing,
+  onToggleEdit,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  editing: boolean;
+  onToggleEdit: () => void;
+}) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const dragging = useRef(false);
+  const lastAngle = useRef(0);
+
+  const getAngle = (clientX: number, clientY: number) => {
+    const svg = svgRef.current;
+    if (!svg) return 0;
+    const rect = svg.getBoundingClientRect();
+    const cx = rect.left + rect.width / 2;
+    const cy = rect.top + rect.height / 2;
+    return Math.atan2(clientY - cy, clientX - cx);
+  };
+
+  const handlePointerDown = (e: React.PointerEvent) => {
+    if (editing) return;
+    dragging.current = true;
+    lastAngle.current = getAngle(e.clientX, e.clientY);
+    (e.target as HTMLElement).setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!dragging.current) return;
+    const angle = getAngle(e.clientX, e.clientY);
+    let delta = angle - lastAngle.current;
+    // Normalize delta to [-PI, PI]
+    if (delta > Math.PI) delta -= 2 * Math.PI;
+    if (delta < -Math.PI) delta += 2 * Math.PI;
+    // Map radians to calorie change: full rotation ≈ 2000 kcal
+    const calDelta = (delta / (2 * Math.PI)) * 2000;
+    const newVal = Math.round((value + calDelta) / CAL_STEP) * CAL_STEP;
+    const clamped = Math.max(MIN_CAL, Math.min(MAX_CAL, newVal));
+    if (clamped !== value) onChange(clamped);
+    lastAngle.current = angle;
+  };
+
+  const handlePointerUp = () => {
+    dragging.current = false;
+  };
+
+  // Normalized progress for the ring arc (0-1 mapped from MIN_CAL to MAX_CAL)
+  const progress = (value - MIN_CAL) / (MAX_CAL - MIN_CAL);
+  const circumference = 2 * Math.PI * RING_RADIUS;
+  const strokeDashoffset = circumference - progress * circumference;
+
+  // Thumb position on the ring
+  const thumbAngle = -Math.PI / 2 + progress * 2 * Math.PI;
+  const thumbX = RING_CENTER + RING_RADIUS * Math.cos(thumbAngle);
+  const thumbY = RING_CENTER + RING_RADIUS * Math.sin(thumbAngle);
+
+  return (
+    <div className="relative flex flex-col items-center touch-none select-none">
+      <svg
+        ref={svgRef}
+        width={RING_SIZE}
+        height={RING_SIZE}
+        viewBox={`0 0 ${RING_SIZE} ${RING_SIZE}`}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        className="cursor-grab active:cursor-grabbing"
+      >
+        {/* Track */}
+        <circle
+          cx={RING_CENTER} cy={RING_CENTER} r={RING_RADIUS}
+          fill="none" stroke="var(--color-border)" strokeWidth="10"
+        />
+        {/* Progress arc */}
+        <circle
+          cx={RING_CENTER} cy={RING_CENTER} r={RING_RADIUS}
+          fill="none" stroke="var(--color-accent)" strokeWidth="10"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          transform={`rotate(-90 ${RING_CENTER} ${RING_CENTER})`}
+          className="transition-[stroke-dashoffset] duration-100"
+        />
+        {/* Draggable thumb */}
+        <circle
+          cx={thumbX} cy={thumbY} r="8"
+          fill="var(--color-accent)" stroke="white" strokeWidth="3"
+          className="drop-shadow-md"
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+        {editing ? (
+          <input
+            autoFocus
+            type="number"
+            inputMode="numeric"
+            value={value}
+            onChange={(e) => onChange(Math.max(MIN_CAL, Math.min(MAX_CAL, Number(e.target.value) || MIN_CAL)))}
+            onBlur={onToggleEdit}
+            onKeyDown={(e) => e.key === "Enter" && onToggleEdit()}
+            className="w-24 bg-transparent text-center text-2xl font-extrabold text-foreground outline-none pointer-events-auto"
+          />
+        ) : (
+          <button onClick={onToggleEdit} className="text-center pointer-events-auto">
+            <span className="text-2xl font-extrabold text-foreground">{value}</span>
+          </button>
+        )}
+        <span className="text-xs text-muted font-medium">kcal / day</span>
+      </div>
+      <div className="flex items-center gap-3 mt-2">
+        <button
+          onClick={() => onChange(Math.max(MIN_CAL, value - CAL_STEP))}
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-border/40 hover:bg-border/60 active:scale-90 transition-all"
+        >
+          <ArrowDownCircle className="h-4 w-4 text-muted" />
+        </button>
+        <span className="text-[10px] text-muted-light w-16 text-center">±{CAL_STEP} kcal</span>
+        <button
+          onClick={() => onChange(Math.min(MAX_CAL, value + CAL_STEP))}
+          className="flex h-7 w-7 items-center justify-center rounded-full bg-border/40 hover:bg-border/60 active:scale-90 transition-all"
+        >
+          <ArrowUpCircle className="h-4 w-4 text-muted" />
+        </button>
+      </div>
+    </div>
   );
 }
 
