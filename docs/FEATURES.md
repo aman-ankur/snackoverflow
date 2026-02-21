@@ -65,7 +65,7 @@
 - Auto-adds detected items with estimated shelf life (e.g., milk=3d, paneer=5d, onion=14d)
 - Color-coded: 🟢 Fresh, 🟡 Expiring (≤2 days), 🔴 Expired
 - Tap date to manually edit expiry
-- Persisted in localStorage (`fridgenius-expiry-tracker`)
+- Persisted in localStorage (`snackoverflow-expiry-tracker`)
 - Collapsible section, shows warning count badge
 
 ## 8. Shopping List
@@ -79,7 +79,7 @@
 - Add recipes from suggestions to specific days
 - Remove meals, clear day
 - Copy day's meal plan to clipboard
-- Persisted in localStorage (`fridgenius-meal-plan`)
+- Persisted in localStorage (`snackoverflow-meal-plan`)
 - Collapsible section
 
 ## 10. YOLO On-Device Mode
@@ -126,5 +126,5 @@
   - Streak counter (current + longest)
   - Edit goals button re-opens onboarding
 - **Streak tracking** — consecutive days with logged meals
-- **Persistence** — localStorage (`fridgenius-user-goals-v1`): UserProfile, NutritionGoals, StreakData
+- **Persistence** — localStorage (`snackoverflow-user-goals-v1`): UserProfile, NutritionGoals, StreakData
 - Auto-shows onboarding on first visit; skip uses sensible defaults (2000 kcal)

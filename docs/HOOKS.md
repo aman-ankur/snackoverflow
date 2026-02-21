@@ -77,7 +77,7 @@ interface AnalysisResult {
 - Items accumulate across scans — deduplication by lowercase name, keeps highest confidence
 - On 429 rate limit, auto-scan is stopped automatically
 - Camera restarts when facingMode changes (if already streaming)
-- Stores recent fridge scan snapshots in localStorage (`fridgenius-fridge-scan-history`) for Dish-mode linkage
+- Stores recent fridge scan snapshots in localStorage (`snackoverflow-fridge-scan-history`) for Dish-mode linkage
 
 ---
 
@@ -97,7 +97,7 @@ interface TrackedItem {
 ```
 
 ### localStorage Key
-`fridgenius-expiry-tracker`
+`snackoverflow-expiry-tracker`
 
 ### Built-in Shelf Life Estimates
 Common Indian kitchen items with default days:
@@ -166,8 +166,8 @@ Common Indian kitchen items with default days:
 **File**: `src/lib/useMealLog.ts`
 
 ### localStorage Keys
-- `fridgenius-meal-log-v1`
-- Reads optional fridge snapshot linkage from `fridgenius-fridge-scan-history`
+- `snackoverflow-meal-log-v1`
+- Reads optional fridge snapshot linkage from `snackoverflow-fridge-scan-history`
 
 ### State & Methods
 | Return | Type | Description |
@@ -193,7 +193,7 @@ Common Indian kitchen items with default days:
 **File**: `src/lib/useUserGoals.ts`
 
 ### localStorage Key
-`fridgenius-user-goals-v1`
+`snackoverflow-user-goals-v1`
 
 ### State & Methods
 | Return | Type | Description |

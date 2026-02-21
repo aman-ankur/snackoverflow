@@ -1,4 +1,4 @@
-# Fridgenius — Docs
+# SnackOverflow — Docs
 
 See the main [README.md](../README.md) for project overview, setup, and features.
 

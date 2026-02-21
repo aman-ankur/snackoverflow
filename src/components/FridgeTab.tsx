@@ -27,7 +27,7 @@ export default function FridgeTab() {
         <p className="text-[10px] text-muted-light">
           {mode === "yolo"
             ? "YOLOv8n via ONNX Runtime • Runs entirely on your device"
-            : "Powered by Fridgenius AI • Your images are not stored"}
+            : "Powered by SnackOverflow AI • Your images are not stored"}
         </p>
       </div>
     </>

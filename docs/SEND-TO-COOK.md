@@ -2,7 +2,7 @@
 
 ## Overview
 
-Indian household cooks typically speak Hindi and may not read English. Fridgenius generates casual Hindi messages (text and audio) that users can send to their cook via WhatsApp.
+Indian household cooks typically speak Hindi and may not read English. SnackOverflow generates casual Hindi messages (text and audio) that users can send to their cook via WhatsApp.
 
 ## Flow Diagram
 

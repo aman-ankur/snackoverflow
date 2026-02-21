@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="public/model/capy-happy.png" width="120" alt="Fridgenius Capy" />
+<img src="public/model/capy-logo.gif" width="160" alt="SnackOverflow Capy" />
 
-# Fridgenius
+# SnackOverflow
 
 **Your Smart Kitchen Assistant — powered by AI & a capybara** 🐾
 
@@ -17,9 +17,9 @@ Track meals, scan your fridge, hit nutrition goals, and grow a virtual garden �
 
 ---
 
-## What is Fridgenius?
+## What is SnackOverflow?
 
-Fridgenius is a **mobile-first meal tracker and nutrition assistant** built for Indian households. It combines AI-powered food scanning with goal tracking, a gamified garden, and a lovable capybara mascot.
+SnackOverflow is a **mobile-first meal tracker and nutrition assistant** built for Indian households. It combines AI-powered food scanning with goal tracking, a gamified garden, and a lovable capybara mascot.
 
 <div align="center">
 
@@ -83,8 +83,8 @@ Fridgenius is a **mobile-first meal tracker and nutrition assistant** built for 
 
 ```bash
 # Clone
-git clone https://github.com/aman-ankur/fridgenius.git
-cd fridgenius
+git clone https://github.com/aman-ankur/snackoverflow.git
+cd snackoverflow
 
 # Install
 npm install
@@ -164,7 +164,7 @@ src/
 ## Deploy on Vercel
 
 1. Go to [vercel.com/new](https://vercel.com/new)
-2. Import `aman-ankur/fridgenius` from GitHub
+2. Import `aman-ankur/snackoverflow` from GitHub
 3. Add the 3 environment variables
 4. Click Deploy
 

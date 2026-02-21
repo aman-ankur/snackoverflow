@@ -4,8 +4,8 @@ import { useCallback, useEffect, useState } from "react";
 import type { UserProfile, NutritionGoals, StreakData } from "@/lib/dishTypes";
 import { calculateGoals, DEFAULT_GOALS } from "@/lib/tdeeCalculator";
 
-const PROFILE_KEY = "fridgenius-user-goals-v1";
-const MEAL_LOG_KEY = "fridgenius-meal-log-v1";
+const PROFILE_KEY = "snackoverflow-user-goals-v1";
+const MEAL_LOG_KEY = "snackoverflow-meal-log-v1";
 
 function todayDateKey(): string {
   return new Date().toISOString().slice(0, 10);

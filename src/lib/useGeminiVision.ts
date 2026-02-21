@@ -30,7 +30,7 @@ export interface AnalysisResult {
   tip: string;
 }
 
-const FRIDGE_SCAN_HISTORY_KEY = "fridgenius-fridge-scan-history";
+const FRIDGE_SCAN_HISTORY_KEY = "snackoverflow-fridge-scan-history";
 
 export function useGeminiVision() {
   const videoRef = useRef<HTMLVideoElement>(null);

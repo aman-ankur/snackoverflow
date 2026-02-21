@@ -7,7 +7,7 @@ export interface MotivationLine {
   context: string;
 }
 
-const SEEN_KEY = "fridgenius-capy-motivation-seen";
+const SEEN_KEY = "snackoverflow-capy-motivation-seen";
 
 // ── Pre-built motivation lines (60+) ──────────────────────────────────
 

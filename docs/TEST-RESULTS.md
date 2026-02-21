@@ -47,12 +47,12 @@
 
 ### Profile View
 - Capy avatar SVG at top
-- App name "Fridgenius" + subtitle
+- App name "SnackOverflow" + subtitle
 - Body Stats card: Gender, Age, Height, Weight, Activity, Goal — all populated from localStorage
 - Daily Targets card: Calories, Protein, Carbs, Fat with values + TDEE display
 - Edit buttons on both cards
 - "Re-run Goal Setup" and "Reset All Data" action buttons
-- Footer: "Fridgenius v2.0 • Made with 🐾 by Capy"
+- Footer: "SnackOverflow v2.0 • Made with 🐾 by Capy"
 
 ### Fridge Overlay
 - Opens from Home "Scan Your Fridge" button

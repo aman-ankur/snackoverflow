@@ -3,8 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
 
-const STORAGE_KEY = "fridgenius-garden-v1";
-const MEAL_LOG_KEY = "fridgenius-meal-log-v1";
+const STORAGE_KEY = "snackoverflow-garden-v1";
+const MEAL_LOG_KEY = "snackoverflow-meal-log-v1";
 
 export interface GardenState {
   flowers: number;

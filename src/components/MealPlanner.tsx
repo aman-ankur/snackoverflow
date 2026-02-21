@@ -16,7 +16,7 @@ import {
 import type { GeminiRecipe } from "@/lib/useGeminiVision";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
-const STORAGE_KEY = "fridgenius-meal-plan";
+const STORAGE_KEY = "snackoverflow-meal-plan";
 
 interface MealPlan {
   [day: string]: { name: string; hindi: string; ingredients_needed: string[] }[];

@@ -27,7 +27,7 @@ People tracking calories/macros struggle with Indian food because:
 ### 1. Bottom Tab Bar (replaces ModeSwitcher)
 - Sticky bottom nav: 🧊 Fridge | 🍽️ Dish
 - YOLO/Cloud AI toggle moves inside Fridge tab as sub-switcher
-- Header stays at top ("Fridgenius — Smart Kitchen Assistant")
+- Header stays at top ("SnackOverflow — Smart Kitchen Assistant")
 - Tab transitions animated with framer-motion
 
 ### 2. Dish Scanner Camera
@@ -170,7 +170,7 @@ People tracking calories/macros struggle with Indian food because:
 - Edit goals button re-opens onboarding
 
 #### Persistence
-- localStorage key: `fridgenius-user-goals-v1`
+- localStorage key: `snackoverflow-user-goals-v1`
 - Stores: UserProfile, NutritionGoals, StreakData
 - Streak refreshes on meal log
 
