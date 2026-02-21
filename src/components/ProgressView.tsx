@@ -5,6 +5,7 @@ import { motion } from "framer-motion";
 import { Flame, TrendingUp, Utensils, Link2, History } from "lucide-react";
 import CapyMascot from "@/components/CapyMascot";
 import CapyLottie from "@/components/CapyLottie";
+import CalendarProgressView from "@/components/CalendarProgressView";
 import type { LoggedMeal, MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
 
 interface ProgressViewProps {
@@ -77,6 +78,9 @@ export default function ProgressView({
         </div>
         <CapyLottie src="/model/cute-cat.json" size={48} />
       </div>
+
+      {/* Calendar View */}
+      <CalendarProgressView meals={meals} goals={goals} />
 
       {/* Total Progress Card */}
       <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-white border border-accent/10 p-4">

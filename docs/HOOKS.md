@@ -262,6 +262,66 @@ Motivational line picker for Capy mascot:
 
 ---
 
+## `useGardenState()` — Garden State & Milestone Hook
+
+**File**: `src/lib/useGardenState.ts`
+
+### Exported Types
+```ts
+interface GardenState {
+  flowers: number;        // 0-30 (= calorie goal days hit)
+  treeLevel: number;      // 0-3 (streak: 0→1 at 3d, →2 at 14d, →3 at 30d)
+  pondLevel: number;      // backward compat (= homeLevel)
+  butterflies: number;    // 0-5 (streak ≥5)
+  hasRainbow: boolean;    // streak ≥14 (visual bonus with Forest)
+  hasCrown: boolean;      // streak ≥30 (Hot Spring)
+  gardenHealth: number;   // 0-100 composite score
+  totalMealsLogged: number;
+  daysGoalHit: number;    // permanent counter (80-120% of calorie target)
+  lastComputedDate: string;
+  journal: GardenEvent[];
+  babyCapybaras: number;  // 0-3 (goal days: 7→1, 12→2, 20→3)
+  homeLevel: number;      // 0-3 (goal days: 15→1, 20→2, 25→3)
+}
+```
+
+### 8-Milestone Progression (2 tracks)
+| # | Icon | Name | Track | Threshold | On streak loss |
+|---|------|------|-------|-----------|----------------|
+| 1 | 🌱 | Sapling | Streak | 3-day streak | Disappears |
+| 2 | 🌸 | First Flower | Goal | 3 calorie goal days | Permanent |
+| 3 | 🦋 | Butterfly | Streak | 5-day streak | Disappears |
+| 4 | 🐾 | Baby Capy | Goal | 7 calorie goal days | Permanent |
+| 5 | 🌲 | Forest | Streak | 14-day streak | Disappears |
+| 6 | 🏡 | Cozy Home | Goal | 15 calorie goal days | Permanent |
+| 7 | ♨️ | Hot Spring | Streak | 30-day streak | Disappears |
+| 8 | 🌻 | Full Garden | Goal | 30 calorie goal days | Permanent |
+
+### Key Functions
+| Function | Description |
+|---|---|
+| `computeGarden(prev, streak, todayTotals, goals)` | Computes new GardenState from 2 inputs: `streak.currentStreak` + `daysGoalHit`. Maps to Three.js props. |
+| `getNextUnlock(state, streak)` | Returns next milestone in exact 8-milestone order with current/target progress |
+| `useGardenState(streak, todayTotals, goals)` | React hook — loads from localStorage, recomputes on input change, persists |
+
+### Garden Health Formula
+- Base 50 + streak bonuses (1d: +10, 3d: +10, 7d: +10, 14d: +5, 30d: +5) + goal bonuses (3 goals: +5, 15 goals: +5)
+- Wilting: streak=0 → health drops by 15/day (min 10)
+
+### Three.js Visual Mapping (no changes to CapyGarden.tsx)
+| Milestone | GardenState prop | Three.js Component |
+|-----------|-----------------|-------------------|
+| Sapling | `treeLevel: 1` | `Trees` |
+| First Flower | `flowers: 3+` | `Flowers` |
+| Butterfly | `butterflies: 1+` | `Butterflies` |
+| Baby Capy | `babyCapybaras: 1+` | `BabyCapybaras` |
+| Forest | `treeLevel: 2`, `hasRainbow: true` | `Trees` + `Rainbow` |
+| Cozy Home | `homeLevel: 1+` | `CozyHome` |
+| Hot Spring | `hasCrown: true` | `HotSpring` |
+| Full Garden | `flowers: 30` | `Flowers` (max) |
+
+---
+
 ## `useYoloDetection()` — YOLO On-Device Hook
 
 **File**: `src/lib/useYoloDetection.ts`
