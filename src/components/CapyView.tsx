@@ -1,12 +1,56 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Flame, TreePine, Flower2, Fish, Sparkles, MessageCircle, Trophy, ChevronRight } from "lucide-react";
+import { Flame, TreePine, Flower2, Fish, Sparkles, MessageCircle, Trophy, ChevronRight, Eye, EyeOff } from "lucide-react";
 import dynamic from "next/dynamic";
-import { useGardenState, type GardenEvent, type NextUnlock } from "@/lib/useGardenState";
+import { useGardenState, type GardenState, type GardenEvent, type NextUnlock } from "@/lib/useGardenState";
 import { getContextualMotivation } from "@/lib/capyMotivation";
 import type { MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
+
+// ── Demo garden presets for each achievement stage ────────────────────
+const DEMO_PRESETS: { label: string; icon: string; garden: GardenState }[] = [
+  {
+    label: "First Flower",
+    icon: "🌸",
+    garden: { flowers: 3, treeLevel: 0, pondLevel: 0, butterflies: 0, hasRainbow: false, hasCrown: false, gardenHealth: 60, totalMealsLogged: 3, daysGoalHit: 3, lastComputedDate: "", journal: [], babyCapybaras: 0, homeLevel: 0 },
+  },
+  {
+    label: "Sapling",
+    icon: "🌳",
+    garden: { flowers: 5, treeLevel: 1, pondLevel: 0, butterflies: 2, hasRainbow: false, hasCrown: false, gardenHealth: 68, totalMealsLogged: 8, daysGoalHit: 5, lastComputedDate: "", journal: [], babyCapybaras: 0, homeLevel: 0 },
+  },
+  {
+    label: "Rainbow",
+    icon: "🌈",
+    garden: { flowers: 10, treeLevel: 2, pondLevel: 0, butterflies: 3, hasRainbow: true, hasCrown: false, gardenHealth: 75, totalMealsLogged: 15, daysGoalHit: 10, lastComputedDate: "", journal: [], babyCapybaras: 0, homeLevel: 0 },
+  },
+  {
+    label: "Forest",
+    icon: "🌲",
+    garden: { flowers: 15, treeLevel: 3, pondLevel: 0, butterflies: 4, hasRainbow: true, hasCrown: false, gardenHealth: 80, totalMealsLogged: 25, daysGoalHit: 15, lastComputedDate: "", journal: [], babyCapybaras: 0, homeLevel: 1 },
+  },
+  {
+    label: "Baby Capy",
+    icon: "🐾",
+    garden: { flowers: 18, treeLevel: 3, pondLevel: 1, butterflies: 4, hasRainbow: true, hasCrown: false, gardenHealth: 85, totalMealsLogged: 30, daysGoalHit: 18, lastComputedDate: "", journal: [], babyCapybaras: 2, homeLevel: 1 },
+  },
+  {
+    label: "Cozy Home",
+    icon: "\uD83C\uDFE1",
+    garden: { flowers: 22, treeLevel: 4, pondLevel: 2, butterflies: 5, hasRainbow: true, hasCrown: false, gardenHealth: 90, totalMealsLogged: 40, daysGoalHit: 22, lastComputedDate: "", journal: [], babyCapybaras: 3, homeLevel: 2 },
+  },
+  {
+    label: "Hot Spring",
+    icon: "♨️",
+    garden: { flowers: 26, treeLevel: 4, pondLevel: 3, butterflies: 5, hasRainbow: true, hasCrown: true, gardenHealth: 95, totalMealsLogged: 60, daysGoalHit: 26, lastComputedDate: "", journal: [], babyCapybaras: 3, homeLevel: 3 },
+  },
+  {
+    label: "Full Garden",
+    icon: "🌻",
+    garden: { flowers: 30, treeLevel: 4, pondLevel: 3, butterflies: 5, hasRainbow: true, hasCrown: true, gardenHealth: 100, totalMealsLogged: 100, daysGoalHit: 30, lastComputedDate: "", journal: [], babyCapybaras: 3, homeLevel: 3 },
+  },
+];
 
 const CapyGarden = dynamic(() => import("@/components/CapyGarden"), {
   ssr: false,
@@ -31,6 +75,32 @@ export default function CapyView({ streak, todayTotals, goals, isActive }: CapyV
   const { garden, nextUnlock } = useGardenState(streak, todayTotals, goals);
   const [motivation, setMotivation] = useState<{ text: string; mood: string } | null>(null);
   const [showMotivation, setShowMotivation] = useState(false);
+  const [demoGarden, setDemoGarden] = useState<GardenState | null>(null);
+  const [showDemoPanel, setShowDemoPanel] = useState(false);
+  const [activeDemo, setActiveDemo] = useState<string | null>(null);
+  const revertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Auto-revert preview after 10 seconds
+  useEffect(() => {
+    if (revertTimerRef.current) clearTimeout(revertTimerRef.current);
+    if (demoGarden) {
+      revertTimerRef.current = setTimeout(() => {
+        setDemoGarden(null);
+        setActiveDemo(null);
+      }, 30000);
+    }
+    return () => { if (revertTimerRef.current) clearTimeout(revertTimerRef.current); };
+  }, [demoGarden]);
+
+  // Revert preview when tab changes (isActive becomes false)
+  useEffect(() => {
+    if (!isActive && demoGarden) {
+      setDemoGarden(null);
+      setActiveDemo(null);
+    }
+  }, [isActive, demoGarden]);
+
+  const activeGarden = demoGarden ?? garden;
 
   const handleCapyTap = useCallback(() => {
     const line = getContextualMotivation(
@@ -62,27 +132,30 @@ export default function CapyView({ streak, todayTotals, goals, isActive }: CapyV
 
   const achievements = useMemo(() => {
     return [
-      { icon: "🌸", label: "First Flower", unlocked: garden.flowers >= 1 },
-      { icon: "🌳", label: "Sapling", unlocked: garden.treeLevel >= 1 },
-      { icon: "🦋", label: "Butterfly", unlocked: garden.butterflies >= 1 },
-      { icon: "🌊", label: "Pond", unlocked: garden.pondLevel >= 1 },
-      { icon: "🐟", label: "Fish", unlocked: garden.pondLevel >= 3 },
-      { icon: "🌈", label: "Rainbow", unlocked: garden.hasRainbow },
-      { icon: "👑", label: "Crown", unlocked: garden.hasCrown },
-      { icon: "🏆", label: "Full Garden", unlocked: garden.flowers >= 30 },
+      { icon: "🌸", label: "First Flower", unlocked: activeGarden.flowers >= 1 },
+      { icon: "🌳", label: "Sapling", unlocked: activeGarden.treeLevel >= 1 },
+      { icon: "🌈", label: "Rainbow", unlocked: activeGarden.hasRainbow },
+      { icon: "🌲", label: "Forest", unlocked: activeGarden.treeLevel >= 3 },
+      { icon: "🐾", label: "Baby Capy", unlocked: (activeGarden.babyCapybaras ?? 0) >= 1 },
+      { icon: "\uD83C\uDFE1", label: "Cozy Home", unlocked: (activeGarden.homeLevel ?? 0) >= 1 },
+      { icon: "♨️", label: "Hot Spring", unlocked: activeGarden.hasCrown },
+      { icon: "🌻", label: "Full Garden", unlocked: activeGarden.flowers >= 30 },
     ];
-  }, [garden]);
+  }, [activeGarden]);
 
   return (
     <div className="space-y-4">
       {/* Garden Stats Bar */}
       <div className="flex items-center justify-between">
-        <h2 className="text-lg font-extrabold text-foreground">Capy&apos;s Garden</h2>
+        <h2 className="text-lg font-extrabold text-foreground">
+          Capy&apos;s Garden
+          {demoGarden && <span className="text-[10px] font-medium text-orange ml-1.5">(Preview)</span>}
+        </h2>
         <div className="flex items-center gap-3">
-          <StatChip icon="🌸" value={garden.flowers} />
-          <StatChip icon="🌳" value={`Lv${garden.treeLevel}`} />
-          <StatChip icon="🦋" value={garden.butterflies} />
-          {streak.currentStreak > 0 && (
+          <StatChip icon="🌸" value={activeGarden.flowers} />
+          <StatChip icon="🌳" value={`Lv${activeGarden.treeLevel}`} />
+          <StatChip icon="🦋" value={activeGarden.butterflies} />
+          {streak.currentStreak > 0 && !demoGarden && (
             <div className="flex items-center gap-1 rounded-full bg-orange-light border border-orange/20 px-2 py-0.5">
               <Flame className="h-3 w-3 text-orange" />
               <span className="text-[10px] font-bold text-orange">{streak.currentStreak}</span>
@@ -94,10 +167,23 @@ export default function CapyView({ streak, todayTotals, goals, isActive }: CapyV
       {/* 3D Garden Canvas */}
       <div className="relative">
         <CapyGarden
-          garden={garden}
+          garden={activeGarden}
           isActive={isActive}
           onCapyTap={handleCapyTap}
         />
+
+        {/* Demo mode indicator overlay */}
+        {demoGarden && (
+          <div className="absolute top-3 left-3">
+            <button
+              onClick={() => { setDemoGarden(null); setActiveDemo(null); }}
+              className="flex items-center gap-1.5 rounded-full bg-orange/90 text-white px-3 py-1 text-[10px] font-bold shadow-lg backdrop-blur-sm transition-all active:scale-95"
+            >
+              <EyeOff className="h-3 w-3" />
+              Exit Preview
+            </button>
+          </div>
+        )}
 
         {/* Motivation Bubble Overlay */}
         <AnimatePresence>
@@ -138,8 +224,67 @@ export default function CapyView({ streak, todayTotals, goals, isActive }: CapyV
         <Sparkles className="h-4 w-4 text-accent" />
       </button>
 
+      {/* Preview Garden Button & Panel */}
+      <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        <button
+          onClick={() => setShowDemoPanel(!showDemoPanel)}
+          className="w-full p-3 flex items-center gap-2 text-left transition-colors hover:bg-border/20"
+        >
+          <Eye className="h-4 w-4 text-accent" />
+          <span className="text-sm font-bold text-foreground flex-1">Preview Garden Stages</span>
+          <ChevronRight className={`h-4 w-4 text-muted transition-transform ${showDemoPanel ? "rotate-90" : ""}`} />
+        </button>
+        <AnimatePresence>
+          {showDemoPanel && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="overflow-hidden"
+            >
+              <div className="px-3 pb-3 pt-1">
+                <p className="text-[10px] text-muted mb-2">Tap to preview how your garden looks at each stage</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {DEMO_PRESETS.map((preset) => (
+                    <button
+                      key={preset.label}
+                      onClick={() => {
+                        if (activeDemo === preset.label) {
+                          setDemoGarden(null);
+                          setActiveDemo(null);
+                        } else {
+                          setDemoGarden(preset.garden);
+                          setActiveDemo(preset.label);
+                        }
+                      }}
+                      className={`flex flex-col items-center gap-0.5 rounded-xl p-1.5 transition-all active:scale-95 ${
+                        activeDemo === preset.label
+                          ? "bg-accent/20 border border-accent/40 shadow-sm"
+                          : "bg-border/20 border border-transparent hover:bg-border/40"
+                      }`}
+                    >
+                      <span className="text-base">{preset.icon}</span>
+                      <span className="text-[8px] font-semibold text-foreground text-center leading-tight">{preset.label}</span>
+                    </button>
+                  ))}
+                </div>
+                {demoGarden && (
+                  <button
+                    onClick={() => { setDemoGarden(null); setActiveDemo(null); }}
+                    className="mt-2 w-full rounded-lg bg-border/30 py-1.5 text-[10px] font-bold text-muted hover:bg-border/50 transition-colors"
+                  >
+                    Reset to My Garden
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* Next Unlock Card */}
-      {nextUnlock && <NextUnlockCard unlock={nextUnlock} />}
+      {nextUnlock && !demoGarden && <NextUnlockCard unlock={nextUnlock} />}
 
       {/* Achievements Grid */}
       <div className="rounded-2xl bg-card border border-border p-4">
@@ -181,27 +326,27 @@ export default function CapyView({ streak, todayTotals, goals, isActive }: CapyV
       <div className="rounded-2xl bg-card border border-border p-4">
         <div className="flex items-center justify-between mb-2">
           <h3 className="text-sm font-bold text-foreground">Garden Health</h3>
-          <span className="text-xs font-bold" style={{ color: garden.gardenHealth > 60 ? "#16a34a" : garden.gardenHealth > 30 ? "#ca8a04" : "#ea580c" }}>
-            {garden.gardenHealth}%
+          <span className="text-xs font-bold" style={{ color: activeGarden.gardenHealth > 60 ? "#16a34a" : activeGarden.gardenHealth > 30 ? "#ca8a04" : "#ea580c" }}>
+            {activeGarden.gardenHealth}%
           </span>
         </div>
         <div className="h-2.5 w-full rounded-full bg-border overflow-hidden">
           <motion.div
             initial={{ width: 0 }}
-            animate={{ width: `${garden.gardenHealth}%` }}
+            animate={{ width: `${activeGarden.gardenHealth}%` }}
             transition={{ duration: 0.8, ease: "easeOut" }}
             className="h-full rounded-full"
             style={{
-              backgroundColor: garden.gardenHealth > 60 ? "#16a34a" : garden.gardenHealth > 30 ? "#ca8a04" : "#ea580c",
+              backgroundColor: activeGarden.gardenHealth > 60 ? "#16a34a" : activeGarden.gardenHealth > 30 ? "#ca8a04" : "#ea580c",
             }}
           />
         </div>
         <p className="text-[10px] text-muted mt-1.5">
-          {garden.gardenHealth > 80
+          {activeGarden.gardenHealth > 80
             ? "Your garden is thriving! Keep it up!"
-            : garden.gardenHealth > 50
+            : activeGarden.gardenHealth > 50
             ? "Garden is healthy. Log meals to keep it growing!"
-            : garden.gardenHealth > 30
+            : activeGarden.gardenHealth > 30
             ? "Garden needs attention. Log a meal to help!"
             : "Garden is wilting! Log meals to revive it!"}
         </p>

@@ -103,7 +103,11 @@
 - Manual-scan-only dish mode avoids uncontrolled background token usage
 
 ## 13. Goal Setting & Capy Mascot (NEW)
-- **Capy** — mood-reactive capybara mascot (SVG, 5 moods: happy/excited/sleepy/motivated/concerned)
+- **Capy** — mood-reactive capybara mascot (kawaii PNG images, 3 variants: bath/orange-hat/headphones)
+- **Lottie animations** — animated mascots via `lottie-react`:
+  - Fat capybara logo animation on Home greeting & streak cards
+  - Cute cat animation on Progress page header
+  - Cute dog animation on Home fridge scanner card
 - **5-step animated onboarding wizard**:
   - Welcome screen with Capy
   - Body stats: Gender, Age (range slider), Height (cm/ft toggle), Weight (kg/lbs toggle)
