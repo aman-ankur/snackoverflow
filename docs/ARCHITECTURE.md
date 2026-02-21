@@ -40,9 +40,12 @@ fridgenius/
 │   ├── components/
 │   │   ├── BottomTabBar.tsx           # Sticky bottom navigation (Fridge/Dish)
 │   │   ├── FridgeTab.tsx              # Fridge workspace container (keeps YOLO + Cloud AI switcher)
-│   │   ├── DishMode.tsx               # Dish scanner orchestrator
+│   │   ├── DishMode.tsx               # Dish scanner orchestrator (+ goal integration)
 │   │   ├── NutritionCard.tsx          # Per-dish calorie/macro card
-│   │   ├── DailySummary.tsx           # Today's nutrition summary
+│   │   ├── DailySummary.tsx           # Today's nutrition summary (replaced by GoalDashboard)
+│   │   ├── CapyMascot.tsx             # SVG capybara mascot with 5 moods (NEW)
+│   │   ├── GoalOnboarding.tsx         # 5-step animated onboarding wizard (NEW)
+│   │   ├── GoalDashboard.tsx          # Daily progress card with Capy (NEW)
 │   │   ├── MealLog.tsx                # Logged meals list
 │   │   ├── MealHistory.tsx            # History + weekly insights
 │   │   ├── ApiKeyInput.tsx            # (Legacy) API key input field
@@ -63,7 +66,10 @@ fridgenius/
 │   │   ├── YoloCameraView.tsx        # Camera view for YOLO mode
 │   │   └── YoloMode.tsx              # YOLO on-device mode orchestrator
 │   └── lib/
-│       ├── dishTypes.ts              # Shared dish scanner domain types
+│       ├── dishTypes.ts              # Shared domain types (incl. UserProfile, NutritionGoals, StreakData)
+│       ├── tdeeCalculator.ts         # TDEE/BMR/macro calculation (Mifflin-St Jeor) (NEW)
+│       ├── capyLines.ts              # Motivational line picker + mood logic (NEW)
+│       ├── useUserGoals.ts           # Goal setting + streak hook (localStorage) (NEW)
 │       ├── recipes.ts                # Static recipe database (YOLO mode fallback)
 │       ├── useDetection.ts           # (Legacy) Generic detection hook
 │       ├── useDishScanner.ts         # Dish camera + analysis hook
@@ -106,10 +112,13 @@ YOLO Mode (YoloMode.tsx):
   → items matched to static recipe database (recipes.ts)
 
 Dish Tab (DishMode.tsx):
+  First visit → GoalOnboarding (useUserGoals checks localStorage)
+  → 5-step wizard → TDEE calculation → save profile + goals
   Camera → captureFrame() → /api/analyze-dish → Gemini/Groq → nutrition JSON
   → per-dish NutritionCard + portion scaling
-  → Log This Meal (useMealLog)
-  → DailySummary + MealLog + MealHistory insights
+  → Log This Meal (useMealLog) → refreshStreak()
+  → GoalDashboard (replaces DailySummary) + MealLog + MealHistory insights
+  → Capy mood + motivational lines based on progress vs goals
   → optional Fridge↔Dish linkage from recent fridge scan snapshots
 ```
 

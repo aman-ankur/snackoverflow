@@ -22,14 +22,17 @@ All components are in `src/components/`. All are `"use client"` components.
 **Main Dish scanner orchestrator (manual scan).**
 - Uses `useDishScanner()` for camera + API analysis flow
 - Uses `useMealLog()` for local meal logging + daily/weekly insights
+- Uses `useUserGoals()` for goal tracking + streak management
 - Renders sequence:
+  - GoalOnboarding overlay (if no profile exists),
   - camera (manual analyze only),
   - meal type context picker,
   - portion adjuster,
   - per-dish nutrition cards,
   - log-this-meal action,
-  - daily summary, meal log, and history insights
-- Adds “You had this X days ago” badges for previously logged dishes
+  - GoalDashboard (replaces DailySummary), meal log, and history insights
+- Adds "You had this X days ago" badges for previously logged dishes
+- Refreshes streak on meal log
 
 ### `NutritionCard.tsx`
 **Per-dish nutrition presentation card.**
@@ -38,9 +41,35 @@ All components are in `src/components/`. All are `"use client"` components.
 - Shows portion, confidence, ingredients, and health tip
 
 ### `DailySummary.tsx`
-**Today-level nutrition summary for logged dish meals.**
+**Today-level nutrition summary for logged dish meals.** *(Replaced by GoalDashboard in DishMode)*
 - Props: `totals`, `mealsCount`
 - Shows calories/protein/carbs/fat with compact ring progress visuals
+
+### `CapyMascot.tsx` (NEW)
+**SVG capybara mascot with mood-reactive expressions.**
+- Props: `mood: CapyMood`, `size?: number`
+- 5 moods: happy, excited, sleepy, motivated, concerned
+- Each mood changes eyes, mouth, accessories (sparkles, zzz, stars)
+- Pure SVG — no external assets
+
+### `GoalOnboarding.tsx` (NEW)
+**5-step animated onboarding wizard with Capy.**
+- Props: `existingProfile?`, `onComplete`, `onSkip`
+- Steps: Welcome → About You → Activity → Goal → Plan
+- Framer Motion slide transitions between steps
+- Age: range slider (14-80); Height/Weight: free-type with onBlur validation
+- 7 goal options (India-specific with detailed descriptions)
+- Final step shows computed TDEE + editable calorie/macro targets
+- Locks body scroll when open (`fixed inset-0 z-[100]`)
+
+### `GoalDashboard.tsx` (NEW)
+**Daily progress card with Capy mascot — replaces DailySummary.**
+- Props: `totals`, `goals`, `streak`, `mealsCount`, `onEditGoals`
+- Time-of-day greeting + Capy with speech bubble
+- Calorie progress bar (percentage + remaining)
+- Macro bars (protein/carbs/fat)
+- Streak counter
+- Edit goals gear button
 
 ### `MealLog.tsx`
 **Collapsible list of today’s logged meals.**

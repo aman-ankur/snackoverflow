@@ -97,3 +97,26 @@
 - Image downscaling to max width 512px and JPEG compression before AI requests
 - Dish scan endpoint includes short-lived in-memory cache for repeated near-identical scans
 - Manual-scan-only dish mode avoids uncontrolled background token usage
+
+## 13. Goal Setting & Capy Mascot (NEW)
+- **Capy** — mood-reactive capybara mascot (SVG, 5 moods: happy/excited/sleepy/motivated/concerned)
+- **5-step animated onboarding wizard**:
+  - Welcome screen with Capy
+  - Body stats: Gender, Age (range slider), Height (cm/ft toggle), Weight (kg/lbs toggle)
+  - Activity level: 5 options (Sedentary → Athlete)
+  - Goal: 7 India-specific options (Lose 2-3kg, Lose 5-7kg, Lose 7-10kg, Tone Up, Maintain, Build Muscle, Lean Bulk)
+  - Personalized plan: computed TDEE + calorie/macro targets (tap to edit)
+- **TDEE calculator** — Mifflin-St Jeor BMR × activity multiplier + goal offset
+  - Evidence-based calorie deficits/surpluses per goal
+  - Protein targets: 1.6–2.2 g/kg bodyweight depending on goal
+  - Fat: 25% of target calories; carbs: remainder
+  - Minimum floor: 1200 kcal
+- **GoalDashboard** — replaces DailySummary with:
+  - Time-of-day greeting + Capy speech bubble (context-aware motivational lines)
+  - Calorie progress bar with percentage and remaining
+  - Macro progress bars (protein/carbs/fat)
+  - Streak counter (current + longest)
+  - Edit goals button re-opens onboarding
+- **Streak tracking** — consecutive days with logged meals
+- **Persistence** — localStorage (`fridgenius-user-goals-v1`): UserProfile, NutritionGoals, StreakData
+- Auto-shows onboarding on first visit; skip uses sensible defaults (2000 kcal)

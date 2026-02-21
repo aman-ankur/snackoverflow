@@ -106,6 +106,52 @@ body { overscroll-behavior: none; }               /* No pull-to-refresh */
 .scrollbar-hide { scrollbar-width: none; }        /* Hidden scrollbars */
 ```
 
+## Goal Setting UI Patterns (NEW)
+
+### Onboarding Overlay
+```
+fixed inset-0 z-[100] bg-background/98 backdrop-blur-xl
+```
+- Locks body scroll via `document.body.style.overflow = "hidden"`
+- Full-screen overlay with progress dots at top
+- Step content scrollable, nav buttons pinned at bottom
+
+### Goal Option Cards
+```
+w-full flex items-start gap-3 rounded-xl border px-4 py-3 text-left
+Selected: border-accent/40 bg-accent/10
+Unselected: border-border bg-surface hover:bg-surface-hover
+```
+- Each option: emoji + label + description + detail line
+- Checkmark on selected option
+
+### Range Slider (Age)
+```
+w-full h-2 rounded-full appearance-none bg-border cursor-pointer accent-accent
+```
+- Label + value display on same row above slider
+- Min/max labels below
+
+### Input Fields (Height/Weight)
+- Free-type with `onBlur` validation (no aggressive onChange clamping)
+- `inputMode="numeric"` for mobile keyboard
+- Unit toggle buttons (cm/ft, kg/lbs)
+
+### Progress Bars (GoalDashboard)
+```
+h-2.5 rounded-full bg-border (track)
+h-2.5 rounded-full bg-accent (fill, width via style)
+```
+- Calorie bar: accent color, shows percentage + remaining
+- Macro bars: accent (protein), yellow-400 (carbs), red-400 (fat)
+
+### Capy Speech Bubble
+```
+rounded-2xl bg-surface border border-border p-3
+```
+- Positioned next to CapyMascot SVG
+- Context-aware text from `capyLines.ts`
+
 ## Layout
 - Max width: `max-w-lg` (32rem / 512px) — centered on larger screens
 - Padding: `px-4 py-4 pb-20`
