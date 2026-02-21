@@ -119,96 +119,102 @@ export function computeGarden(
 
   let state = { ...prev, totalMealsLogged: totalMeals };
   let journal = [...prev.journal];
+  const s = streak.currentStreak;
 
-  // Count days where calorie goal was approximately hit (within 80-120%)
-  let daysGoalHit = 0;
-  if (goals.calories > 0) {
-    // Simple heuristic: count dates with meals logged as potential goal-hit days
-    // For a more accurate count we'd need per-day totals, but this is a reasonable proxy
-    daysGoalHit = Math.min(mealDates.size, prev.daysGoalHit);
-
-    // Check if today's totals hit the goal
+  // ── Calorie goal days (permanent, never decreases) ──
+  let daysGoalHit = prev.daysGoalHit;
+  if (goals.calories > 0 && prev.lastComputedDate !== today) {
     const todayPercent = todayTotals.calories / goals.calories;
     if (todayPercent >= 0.8 && todayPercent <= 1.2) {
-      if (prev.lastComputedDate !== today) {
-        daysGoalHit = prev.daysGoalHit + 1;
-      }
+      daysGoalHit = prev.daysGoalHit + 1;
     }
   }
 
-  // Flowers: based on days goal hit (max 30)
+  // ── Milestone 1: 🌱 Sapling — 3-day streak (streak-based, disappears) ──
+  // treeLevel: 0 → 1 (streak≥3) → 2 (streak≥14, Forest) → 3 (streak≥30)
+  let treeLevel = 0;
+  if (s >= 30) treeLevel = 3;
+  else if (s >= 14) treeLevel = 2;
+  else if (s >= 3) treeLevel = 1;
+
+  if (treeLevel > 0 && prev.treeLevel === 0) {
+    journal = addEvent(journal, "A sapling sprouted in your garden!", "�");
+  }
+  if (treeLevel >= 2 && prev.treeLevel < 2) {
+    journal = addEvent(journal, "Your garden has grown into a forest!", "🌲");
+  }
+
+  // ── Milestone 2: 🌸 First Flower — 3 calorie goal days (permanent) ──
+  // flowers: min(daysGoalHit, 30)
   const newFlowers = Math.min(daysGoalHit, 30);
-  if (newFlowers > prev.flowers && prev.lastComputedDate !== today) {
-    journal = addEvent(journal, "A new flower bloomed in your garden!", "🌸");
+  if (newFlowers > prev.flowers && newFlowers >= 3 && prev.flowers < 3) {
+    journal = addEvent(journal, "Flowers are blooming in your garden!", "🌸");
+  } else if (newFlowers > prev.flowers) {
+    journal = addEvent(journal, "A new flower bloomed!", "🌸");
   }
 
-  // Tree level: based on protein goal hits
-  const proteinPercent = goals.protein > 0 ? todayTotals.protein / goals.protein : 0;
-  let treeLevel = prev.treeLevel;
-  if (proteinPercent >= 0.9 && prev.lastComputedDate !== today) {
-    treeLevel = Math.min(prev.treeLevel + 1, 4);
-    if (treeLevel > prev.treeLevel) {
-      const treeNames = ["", "Sapling planted!", "Tree is growing!", "Tree is getting tall!", "Tree is fully grown!"];
-      journal = addEvent(journal, treeNames[treeLevel] || "Tree grew!", "🌳");
-    }
+  // ── Milestone 3: 🦋 Butterfly — 5-day streak (streak-based, disappears) ──
+  // butterflies: streak≥5 → scale up, max 5
+  const butterflies = s >= 5 ? Math.min(Math.floor((s - 3) / 2), 5) : 0;
+  if (butterflies > 0 && prev.butterflies === 0) {
+    journal = addEvent(journal, "Butterflies arrived in your garden!", "🦋");
   }
 
-  // Baby capybaras: based on streak (5+ days, max 3)
+  // ── Milestone 4: 🐾 Baby Capy — 7 calorie goal days (permanent) ──
   let babyCapybaras = 0;
-  if (streak.currentStreak >= 15) babyCapybaras = 3;
-  else if (streak.currentStreak >= 10) babyCapybaras = 2;
-  else if (streak.currentStreak >= 5) babyCapybaras = 1;
+  if (daysGoalHit >= 20) babyCapybaras = 3;
+  else if (daysGoalHit >= 12) babyCapybaras = 2;
+  else if (daysGoalHit >= 7) babyCapybaras = 1;
 
   if (babyCapybaras > prev.babyCapybaras) {
     const babyNames = ["", "A baby capybara joined the family!", "Another baby capybara appeared!", "The capybara family is complete!"];
     journal = addEvent(journal, babyNames[babyCapybaras] || "New baby!", "🐾");
   }
 
-  // Cozy home: based on total meals logged
+  // ── Milestone 5: 🌲 Forest — 14-day streak (streak-based, disappears) ──
+  // Rainbow appears as visual bonus with Forest
+  const hasRainbow = s >= 14;
+  if (hasRainbow && !prev.hasRainbow) {
+    journal = addEvent(journal, "A rainbow appeared over your forest!", "🌈");
+  }
+
+  // ── Milestone 6: 🏡 Cozy Home — 15 calorie goal days (permanent) ──
   let homeLevel = 0;
-  if (totalMeals >= 30) homeLevel = 3;
-  else if (totalMeals >= 15) homeLevel = 2;
-  else if (totalMeals >= 5) homeLevel = 1;
+  if (daysGoalHit >= 25) homeLevel = 3;
+  else if (daysGoalHit >= 20) homeLevel = 2;
+  else if (daysGoalHit >= 15) homeLevel = 1;
 
   if (homeLevel > prev.homeLevel) {
     const homeNames = ["", "A small shelter appeared in the garden!", "The cabin is growing cozier!", "A beautiful home with a chimney!"];
-    journal = addEvent(journal, homeNames[homeLevel] || "Home upgraded!", "�");
+    journal = addEvent(journal, homeNames[homeLevel] || "Home upgraded!", "🏡");
   }
 
-  // Keep pondLevel for backward compat (mapped from homeLevel)
+  // ── Milestone 7: ♨️ Hot Spring — 30-day streak (streak-based, disappears) ──
+  const hasCrown = s >= 30;
+  if (hasCrown && !prev.hasCrown) {
+    journal = addEvent(journal, "A hot spring appeared — paradise unlocked!", "♨️");
+  }
+
+  // ── Milestone 8: 🌻 Full Garden — 30 calorie goal days (permanent) ──
+  if (daysGoalHit >= 30 && prev.daysGoalHit < 30) {
+    journal = addEvent(journal, "Your garden is complete — nutrition mastery!", "�");
+  }
+
+  // Keep pondLevel for backward compat
   const pondLevel = homeLevel;
 
-  // Butterflies: based on streak (3+ days, max 5)
-  const butterflies = Math.min(Math.max(0, Math.floor((streak.currentStreak - 1) / 2)), 5);
-  if (butterflies > prev.butterflies) {
-    journal = addEvent(journal, "A butterfly arrived in your garden!", "🦋");
-  }
-
-  // Rainbow: 14+ day streak
-  const hasRainbow = streak.currentStreak >= 14;
-  if (hasRainbow && !prev.hasRainbow) {
-    journal = addEvent(journal, "A rainbow appeared over your garden!", "🌈");
-  }
-
-  // Crown: 30+ day streak
-  const hasCrown = streak.currentStreak >= 30;
-  if (hasCrown && !prev.hasCrown) {
-    journal = addEvent(journal, "A hot spring appeared in the garden!", "♨️");
-  }
-
-  // Garden health: composite score 0-100
+  // ── Garden health: composite score 0-100 ──
   let health = 50;
-  if (streak.currentStreak >= 1) health += 10;
-  if (streak.currentStreak >= 3) health += 10;
-  if (streak.currentStreak >= 7) health += 10;
-  if (newFlowers >= 5) health += 5;
-  if (newFlowers >= 15) health += 5;
-  if (treeLevel >= 2) health += 5;
-  if (homeLevel >= 1) health += 3;
-  if (babyCapybaras >= 1) health += 2;
+  if (s >= 1) health += 10;
+  if (s >= 3) health += 10;   // Sapling
+  if (s >= 7) health += 10;
+  if (s >= 14) health += 5;   // Forest
+  if (s >= 30) health += 5;   // Hot Spring
+  if (daysGoalHit >= 3) health += 5;  // First Flower
+  if (daysGoalHit >= 15) health += 5; // Cozy Home
 
   // Wilting: missed days reduce health
-  if (streak.currentStreak === 0 && prev.gardenHealth > 0) {
+  if (s === 0 && prev.gardenHealth > 0) {
     health = Math.max(10, prev.gardenHealth - 15);
     if (health < prev.gardenHealth && prev.lastComputedDate !== today) {
       journal = addEvent(journal, "Your garden is wilting... log a meal to help!", "🥀");
@@ -243,26 +249,29 @@ export interface NextUnlock {
   target: number;
 }
 
+// Follows the 8-milestone order exactly
 export function getNextUnlock(state: GardenState, streak: StreakData): NextUnlock | null {
-  if (!state.hasCrown && streak.currentStreak < 30) {
-    if (!state.hasRainbow && streak.currentStreak < 14) {
-      if (state.babyCapybaras < 1 && streak.currentStreak < 5) {
-        if (state.butterflies < 1 && streak.currentStreak < 3) {
-          return { label: "First Butterfly", icon: "🦋", current: streak.currentStreak, target: 3 };
-        }
-        return { label: "Baby Capybara", icon: "🐾", current: streak.currentStreak, target: 5 };
-      }
-      return { label: "Rainbow Arc", icon: "🌈", current: streak.currentStreak, target: 14 };
-    }
-    return { label: "Hot Spring", icon: "♨️", current: streak.currentStreak, target: 30 };
-  }
-  if (state.flowers < 30) {
-    return { label: "Full Garden (30 flowers)", icon: "🌸", current: state.flowers, target: 30 };
-  }
-  if (state.treeLevel < 4) {
-    return { label: "Max Tree Growth", icon: "🌳", current: state.treeLevel, target: 4 };
-  }
-  return null;
+  const s = streak.currentStreak;
+  const g = state.daysGoalHit;
+
+  // 1. 🌱 Sapling — 3-day streak
+  if (s < 3) return { label: "Sapling", icon: "🌱", current: s, target: 3 };
+  // 2. 🌸 First Flower — 3 calorie goal days
+  if (g < 3) return { label: "First Flower", icon: "🌸", current: g, target: 3 };
+  // 3. 🦋 Butterfly — 5-day streak
+  if (s < 5) return { label: "Butterfly", icon: "🦋", current: s, target: 5 };
+  // 4. 🐾 Baby Capy — 7 calorie goal days
+  if (g < 7) return { label: "Baby Capy", icon: "🐾", current: g, target: 7 };
+  // 5. 🌲 Forest — 14-day streak
+  if (s < 14) return { label: "Forest", icon: "�", current: s, target: 14 };
+  // 6. 🏡 Cozy Home — 15 calorie goal days
+  if (g < 15) return { label: "Cozy Home", icon: "🏡", current: g, target: 15 };
+  // 7. ♨️ Hot Spring — 30-day streak
+  if (s < 30) return { label: "Hot Spring", icon: "♨️", current: s, target: 30 };
+  // 8. 🌻 Full Garden — 30 calorie goal days
+  if (g < 30) return { label: "Full Garden", icon: "�", current: g, target: 30 };
+
+  return null; // All milestones unlocked!
 }
 
 export function useGardenState(
