@@ -2,12 +2,22 @@
 
 ## Priority: High (Next Up)
 
-### Dish Scanner & Calorie Tracker
+### ~~Dish Scanner & Calorie Tracker~~ ✅ SHIPPED
 See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
-- Bottom tab bar (Fridge / Dish)
-- Point camera at dish → instant calorie/macro breakdown
-- Meal logging, daily summary, history
-- Cross-tab intelligence (fridge ↔ dish linking)
+- ~~Bottom tab bar (Fridge / Dish)~~
+- ~~Point camera at dish → instant calorie/macro breakdown~~
+- ~~Meal logging, daily summary, history~~
+- ~~Cross-tab intelligence (fridge ↔ dish linking)~~
+
+### ~~UI Redesign — Sage & Cream Theme~~ ✅ SHIPPED
+- ~~4-tab navigation (Home / Progress / Scan FAB / Profile) + Fridge Overlay~~
+- ~~Warm flat light theme replacing dark theme (bg-card, text-muted, border-border)~~
+- ~~HomeView dashboard with Capy mascot, calorie ring, meal slots~~
+- ~~ProgressView with macro bars, weekly calories, meal history~~
+- ~~ProfileView with body stats, daily targets, reset actions~~
+- ~~Capy SVG overhaul with breathing, blinking, tail wag, floating, sleep animations~~
+- ~~All 25+ components restyled — zero dark-theme remnants~~
+- See [TEST-RESULTS.md](./TEST-RESULTS.md) for E2E verification
 
 ---
 

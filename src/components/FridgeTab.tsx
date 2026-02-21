@@ -8,7 +8,7 @@ import ModeSwitcher, { DetectionMode } from "@/components/ModeSwitcher";
 const YoloMode = dynamic(() => import("@/components/YoloMode"), {
   ssr: false,
   loading: () => (
-    <div className="flex items-center justify-center py-20 text-sm text-foreground/40">
+    <div className="flex items-center justify-center py-20 text-sm text-muted">
       Loading YOLO engine...
     </div>
   ),
@@ -24,7 +24,7 @@ export default function FridgeTab() {
       {mode === "yolo" && <YoloMode />}
 
       <div className="text-center pt-2 pb-2">
-        <p className="text-[10px] text-foreground/20">
+        <p className="text-[10px] text-muted-light">
           {mode === "yolo"
             ? "YOLOv8n via ONNX Runtime • Runs entirely on your device"
             : "Powered by Fridgenius AI • Your images are not stored"}

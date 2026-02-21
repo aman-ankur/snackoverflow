@@ -60,7 +60,7 @@ function MacroRow({
     <div className="space-y-1">
       <div className="flex items-center justify-between">
         <span className={`text-[10px] font-medium ${colorClass}`}>{label}</span>
-        <span className="text-[10px] text-foreground/40">
+        <span className="text-[10px] text-muted">
           {value}/{max}{unit}
         </span>
       </div>
@@ -86,17 +86,17 @@ export default function GoalDashboard({
   const calRemaining = Math.max(0, goals.calories - Math.round(totals.calories));
 
   return (
-    <div className="rounded-2xl border border-border bg-surface overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card overflow-hidden">
       {/* Header with greeting + Capy */}
       <div className="px-4 pt-4 pb-2">
         <div className="flex items-start justify-between">
           <div>
-            <p className="text-xs text-foreground/40">{greeting}</p>
+            <p className="text-xs text-muted">{greeting}</p>
             <h3 className="text-sm font-bold mt-0.5">Your Daily Progress</h3>
           </div>
           <button
             onClick={onEditGoals}
-            className="rounded-full border border-border p-2 text-foreground/35 hover:text-foreground/60 hover:bg-surface-hover transition-all active:scale-95"
+            className="rounded-full border border-border p-2 text-muted hover:text-foreground hover:bg-card-hover transition-all active:scale-95"
             title="Edit goals"
           >
             <Settings2 className="h-3.5 w-3.5" />
@@ -119,9 +119,9 @@ export default function GoalDashboard({
           key={capyState.line}
           initial={{ x: 10, opacity: 0 }}
           animate={{ x: 0, opacity: 1 }}
-          className="rounded-xl border border-border bg-background/50 px-3 py-2 flex-1"
+          className="rounded-xl border border-border bg-accent-light px-3 py-2 flex-1"
         >
-          <p className="text-xs text-foreground/65 leading-relaxed">{capyState.line}</p>
+          <p className="text-xs text-foreground leading-relaxed">{capyState.line}</p>
         </motion.div>
       </div>
 
@@ -132,9 +132,9 @@ export default function GoalDashboard({
             <Flame className="h-3.5 w-3.5 text-orange" />
             <span className="text-xs font-semibold">Calories</span>
           </div>
-          <span className="text-xs text-foreground/50">
-            <span className="font-semibold text-foreground/80">{Math.round(totals.calories)}</span>
-            <span className="text-foreground/30"> / {goals.calories} kcal</span>
+          <span className="text-xs text-muted">
+            <span className="font-semibold text-foreground">{Math.round(totals.calories)}</span>
+            <span className="text-muted-light"> / {goals.calories} kcal</span>
           </span>
         </div>
         <ProgressBar
@@ -144,9 +144,9 @@ export default function GoalDashboard({
           bgClass="bg-orange/10"
         />
         <div className="flex items-center justify-between">
-          <span className="text-[10px] text-foreground/30">{calPercent}% of daily goal</span>
+          <span className="text-[10px] text-muted-light">{calPercent}% of daily goal</span>
           {calRemaining > 0 && (
-            <span className="text-[10px] text-foreground/30">{calRemaining} kcal remaining</span>
+            <span className="text-[10px] text-muted-light">{calRemaining} kcal remaining</span>
           )}
         </div>
       </div>
@@ -186,7 +186,7 @@ export default function GoalDashboard({
       {streak.currentStreak > 0 && (
         <div className="mx-4 mb-3 rounded-xl bg-gradient-to-r from-orange/15 to-accent/10 border border-orange/20 px-3 py-2 flex items-center gap-2">
           <Flame className="h-4 w-4 text-orange shrink-0" />
-          <p className="text-xs font-semibold text-foreground/70">
+          <p className="text-xs font-semibold text-foreground">
             {streak.currentStreak} Day Streak
             {streak.currentStreak >= 7 && " — Keep Going!"}
             {streak.currentStreak >= 3 && streak.currentStreak < 7 && " — Nice!"}
@@ -196,11 +196,11 @@ export default function GoalDashboard({
 
       {/* Meals count */}
       <div className="border-t border-border px-4 py-2 flex items-center justify-between">
-        <span className="text-[10px] text-foreground/30">
+        <span className="text-[10px] text-muted">
           {mealsCount} meal{mealsCount === 1 ? "" : "s"} logged today
         </span>
         {streak.longestStreak > streak.currentStreak && (
-          <span className="text-[10px] text-foreground/25">
+          <span className="text-[10px] text-muted-light">
             Best: {streak.longestStreak} days
           </span>
         )}

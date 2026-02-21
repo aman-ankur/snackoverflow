@@ -231,12 +231,12 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.95 }}
               transition={{ duration: 0.15 }}
-              className="absolute right-0 top-full mt-1 z-50 w-56 rounded-xl bg-surface border border-border shadow-xl overflow-hidden"
+              className="absolute right-0 top-full mt-1 z-50 w-56 rounded-xl bg-card border border-border shadow-xl overflow-hidden"
             >
               <div className="p-1.5 space-y-0.5">
                 {/* Serving size picker */}
                 <div className="px-3 pt-2 pb-1.5">
-                  <span className="text-[10px] text-foreground/40 block mb-1.5">Servings</span>
+                  <span className="text-[10px] text-muted block mb-1.5">Servings</span>
                   <div className="flex items-center gap-1">
                     {SERVING_OPTIONS.map((n) => (
                       <button
@@ -245,7 +245,7 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                         className={`flex items-center justify-center w-9 h-8 rounded-lg text-xs font-semibold transition-all active:scale-95 ${
                           servings === n
                             ? "bg-accent text-background shadow-sm"
-                            : "bg-foreground/5 text-foreground/50 border border-foreground/10"
+                            : "bg-card-hover text-muted border border-border"
                         }`}
                       >
                         {n}🧑
@@ -266,7 +266,7 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                 <button
                   onClick={handleHindiAudio}
                   disabled={audioLoading}
-                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-card-hover transition-colors disabled:opacity-50"
                 >
                   {audioLoading ? (
                     <Loader2 className="h-4 w-4 text-orange animate-spin" />
@@ -274,10 +274,10 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                     <Mic className="h-4 w-4 text-orange" />
                   )}
                   <div>
-                    <span className="text-xs font-medium text-foreground/80 block">
+                    <span className="text-xs font-medium text-foreground block">
                       {audioLoading ? "Generating..." : "Hindi Audio Message"}
                     </span>
-                    <span className="text-[10px] text-foreground/30">
+                    <span className="text-[10px] text-muted">
                       AI voice in Hindi → share on WhatsApp
                     </span>
                   </div>
@@ -286,7 +286,7 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                 <button
                   onClick={handleHindiWhatsApp}
                   disabled={hindiLoading}
-                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors disabled:opacity-50"
+                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-card-hover transition-colors disabled:opacity-50"
                 >
                   {hindiLoading ? (
                     <Loader2 className="h-4 w-4 text-green-400 animate-spin" />
@@ -294,10 +294,10 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                     <MessageCircle className="h-4 w-4 text-green-400" />
                   )}
                   <div>
-                    <span className="text-xs font-medium text-foreground/80 block">
+                    <span className="text-xs font-medium text-foreground block">
                       {hindiLoading ? "Generating..." : "Hindi Text on WhatsApp"}
                     </span>
-                    <span className="text-[10px] text-foreground/30">
+                    <span className="text-[10px] text-muted">
                       हिंदी में message भेजें
                     </span>
                   </div>
@@ -307,25 +307,25 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
 
                 {/* Section: English */}
                 <div className="px-3 pt-1 pb-1">
-                  <span className="text-[10px] font-semibold text-foreground/30 uppercase tracking-wider">
+                  <span className="text-[10px] font-semibold text-muted uppercase tracking-wider">
                     English
                   </span>
                 </div>
 
                 <button
                   onClick={handleWhatsApp}
-                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors"
+                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-card-hover transition-colors"
                 >
                   <MessageCircle className="h-4 w-4 text-green-400" />
                   <div>
-                    <span className="text-xs font-medium text-foreground/80 block">WhatsApp (English)</span>
-                    <span className="text-[10px] text-foreground/30">Send recipe in English</span>
+                    <span className="text-xs font-medium text-foreground block">WhatsApp (English)</span>
+                    <span className="text-[10px] text-muted">Send recipe in English</span>
                   </div>
                 </button>
 
                 <button
                   onClick={handleSpeak}
-                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors"
+                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-card-hover transition-colors"
                 >
                   {isSpeaking ? (
                     <VolumeX className="h-4 w-4 text-red-400" />
@@ -333,10 +333,10 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                     <Volume2 className="h-4 w-4 text-purple-400" />
                   )}
                   <div>
-                    <span className="text-xs font-medium text-foreground/80 block">
+                    <span className="text-xs font-medium text-foreground block">
                       {isSpeaking ? "Stop" : "Read Aloud"}
                     </span>
-                    <span className="text-[10px] text-foreground/30">English voice</span>
+                    <span className="text-[10px] text-muted">English voice</span>
                   </div>
                 </button>
 
@@ -348,30 +348,30 @@ export default function ShareRecipe({ recipe }: ShareRecipeProps) {
                       } catch { /* cancelled */ }
                       setIsOpen(false);
                     }}
-                    className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors"
+                    className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-card-hover transition-colors"
                   >
-                    <Share2 className="h-4 w-4 text-foreground/40" />
+                    <Share2 className="h-4 w-4 text-muted" />
                     <div>
-                      <span className="text-xs font-medium text-foreground/80 block">Share via...</span>
-                      <span className="text-[10px] text-foreground/30">Any app</span>
+                      <span className="text-xs font-medium text-foreground block">Share via...</span>
+                      <span className="text-[10px] text-muted">Any app</span>
                     </div>
                   </button>
                 )}
 
                 <button
                   onClick={handleCopy}
-                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-surface-hover transition-colors"
+                  className="flex items-center gap-2.5 w-full rounded-lg px-3 py-2.5 text-left hover:bg-card-hover transition-colors"
                 >
                   {copied ? (
                     <Check className="h-4 w-4 text-green-400" />
                   ) : (
-                    <Copy className="h-4 w-4 text-foreground/40" />
+                    <Copy className="h-4 w-4 text-muted" />
                   )}
                   <div>
-                    <span className="text-xs font-medium text-foreground/80 block">
+                    <span className="text-xs font-medium text-foreground block">
                       {copied ? "Copied!" : "Copy Text"}
                     </span>
-                    <span className="text-[10px] text-foreground/30">Clipboard</span>
+                    <span className="text-[10px] text-muted">Clipboard</span>
                   </div>
                 </button>
               </div>

@@ -5,29 +5,26 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Calculator, PlusCircle, Sparkles, Pencil, X, Check, Loader2 } from "lucide-react";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import NutritionCard from "@/components/NutritionCard";
-import MealLog from "@/components/MealLog";
-import GoalDashboard from "@/components/GoalDashboard";
-import GoalOnboarding from "@/components/GoalOnboarding";
-import MealHistory from "@/components/MealHistory";
+import CapyMascot from "@/components/CapyMascot";
 import { useDishScanner } from "@/lib/useDishScanner";
 import { useMealLog } from "@/lib/useMealLog";
 import { useUserGoals } from "@/lib/useUserGoals";
-import type { DishNutrition, MealType, UserProfile, NutritionGoals } from "@/lib/dishTypes";
+import type { DishNutrition, MealType } from "@/lib/dishTypes";
 
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2] as const;
 const MEAL_TYPE_OPTIONS: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
 
 function getHealthTagColor(tag: string): string {
   if (tag.includes("protein") || tag.includes("fiber") || tag.includes("low")) {
-    return "bg-accent/10 border-accent/20 text-accent";
+    return "bg-accent-light border-accent/20 text-accent-dim";
   }
   if (tag.includes("carb")) {
-    return "bg-yellow-400/10 border-yellow-400/20 text-yellow-400";
+    return "bg-orange-light border-orange/20 text-orange";
   }
   if (tag.includes("fat") || tag.includes("high-calorie")) {
-    return "bg-red-500/10 border-red-500/20 text-red-400";
+    return "bg-red-50 border-red-200 text-red-500";
   }
-  return "bg-card-hover border-border text-muted";
+  return "bg-card border-border text-muted";
 }
 
 function titleCaseTag(tag: string): string {
@@ -68,7 +65,7 @@ function deriveTags(dish: DishNutrition): string[] {
   return Array.from(tags);
 }
 
-export default function DishMode() {
+export default function ScanView() {
   const dish = useDishScanner();
   const mealLog = useMealLog();
   const userGoals = useUserGoals();
@@ -76,13 +73,6 @@ export default function DishMode() {
   const [servingsMultiplier, setServingsMultiplier] = useState<number>(1);
   const [logMealType, setLogMealType] = useState<MealType>("lunch");
   const [logSuccess, setLogSuccess] = useState(false);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    if (userGoals.hasLoaded && !userGoals.hasProfile) {
-      setShowOnboarding(true);
-    }
-  }, [userGoals.hasLoaded, userGoals.hasProfile]);
 
   const scaledDishes = useMemo(
     () => (dish.analysis?.dishes || []).map((item) => scaleDish(item, servingsMultiplier)),
@@ -104,7 +94,6 @@ export default function DishMode() {
 
   const dishLastSeenDays = useMemo(() => {
     const lookup = new Map<string, number>();
-
     mealLog.meals.forEach((meal) => {
       meal.dishes.forEach((loggedDish) => {
         const key = loggedDish.name.toLowerCase();
@@ -112,45 +101,24 @@ export default function DishMode() {
         lookup.set(key, getDaysAgo(meal.loggedAt));
       });
     });
-
     return lookup;
   }, [mealLog.meals]);
 
   const handleLogMeal = () => {
     if (scaledDishes.length === 0) return;
-
     mealLog.logMeal({
       mealType: logMealType,
       servingsMultiplier,
       dishes: scaledDishes,
       totals: scaledTotals,
     });
-
     setLogSuccess(true);
     userGoals.refreshStreak();
     setTimeout(() => setLogSuccess(false), 1800);
   };
 
-  const handleOnboardingComplete = (profile: UserProfile, goals: NutritionGoals) => {
-    userGoals.saveProfile(profile);
-    if (goals.isCustom) {
-      userGoals.updateGoals(goals);
-    }
-    setShowOnboarding(false);
-  };
-
   return (
-    <>
-      <AnimatePresence>
-        {showOnboarding && (
-          <GoalOnboarding
-            existingProfile={userGoals.profile}
-            onComplete={handleOnboardingComplete}
-            onSkip={() => setShowOnboarding(false)}
-          />
-        )}
-      </AnimatePresence>
-
+    <div className="space-y-4">
       <GeminiCameraView
         videoRef={dish.videoRef}
         canvasRef={dish.canvasRef}
@@ -171,7 +139,8 @@ export default function DishMode() {
         placeholderSubtitle="AI will estimate calories and macros"
       />
 
-      <div className="rounded-2xl border border-border bg-card p-3">
+      {/* Meal context */}
+      <div className="rounded-2xl bg-card border border-border p-3">
         <p className="text-[10px] text-muted mb-2 px-1">Meal context</p>
         <div className="grid grid-cols-4 gap-1.5">
           {MEAL_TYPE_OPTIONS.map((option) => (
@@ -183,7 +152,7 @@ export default function DishMode() {
               }}
               className={`rounded-full border px-2 py-1.5 text-[10px] font-medium capitalize transition-colors ${
                 dish.mealType === option
-                  ? "border-orange/30 bg-orange/15 text-orange"
+                  ? "border-accent/30 bg-accent-light text-accent-dim"
                   : "border-border bg-background text-muted hover:bg-card-hover"
               }`}
             >
@@ -193,10 +162,11 @@ export default function DishMode() {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-border bg-card p-3">
+      {/* Portion adjuster */}
+      <div className="rounded-2xl bg-card border border-border p-3">
         <div className="flex items-center gap-2 mb-2">
-          <Calculator className="h-4 w-4 text-orange" />
-          <h3 className="text-sm font-semibold">Portion Adjuster</h3>
+          <Calculator className="h-4 w-4 text-accent" />
+          <h3 className="text-sm font-semibold text-foreground">Portion Adjuster</h3>
         </div>
         <div className="grid grid-cols-4 gap-1.5">
           {SERVING_OPTIONS.map((value) => (
@@ -205,7 +175,7 @@ export default function DishMode() {
               onClick={() => setServingsMultiplier(value)}
               className={`rounded-full border px-2 py-1.5 text-[10px] font-semibold transition-colors ${
                 servingsMultiplier === value
-                  ? "border-accent/30 bg-accent/15 text-accent"
+                  ? "border-accent/30 bg-accent-light text-accent-dim"
                   : "border-border bg-background text-muted hover:bg-card-hover"
               }`}
             >
@@ -215,6 +185,7 @@ export default function DishMode() {
         </div>
       </div>
 
+      {/* Results */}
       <AnimatePresence mode="popLayout">
         {scaledDishes.length === 0 ? (
           <motion.div
@@ -222,9 +193,9 @@ export default function DishMode() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="rounded-2xl border border-border bg-card py-10 px-6 text-center"
+            className="rounded-2xl bg-card border border-border py-10 px-6 text-center"
           >
-            <Sparkles className="h-7 w-7 text-orange/60 mx-auto" />
+            <Sparkles className="h-7 w-7 text-accent/50 mx-auto" />
             <p className="text-sm font-medium text-muted mt-3">No dish analysis yet</p>
             <p className="text-xs text-muted mt-1">
               Start camera and tap Analyze Dish to get calorie and macro estimates.
@@ -238,9 +209,10 @@ export default function DishMode() {
             exit={{ opacity: 0, y: 8 }}
             className="space-y-3"
           >
-            <div className="rounded-2xl border border-accent/20 bg-accent-light p-4">
+            {/* Plate total */}
+            <div className="rounded-2xl bg-accent-light border border-accent/15 p-4">
               <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-semibold">Plate Total</h3>
+                <h3 className="text-sm font-semibold text-foreground">Plate Total</h3>
                 <span className="text-[10px] text-muted">
                   {scaledDishes.length} dish{scaledDishes.length === 1 ? "" : "es"}
                 </span>
@@ -253,13 +225,41 @@ export default function DishMode() {
               </div>
             </div>
 
+            {/* Capy reaction */}
+            <div className="flex items-center gap-3 px-1">
+              <motion.div
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ type: "spring", bounce: 0.5, delay: 0.3 }}
+                className="shrink-0"
+              >
+                <CapyMascot
+                  mood={scaledTotals.calories < 400 ? "happy" : scaledTotals.calories > 700 ? "concerned" : "motivated"}
+                  size={48}
+                />
+              </motion.div>
+              <motion.p
+                initial={{ x: 8, opacity: 0 }}
+                animate={{ x: 0, opacity: 1 }}
+                transition={{ delay: 0.4 }}
+                className="text-xs text-muted leading-relaxed rounded-xl bg-accent-light border border-accent/10 px-3 py-2"
+              >
+                {scaledTotals.calories < 400
+                  ? "Light and healthy! Great choice! 🌿"
+                  : scaledTotals.calories > 700
+                  ? "That's a big meal! Maybe balance it out later? 😊"
+                  : "Solid meal! Good balance of nutrients! 💪"}
+              </motion.p>
+            </div>
+
+            {/* Individual dishes */}
             {scaledDishes.map((dishItem, index) => {
               const tags = deriveTags(dishItem);
               const seenAgo = dishLastSeenDays.get(dishItem.name.toLowerCase());
               return (
                 <div key={`${dishItem.name}-${index}`} className="space-y-2">
                   {typeof seenAgo === "number" && seenAgo > 0 && (
-                    <div className="inline-flex items-center rounded-full border border-accent/20 bg-accent/10 px-2.5 py-1 text-[10px] text-accent">
+                    <div className="inline-flex items-center rounded-full border border-accent/20 bg-accent-light px-2.5 py-1 text-[10px] text-accent-dim">
                       You had this {seenAgo} day{seenAgo === 1 ? "" : "s"} ago
                     </div>
                   )}
@@ -286,17 +286,17 @@ export default function DishMode() {
               );
             })}
 
-            <div className="rounded-2xl border border-border bg-card p-3">
+            {/* Log meal */}
+            <div className="rounded-2xl bg-card border border-border p-3">
               <div className="flex items-center justify-between gap-2 mb-2">
                 <p className="text-xs text-muted">Log this scan as a meal</p>
                 <button
                   onClick={dish.clearAnalysis}
-                  className="text-[10px] text-muted-light hover:text-foreground transition-colors"
+                  className="text-[10px] text-muted hover:text-foreground transition-colors"
                 >
                   Clear analysis
                 </button>
               </div>
-
               <div className="flex items-center gap-2">
                 <select
                   value={logMealType}
@@ -309,34 +309,23 @@ export default function DishMode() {
                     </option>
                   ))}
                 </select>
-
                 <button
                   onClick={handleLogMeal}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-accent/30 bg-accent/15 px-4 py-2 text-xs font-semibold text-accent transition-colors hover:bg-accent/20"
+                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold transition-all active:scale-95 ${
+                    logSuccess
+                      ? "bg-accent text-white"
+                      : "bg-accent-light border border-accent/20 text-accent-dim hover:bg-accent/15"
+                  }`}
                 >
                   <PlusCircle className="h-3.5 w-3.5" />
-                  {logSuccess ? "Logged" : "Log This Meal"}
+                  {logSuccess ? "Logged ✓" : "Log This Meal"}
                 </button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <GoalDashboard
-        totals={mealLog.todayTotals}
-        goals={userGoals.goals}
-        streak={userGoals.streak}
-        mealsCount={mealLog.todayMeals.length}
-        onEditGoals={() => setShowOnboarding(true)}
-      />
-      <MealLog meals={mealLog.todayMeals} onRemoveMeal={mealLog.removeMeal} onClearAll={mealLog.clearAllMeals} />
-      <MealHistory
-        meals={mealLog.meals}
-        weeklyByDate={mealLog.weeklyByDate}
-        repeatedDishes={mealLog.insights.repeatedDishes}
-      />
-    </>
+    </div>
   );
 }
 
@@ -409,7 +398,7 @@ function CorrectionChip({
       />
       <button
         onClick={handleSubmit}
-        className="rounded-full border border-accent/30 bg-accent/15 p-1.5 text-accent hover:bg-accent/25 transition-colors"
+        className="rounded-full bg-accent-light border border-accent/20 p-1.5 text-accent-dim hover:bg-accent/15 transition-colors"
       >
         <Check className="h-3 w-3" />
       </button>

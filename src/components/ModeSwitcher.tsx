@@ -12,7 +12,7 @@ interface ModeSwitcherProps {
 
 export default function ModeSwitcher({ mode, onModeChange }: ModeSwitcherProps) {
   return (
-    <div className="rounded-2xl bg-surface border border-border overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       <div className="flex p-1.5">
         <button
           onClick={() => onModeChange("yolo")}
@@ -25,7 +25,7 @@ export default function ModeSwitcher({ mode, onModeChange }: ModeSwitcherProps) 
               transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
             />
           )}
-          <span className={`relative flex items-center gap-1.5 ${mode === "yolo" ? "text-accent" : "text-foreground/40"}`}>
+          <span className={`relative flex items-center gap-1.5 ${mode === "yolo" ? "text-accent" : "text-muted"}`}>
             <Cpu className="h-3.5 w-3.5" />
             YOLO On-Device
           </span>
@@ -41,14 +41,14 @@ export default function ModeSwitcher({ mode, onModeChange }: ModeSwitcherProps) 
               transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
             />
           )}
-          <span className={`relative flex items-center gap-1.5 ${mode === "gemini" ? "text-accent" : "text-foreground/40"}`}>
+          <span className={`relative flex items-center gap-1.5 ${mode === "gemini" ? "text-accent" : "text-muted"}`}>
             <Cloud className="h-3.5 w-3.5" />
             Cloud AI
           </span>
         </button>
       </div>
       <div className="px-3 pb-2">
-        <p className="text-[10px] text-foreground/25 text-center">
+        <p className="text-[10px] text-muted-light text-center">
           {mode === "yolo"
             ? "Free • Offline • Real-time (~5-15 FPS) • 80 COCO object classes"
             : "Best accuracy • Identifies Indian groceries • AI recipe suggestions"}

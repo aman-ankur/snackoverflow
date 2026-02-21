@@ -36,16 +36,21 @@ fridgenius/
 │   │   │   └── hindi-tts/route.ts     # Hindi audio generation (Sarvam AI)
 │   │   ├── globals.css                # Tailwind theme, CSS vars, animations
 │   │   ├── layout.tsx                 # Root layout, fonts, metadata
-│   │   └── page.tsx                   # Main page — header + bottom tab shell (Fridge/Dish)
+│   │   └── page.tsx                   # Main page — 4-tab router (Home/Scan/Progress/Profile)
 │   ├── components/
-│   │   ├── BottomTabBar.tsx           # Sticky bottom navigation (Fridge/Dish)
-│   │   ├── FridgeTab.tsx              # Fridge workspace container (keeps YOLO + Cloud AI switcher)
+│   │   ├── BottomTabBar.tsx           # 4-tab bottom nav (Home/Progress/Scan FAB/Profile)
+│   │   ├── HomeView.tsx               # Home dashboard (Capy, intake ring, meal slots, fridge CTA)
+│   │   ├── ScanView.tsx               # Dish scanner view (camera, meal context, portion adjuster)
+│   │   ├── ProgressView.tsx           # Progress tracking (macros, weekly, history)
+│   │   ├── ProfileView.tsx            # Profile & settings (body stats, targets, reset)
+│   │   ├── FridgeOverlay.tsx          # Full-screen fridge scanner overlay (from Home CTA)
+│   │   ├── FridgeTab.tsx              # Fridge workspace container (YOLO + Cloud AI switcher)
 │   │   ├── DishMode.tsx               # Dish scanner orchestrator (+ goal integration)
 │   │   ├── NutritionCard.tsx          # Per-dish calorie/macro card
-│   │   ├── DailySummary.tsx           # Today's nutrition summary (replaced by GoalDashboard)
-│   │   ├── CapyMascot.tsx             # SVG capybara mascot with 5 moods (NEW)
-│   │   ├── GoalOnboarding.tsx         # 5-step animated onboarding wizard (NEW)
-│   │   ├── GoalDashboard.tsx          # Daily progress card with Capy (NEW)
+│   │   ├── DailySummary.tsx           # Today's nutrition summary (legacy, replaced by GoalDashboard)
+│   │   ├── CapyMascot.tsx             # SVG capybara mascot with 5 moods + animations
+│   │   ├── GoalOnboarding.tsx         # 5-step animated onboarding wizard
+│   │   ├── GoalDashboard.tsx          # Daily progress card with Capy
 │   │   ├── MealLog.tsx                # Logged meals list
 │   │   ├── MealHistory.tsx            # History + weekly insights
 │   │   ├── ApiKeyInput.tsx            # (Legacy) API key input field
@@ -89,10 +94,39 @@ fridgenius/
 ## Data Flow
 
 ```
-User opens app → page.tsx renders header + BottomTabBar + active tab
+User opens app → page.tsx renders BottomTabBar + active view (4 tabs)
 
-Fridge Tab (FridgeTab.tsx):
-  ModeSwitcher (YOLO or Cloud AI) → existing fridge flows
+Home Tab (HomeView.tsx):
+  Capy mascot + greeting + speech bubble (context-aware from capyLines.ts)
+  → Daily Intake ring (calorie progress) + macro breakdown
+  → Today Meals (4 meal slots: breakfast/lunch/snack/dinner)
+  → "Scan Your Fridge" CTA → opens FridgeOverlay
+
+Scan Tab (ScanView.tsx — center FAB):
+  First visit → GoalOnboarding (useUserGoals checks localStorage)
+  → 5-step wizard → TDEE calculation → save profile + goals
+  Camera → captureFrame() → /api/analyze-dish → Gemini/Groq → nutrition JSON
+  → per-dish NutritionCard + portion scaling (0.5x–2x)
+  → Meal context picker (breakfast/lunch/snack/dinner)
+  → Log This Meal (useMealLog) → refreshStreak()
+  → GoalDashboard + MealLog + MealHistory insights
+  → Capy mood + motivational lines based on progress vs goals
+
+Progress Tab (ProgressView.tsx):
+  Total progress bar (% of calorie goal)
+  → Nutrition + Average stat cards
+  → Today's Macros (protein/carbs/fat bars)
+  → Weekly Calories chart
+  → Meal History with insights
+
+Profile Tab (ProfileView.tsx):
+  Capy avatar + app branding
+  → Body Stats card (gender, age, height, weight, activity, goal)
+  → Daily Targets card (calories, protein, carbs, fat, TDEE)
+  → Re-run Goal Setup / Reset All Data actions
+
+Fridge Overlay (FridgeOverlay.tsx — from Home CTA):
+  ModeSwitcher (YOLO or Cloud AI) → fridge scanner flows
 
 Cloud AI Mode (GeminiMode.tsx):
   Camera → captureFrame() → /api/analyze → Gemini/Groq → JSON response
@@ -110,16 +144,6 @@ Send to Cook flow:
 YOLO Mode (YoloMode.tsx):
   Camera → ONNX Runtime (YOLOv8n WASM) → bounding boxes on canvas
   → items matched to static recipe database (recipes.ts)
-
-Dish Tab (DishMode.tsx):
-  First visit → GoalOnboarding (useUserGoals checks localStorage)
-  → 5-step wizard → TDEE calculation → save profile + goals
-  Camera → captureFrame() → /api/analyze-dish → Gemini/Groq → nutrition JSON
-  → per-dish NutritionCard + portion scaling
-  → Log This Meal (useMealLog) → refreshStreak()
-  → GoalDashboard (replaces DailySummary) + MealLog + MealHistory insights
-  → Capy mood + motivational lines based on progress vs goals
-  → optional Fridge↔Dish linkage from recent fridge scan snapshots
 ```
 
 ## Two Detection Modes

@@ -28,7 +28,7 @@ export default function CameraView({
   onFlip,
 }: CameraViewProps) {
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-surface border border-border">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-card border border-border">
       {/* Camera Feed */}
       <div className="relative aspect-[4/3] w-full bg-black">
         <video
@@ -88,15 +88,15 @@ export default function CameraView({
 
         {/* Placeholder when not streaming */}
         {!isStreaming && !isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-surface">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card">
             <div className="rounded-full bg-accent-glow p-5">
               <Camera className="h-10 w-10 text-accent" />
             </div>
             <div className="text-center px-6">
-              <p className="text-sm font-medium text-foreground/80">
+              <p className="text-sm font-medium text-foreground">
                 Point your camera at your fridge
               </p>
-              <p className="text-xs text-foreground/40 mt-1">
+              <p className="text-xs text-muted mt-1">
                 AI will detect items and suggest Indian recipes
               </p>
             </div>
@@ -105,9 +105,9 @@ export default function CameraView({
 
         {/* Loading state */}
         {isLoading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-surface">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-card">
             <Loader2 className="h-8 w-8 text-accent animate-spin" />
-            <p className="text-sm text-foreground/60">Loading AI model...</p>
+            <p className="text-sm text-muted">Loading AI model...</p>
           </div>
         )}
 
@@ -120,12 +120,12 @@ export default function CameraView({
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-center gap-3 p-3 bg-surface/80 backdrop-blur-sm">
+      <div className="flex items-center justify-center gap-3 p-3 bg-card">
         {!isStreaming ? (
           <button
             onClick={onStart}
             disabled={isLoading}
-            className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-black transition-all hover:bg-accent-dim active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-accent-dim active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Camera className="h-4 w-4" />
             Start Scanning
@@ -134,9 +134,9 @@ export default function CameraView({
           <>
             <button
               onClick={onFlip}
-              className="flex items-center justify-center rounded-full bg-surface-hover border border-border p-2.5 transition-all hover:bg-border active:scale-95"
+              className="flex items-center justify-center rounded-full bg-card-hover border border-border p-2.5 transition-all hover:bg-border active:scale-95"
             >
-              <SwitchCamera className="h-5 w-5 text-foreground/70" />
+              <SwitchCamera className="h-5 w-5 text-muted" />
             </button>
             <button
               onClick={onStop}
