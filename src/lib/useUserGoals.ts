@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useState } from "react";
 import type { UserProfile, NutritionGoals, StreakData } from "@/lib/dishTypes";
 import { calculateGoals, DEFAULT_GOALS } from "@/lib/tdeeCalculator";
+import { useAuthContext } from "@/components/AuthProvider";
+import { pullUserData, pushUserData } from "@/lib/supabase/sync";
 
 const PROFILE_KEY = "snackoverflow-user-goals-v1";
 const MEAL_LOG_KEY = "snackoverflow-meal-log-v1";
@@ -108,6 +110,7 @@ export function useUserGoals() {
     longestStreak: 0,
   });
   const [hasLoaded, setHasLoaded] = useState(false);
+  const { user, isLoggedIn } = useAuthContext();
 
   useEffect(() => {
     const stored = loadStored();
@@ -118,11 +121,32 @@ export function useUserGoals() {
     setHasLoaded(true);
   }, []);
 
+  // Pull from Supabase when user logs in
+  useEffect(() => {
+    if (!isLoggedIn || !user || !hasLoaded) return;
+    pullUserData(user.id).then((cloud) => {
+      if (!cloud) return;
+      if (cloud.profile) setProfileState(cloud.profile as UserProfile);
+      if (cloud.goals) setGoalsState(cloud.goals as NutritionGoals);
+      if (cloud.streak) {
+        const cloudStreak = cloud.streak as StreakData;
+        setStreakState(computeStreak(cloudStreak));
+      }
+    }).catch(() => {});
+  }, [isLoggedIn, user, hasLoaded]);
+
   useEffect(() => {
     if (!hasLoaded) return;
     const data: StoredData = { profile, goals, streak };
     localStorage.setItem(PROFILE_KEY, JSON.stringify(data));
-  }, [profile, goals, streak, hasLoaded]);
+
+    // Sync to Supabase
+    if (isLoggedIn && user) {
+      pushUserData(user.id, "profile", profile);
+      pushUserData(user.id, "goals", goals);
+      pushUserData(user.id, "streak", streak);
+    }
+  }, [profile, goals, streak, hasLoaded, isLoggedIn, user]);
 
   const saveProfile = useCallback(
     (newProfile: UserProfile) => {

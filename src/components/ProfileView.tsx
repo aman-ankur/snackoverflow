@@ -1,8 +1,10 @@
 "use client";
 
-import { Settings2, Target, Flame, User, Scale, Ruler, Activity } from "lucide-react";
+import { Settings2, Target, Flame, User, Scale, Ruler, Activity, LogOut, Cloud, CloudOff } from "lucide-react";
 import CapyMascot from "@/components/CapyMascot";
+import AuthScreen from "@/components/AuthScreen";
 import type { UserProfile, NutritionGoals, StreakData } from "@/lib/dishTypes";
+import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface ProfileViewProps {
   profile: UserProfile | null;
@@ -10,6 +12,12 @@ interface ProfileViewProps {
   streak: StreakData;
   onEditGoals: () => void;
   onResetAll: () => void;
+  authUser: SupabaseUser | null;
+  isLoggedIn: boolean;
+  onMagicLink: (email: string) => Promise<{ error: unknown }>;
+  onSignUp: (email: string, password: string) => Promise<{ error: unknown }>;
+  onSignInPassword: (email: string, password: string) => Promise<{ error: unknown }>;
+  onSignOut: () => Promise<void>;
 }
 
 const GOAL_LABELS: Record<string, string> = {
@@ -36,6 +44,12 @@ export default function ProfileView({
   streak,
   onEditGoals,
   onResetAll,
+  authUser,
+  isLoggedIn,
+  onMagicLink,
+  onSignUp,
+  onSignInPassword,
+  onSignOut,
 }: ProfileViewProps) {
   return (
     <div className="space-y-4">
@@ -58,7 +72,47 @@ export default function ProfileView({
             <span className="text-xs font-bold text-orange">{streak.currentStreak} Day Streak</span>
           </div>
         )}
+        {isLoggedIn && authUser && (
+          <div className="flex items-center gap-1.5 mt-3">
+            <Cloud className="h-3 w-3 text-green-500" />
+            <span className="text-[10px] text-muted">{authUser.email}</span>
+          </div>
+        )}
       </div>
+
+      {/* Auth Section */}
+      {!isLoggedIn ? (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 px-1">
+            <CloudOff className="h-3.5 w-3.5 text-muted" />
+            <span className="text-[10px] text-muted">Data is stored locally only</span>
+          </div>
+          <AuthScreen
+            onMagicLink={onMagicLink}
+            onSignUp={onSignUp}
+            onSignInPassword={onSignInPassword}
+          />
+        </div>
+      ) : (
+        <div className="rounded-2xl bg-card border border-border p-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Cloud className="h-4 w-4 text-green-500" />
+              <div>
+                <p className="text-xs font-bold text-foreground">Synced to cloud</p>
+                <p className="text-[10px] text-muted">{authUser?.email}</p>
+              </div>
+            </div>
+            <button
+              onClick={onSignOut}
+              className="flex items-center gap-1.5 rounded-lg bg-background border border-border px-3 py-1.5 text-[11px] font-semibold text-muted hover:text-foreground transition-colors"
+            >
+              <LogOut className="h-3 w-3" />
+              Sign Out
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Body Stats */}
       {profile && (
@@ -134,6 +188,9 @@ export default function ProfileView({
       {/* App info */}
       <div className="text-center py-4">
         <p className="text-[10px] text-muted-light">SnackOverflow v2.0 • Made with 🐾 by Capy</p>
+        {isLoggedIn && (
+          <p className="text-[9px] text-muted-light mt-1">Your data syncs across all devices</p>
+        )}
       </div>
     </div>
   );

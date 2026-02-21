@@ -13,7 +13,9 @@
 | **Hindi Text Gen** | Groq (meta-llama/llama-4-scout-17b-16e-instruct) |
 | **Hindi TTS** | Sarvam AI Bulbul v3 (speaker: "kabir", male North Indian) |
 | **On-Device Detection** | YOLOv8n via ONNX Runtime Web (WASM) |
-| **State** | React hooks + localStorage (no database) |
+| **Auth** | Supabase Auth (email magic link + password) |
+| **Database** | Supabase Postgres (JSONB, RLS) |
+| **State** | React hooks + localStorage (cache) + Supabase (cloud sync) |
 | **Fonts** | DM Sans (400–900), JetBrains Mono (via next/font/google) |
 | **Dev Tools** | local-ssl-proxy (HTTPS for mobile camera testing) |
 | **Deployment** | Vercel |
@@ -91,6 +93,11 @@ snackoverflow/
 │       ├── useYoloDetection.ts       # YOLO detection hook
 │       ├── yoloInference.ts          # ONNX Runtime YOLO inference logic
 │       └── yoloLabels.ts             # COCO class labels for YOLO
+│       ├── supabase/
+│       │   ├── client.ts                # Browser Supabase client (createBrowserClient)
+│       │   ├── server.ts                # Server Supabase client (for auth callback)
+│       │   └── sync.ts                  # Pull/push/merge + debounced cloud sync
+│       └── useAuth.ts                   # Auth hook (magic link, password, sign out)
 ├── .env.example                      # Template for API keys
 ├── .env.local                        # Actual API keys (gitignored)
 ├── next.config.ts                    # Next.js config (reactCompiler: true)
@@ -101,7 +108,15 @@ snackoverflow/
 ## Data Flow
 
 ```
-User opens app → page.tsx renders BottomTabBar + active view (5 tabs)
+User opens app → layout.tsx wraps with AuthProvider → page.tsx renders BottomTabBar + active view (5 tabs)
+
+Auth Flow:
+  Guest mode (default): app works fully with localStorage only, no login required
+  Profile tab → AuthScreen → email magic link or password signup/login
+  → Supabase Auth → /auth/callback → session established
+  → migrateLocalStorageToCloud() on first login (if cloud row is empty)
+  → All hooks pull cloud data → override localStorage → sync on every change
+  → Debounced pushes (800ms) to avoid hammering Supabase
 
 Home Tab (HomeView.tsx):
   Capy mascot + greeting + speech bubble (context-aware from capyLines.ts)
@@ -154,6 +169,8 @@ Capy Tab (CapyView.tsx — lazy-loaded with next/dynamic, ssr: false):
 
 Profile Tab (ProfileView.tsx):
   Capy avatar + app branding
+  → Auth section: sign-in CTA (when logged out) or email + sign-out (when logged in)
+  → Cloud sync status badge (green "Synced to cloud" or grey "Data stored locally")
   → Body Stats card (gender, age, height, weight, activity, goal)
   → Daily Targets card (calories, protein, carbs, fat, TDEE)
   → Re-run Goal Setup / Reset All Data actions

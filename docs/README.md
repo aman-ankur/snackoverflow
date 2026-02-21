@@ -12,5 +12,5 @@ This directory contains detailed documentation:
 - [Environment Variables](./ENV-VARS.md) — API keys and configuration
 - [Design System](./DESIGN-SYSTEM.md) — colors, typography, spacing
 - [Backlog](./BACKLOG.md) — shipped features and future ideas
-- [Deployment](./DEPLOYMENT.md) — Vercel deployment guide
+- [Deployment](./DEPLOYMENT.md) — Vercel deployment + Supabase setup guide
 - [Test Results](./TEST-RESULTS.md) — E2E verification

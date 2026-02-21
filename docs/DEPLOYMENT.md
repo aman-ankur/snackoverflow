@@ -19,6 +19,8 @@
    - `GEMINI_API_KEY`
    - `GROQ_API_KEY`
    - `SARVAM_API_KEY`
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 5. Click Deploy
 
 ### Subsequent Deploys
@@ -91,6 +93,59 @@ git push origin main    # Auto-deploys to Vercel
 | `GEMINI_API_KEY` | Yes | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
 | `GROQ_API_KEY` | Yes | [console.groq.com/keys](https://console.groq.com/keys) |
 | `SARVAM_API_KEY` | Yes | [dashboard.sarvam.ai](https://dashboard.sarvam.ai) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Optional* | [supabase.com/dashboard](https://supabase.com/dashboard) → Settings → API |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Optional* | Same dashboard → `anon` `public` key |
+
+\* Without Supabase keys, the app works in guest mode (localStorage only). With them, users can sign in and sync data across devices.
 
 Set these in Vercel Dashboard → Project → Settings → Environment Variables.
 Do NOT commit `.env.local` to git (it's in `.gitignore`).
+
+---
+
+## Supabase Setup (One-Time)
+
+1. Create a project at [supabase.com/dashboard](https://supabase.com/dashboard)
+2. Go to **SQL Editor** → run this to create the table + RLS:
+
+```sql
+create table public.user_data (
+  id uuid primary key references auth.users(id) on delete cascade,
+  profile jsonb default null,
+  goals jsonb default null,
+  streak jsonb default null,
+  meals jsonb default '[]'::jsonb,
+  garden jsonb default null,
+  expiry_tracker jsonb default '[]'::jsonb,
+  fridge_scans jsonb default '[]'::jsonb,
+  meal_planner jsonb default null,
+  updated_at timestamptz default now()
+);
+
+alter table public.user_data enable row level security;
+
+create policy "Users read own data" on public.user_data
+  for select using (auth.uid() = id);
+create policy "Users insert own data" on public.user_data
+  for insert with check (auth.uid() = id);
+create policy "Users update own data" on public.user_data
+  for update using (auth.uid() = id);
+
+create or replace function public.handle_new_user()
+returns trigger as $$
+begin
+  insert into public.user_data (id) values (new.id);
+  return new;
+end;
+$$ language plpgsql security definer;
+
+create trigger on_auth_user_created
+  after insert on auth.users
+  for each row execute function public.handle_new_user();
+```
+
+3. Go to **Authentication → Providers** → ensure Email is enabled (magic link ON)
+4. Go to **Authentication → URL Configuration** → add redirect URLs:
+   - `http://localhost:3000/auth/callback` (local dev)
+   - `https://your-app.vercel.app/auth/callback` (production)
+5. Copy Project URL + anon key → add to `.env.local` and Vercel env vars

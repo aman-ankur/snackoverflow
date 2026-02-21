@@ -76,7 +76,9 @@ SnackOverflow is a **mobile-first meal tracker and nutrition assistant** built f
 | **AI — Vision** | Gemini 2.0 Flash → Gemini Flash Lite → Groq Llama 4 Scout |
 | **AI — Hindi TTS** | Sarvam AI Bulbul v3 |
 | **AI — Hindi Text** | Groq Llama 4 Scout |
-| **Storage** | localStorage (no database, no auth) |
+| **Auth** | Supabase Auth (email magic link + password) |
+| **Database** | Supabase Postgres (JSONB + RLS) |
+| **Storage** | localStorage (cache) + Supabase (cloud sync) |
 | **Deploy** | Vercel |
 
 ## Quick Start
@@ -115,8 +117,10 @@ Create `.env.local` with these keys:
 | `GEMINI_API_KEY` | Primary AI (fridge + dish analysis) | [aistudio.google.com/apikey](https://aistudio.google.com/apikey) |
 | `GROQ_API_KEY` | Fallback AI + Hindi text | [console.groq.com/keys](https://console.groq.com/keys) |
 | `SARVAM_API_KEY` | Hindi text-to-speech | [dashboard.sarvam.ai](https://dashboard.sarvam.ai) |
+| `NEXT_PUBLIC_SUPABASE_URL` | Supabase project URL | [supabase.com/dashboard](https://supabase.com/dashboard) |
+| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase anon (public) key | Same dashboard → Settings → API |
 
-All three have generous free tiers — **₹0/month for personal use**.
+All have generous free tiers — **₹0/month for personal use**.
 
 ## Project Structure
 
@@ -129,6 +133,7 @@ src/
 │   │   ├── hindi-message/  # Hindi text generation
 │   │   ├── hindi-tts/      # Hindi audio generation
 │   │   └── capy-motivation/# LLM motivation lines
+│   ├── auth/callback/      # Supabase magic link callback
 │   └── page.tsx            # Main app shell
 ├── components/
 │   ├── HomeView.tsx        # Dashboard — intake ring, meals, Capy greeting
@@ -141,11 +146,15 @@ src/
 │   ├── CapyLottie.tsx      # Lottie animation player (capy, cat, dog)
 │   ├── GoalOnboarding.tsx  # 5-step goal setup wizard
 │   ├── GoalDashboard.tsx   # Daily progress with Capy speech bubble
+│   ├── AuthProvider.tsx    # Auth context provider (wraps app)
+│   ├── AuthScreen.tsx      # Email magic link + password login UI
 │   └── ...                 # 15+ more components
 ├── lib/
 │   ├── useMealLog.ts       # Meal logging & daily/weekly aggregation
-│   ├── useUserGoals.ts     # Goal persistence & streak tracking
-│   ├── useGardenState.ts   # Garden state computation from activity
+│   ├── useUserGoals.ts     # Goal persistence & streak tracking (+ Supabase sync)
+│   ├── useGardenState.ts   # Garden state computation from activity (+ Supabase sync)
+│   ├── useAuth.ts          # Supabase auth hook
+│   ├── supabase/           # Supabase client, server, sync utilities
 │   ├── tdeeCalculator.ts   # TDEE + macro calculation
 │   ├── capyLines.ts        # Capy mood & greeting logic
 │   └── ...
@@ -158,14 +167,14 @@ src/
 - **Warm Sage & Cream theme** — flat, light design with green accent
 - **Indian food focus** — recipes, Hindi names, Hindi voice for cook communication
 - **Multi-provider AI** — Gemini primary → Groq fallback, never depends on one provider
-- **No auth, no database** — all state in localStorage, privacy-first
+- **Optional auth** — app works fully without login; sign in to sync across devices via Supabase
 - **Gamification** — garden grows with consistency, wilts with neglect
 
 ## Deploy on Vercel
 
 1. Go to [vercel.com/new](https://vercel.com/new)
 2. Import `aman-ankur/snackoverflow` from GitHub
-3. Add the 3 environment variables
+3. Add the 5 environment variables (3 AI keys + 2 Supabase keys)
 4. Click Deploy
 
 ## Documentation
