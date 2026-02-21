@@ -26,7 +26,7 @@ function Ring({ value, baseline, colorClass }: { value: number; baseline: number
 
   return (
     <svg width="28" height="28" viewBox="0 0 28 28" className="shrink-0">
-      <circle cx="14" cy="14" r={radius} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="3" />
+      <circle cx="14" cy="14" r={radius} fill="none" stroke="var(--color-border)" strokeWidth="3" />
       <circle
         cx="14"
         cy="14"
@@ -85,9 +85,9 @@ export default function DailySummary({ totals, mealsCount }: DailySummaryProps) 
   ];
 
   return (
-    <div className="rounded-2xl border border-border bg-surface px-3 py-2.5">
+    <div className="rounded-2xl border border-border bg-card px-3 py-2.5">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-foreground/70">Today&apos;s Summary</h3>
+        <h3 className="text-xs font-semibold text-foreground">Today&apos;s Summary</h3>
         <span className="rounded-full bg-accent/10 border border-accent/20 px-2 py-0.5 text-[10px] font-medium text-accent">
           {mealsCount} meal{mealsCount === 1 ? "" : "s"}
         </span>
@@ -102,11 +102,11 @@ export default function DailySummary({ totals, mealsCount }: DailySummaryProps) 
                 <Ring value={metric.value} baseline={metric.baseline} colorClass={metric.colorClass} />
                 <Icon className={`h-3 w-3 ${metric.colorClass} absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2`} />
               </div>
-              <p className="text-xs font-semibold text-foreground/85 leading-tight">
+              <p className="text-xs font-semibold text-foreground leading-tight">
                 {metric.value}
-                <span className="text-[9px] font-normal text-foreground/40 ml-0.5">{metric.unit}</span>
+                <span className="text-[9px] font-normal text-muted ml-0.5">{metric.unit}</span>
               </p>
-              <p className="text-[9px] text-foreground/35 leading-tight">{metric.label}</p>
+              <p className="text-[9px] text-muted leading-tight">{metric.label}</p>
             </div>
           );
         })}

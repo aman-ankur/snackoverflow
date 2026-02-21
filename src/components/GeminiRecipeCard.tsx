@@ -22,7 +22,7 @@ function getDietStyle(diet: string): string {
     jain: "text-purple-400 bg-purple-400/10 border-purple-400/20",
     "non-vegetarian": "text-red-400 bg-red-400/10 border-red-400/20",
   };
-  return styles[diet] || "text-foreground/40 bg-foreground/5 border-foreground/10";
+  return styles[diet] || "text-muted bg-card-hover border-border";
 }
 
 function getDietEmoji(diet: string): string {
@@ -58,7 +58,7 @@ export default function GeminiRecipeCard({
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.08, duration: 0.3 }}
-      className="rounded-2xl bg-surface border border-border overflow-hidden"
+      className="rounded-2xl bg-card border border-border overflow-hidden"
     >
       {/* Header */}
       <div className="p-4">
@@ -68,11 +68,11 @@ export default function GeminiRecipeCard({
               <h3 className="text-base font-bold text-foreground">
                 {recipe.name}
               </h3>
-              <span className="text-sm text-foreground/30 font-medium">
+              <span className="text-sm text-muted font-medium">
                 {recipe.hindi}
               </span>
             </div>
-            <p className="text-xs text-foreground/50 leading-relaxed line-clamp-2">
+            <p className="text-xs text-muted leading-relaxed line-clamp-2">
               {recipe.description}
             </p>
           </div>
@@ -99,7 +99,7 @@ export default function GeminiRecipeCard({
           {recipe.tags?.slice(0, 2).map((tag) => (
             <span
               key={tag}
-              className="rounded-full bg-foreground/5 border border-foreground/10 px-2.5 py-1 text-xs text-foreground/40"
+              className="rounded-full bg-card-hover border border-border px-2.5 py-1 text-xs text-muted"
             >
               {tag}
             </span>
@@ -109,7 +109,7 @@ export default function GeminiRecipeCard({
         {/* Ingredients summary */}
         <div className="mt-3 flex items-start gap-2">
           <CheckCircle2 className="h-3.5 w-3.5 text-accent mt-0.5 shrink-0" />
-          <p className="text-xs text-foreground/40 leading-relaxed">
+          <p className="text-xs text-muted leading-relaxed">
             <span className="text-accent font-medium">You have:</span>{" "}
             {recipe.ingredients_used?.join(", ") || "—"}
           </p>
@@ -117,7 +117,7 @@ export default function GeminiRecipeCard({
         {recipe.ingredients_needed && recipe.ingredients_needed.length > 0 && (
           <div className="mt-1.5 flex items-start gap-2">
             <ShoppingBag className="h-3.5 w-3.5 text-orange mt-0.5 shrink-0" />
-            <p className="text-xs text-foreground/40 leading-relaxed">
+            <p className="text-xs text-muted leading-relaxed">
               <span className="text-orange font-medium">Also need:</span>{" "}
               {recipe.ingredients_needed.join(", ")}
             </p>
@@ -128,7 +128,7 @@ export default function GeminiRecipeCard({
       {/* Expand toggle */}
       <button
         onClick={() => setExpanded(!expanded)}
-        className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-xs font-medium text-foreground/40 hover:text-accent hover:bg-surface-hover transition-all"
+        className="flex w-full items-center justify-center gap-1.5 border-t border-border py-2.5 text-xs font-medium text-muted hover:text-accent hover:bg-card-hover transition-all"
       >
         <ChefHat className="h-3.5 w-3.5" />
         {expanded ? "Hide Steps" : "View Steps"}
@@ -149,7 +149,7 @@ export default function GeminiRecipeCard({
           className="border-t border-border"
         >
           <div className="p-4 space-y-2.5">
-            <h4 className="text-xs font-semibold text-foreground/50 uppercase tracking-wider">
+            <h4 className="text-xs font-semibold text-muted uppercase tracking-wider">
               Steps
             </h4>
             {recipe.steps?.map((step, i) => (
@@ -157,7 +157,7 @@ export default function GeminiRecipeCard({
                 <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/15 text-[10px] font-bold text-accent mt-0.5">
                   {i + 1}
                 </span>
-                <p className="text-sm text-foreground/70 leading-relaxed">
+                <p className="text-sm text-foreground leading-relaxed">
                   {step}
                 </p>
               </div>

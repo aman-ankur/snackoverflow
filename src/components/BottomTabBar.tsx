@@ -1,63 +1,96 @@
 "use client";
 
-import { motion } from "framer-motion";
-import { Refrigerator, Utensils } from "lucide-react";
+import { Home, BarChart3, Camera, User } from "lucide-react";
 
-export type AppTab = "fridge" | "dish";
+export type AppTab = "home" | "progress" | "scan" | "profile";
 
 interface BottomTabBarProps {
   activeTab: AppTab;
   onTabChange: (tab: AppTab) => void;
 }
 
+const SIDE_TABS: { id: AppTab; label: string; icon: typeof Home }[] = [
+  { id: "home", label: "Home", icon: Home },
+  { id: "progress", label: "Progress", icon: BarChart3 },
+  { id: "profile", label: "Profile", icon: User },
+];
+
 export default function BottomTabBar({ activeTab, onTabChange }: BottomTabBarProps) {
   return (
-    <div className="fixed bottom-0 inset-x-0 z-50 px-4 pb-4">
-      <div className="mx-auto max-w-lg rounded-2xl border border-border bg-surface/90 p-1.5 backdrop-blur-xl shadow-[0_8px_40px_rgba(0,0,0,0.35)]">
-        <div className="grid grid-cols-2 gap-1.5">
-          <button
-            onClick={() => onTabChange("fridge")}
-            className="relative flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold"
-          >
-            {activeTab === "fridge" && (
-              <motion.div
-                layoutId="bottom-tab-bg"
-                className="absolute inset-0 rounded-xl border border-accent/25 bg-accent/15"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-              />
-            )}
-            <span
-              className={`relative flex items-center gap-1.5 ${
-                activeTab === "fridge" ? "text-accent" : "text-foreground/40"
-              }`}
-            >
-              <Refrigerator className="h-3.5 w-3.5" />
-              Fridge
-            </span>
-          </button>
+    <div className="fixed bottom-0 inset-x-0 z-50">
+      <div className="mx-auto max-w-lg border-t border-border bg-card px-2 pb-[env(safe-area-inset-bottom,8px)] pt-1.5">
+        <div className="grid grid-cols-4 items-end">
+          {/* Home */}
+          <TabButton
+            tab={SIDE_TABS[0]}
+            isActive={activeTab === "home"}
+            onPress={() => onTabChange("home")}
+          />
 
-          <button
-            onClick={() => onTabChange("dish")}
-            className="relative flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-semibold"
-          >
-            {activeTab === "dish" && (
-              <motion.div
-                layoutId="bottom-tab-bg"
-                className="absolute inset-0 rounded-xl border border-orange/25 bg-orange/15"
-                transition={{ type: "spring", bounce: 0.2, duration: 0.4 }}
-              />
-            )}
-            <span
-              className={`relative flex items-center gap-1.5 ${
-                activeTab === "dish" ? "text-orange" : "text-foreground/40"
+          {/* Progress */}
+          <TabButton
+            tab={SIDE_TABS[1]}
+            isActive={activeTab === "progress"}
+            onPress={() => onTabChange("progress")}
+          />
+
+          {/* Center Scan FAB */}
+          <div className="flex flex-col items-center">
+            <button
+              onClick={() => onTabChange("scan")}
+              className={`-mt-5 flex h-14 w-14 items-center justify-center rounded-full shadow-lg transition-all active:scale-90 ${
+                activeTab === "scan"
+                  ? "bg-accent text-white shadow-accent/30"
+                  : "bg-accent text-white shadow-accent/20"
               }`}
             >
-              <Utensils className="h-3.5 w-3.5" />
-              Dish
+              <Camera className="h-6 w-6" />
+            </button>
+            <span className={`mt-0.5 text-[10px] font-medium ${
+              activeTab === "scan" ? "text-accent" : "text-muted"
+            }`}>
+              Scan
             </span>
-          </button>
+          </div>
+
+          {/* Profile */}
+          <TabButton
+            tab={SIDE_TABS[2]}
+            isActive={activeTab === "profile"}
+            onPress={() => onTabChange("profile")}
+          />
         </div>
       </div>
     </div>
+  );
+}
+
+function TabButton({
+  tab,
+  isActive,
+  onPress,
+}: {
+  tab: (typeof SIDE_TABS)[number];
+  isActive: boolean;
+  onPress: () => void;
+}) {
+  const Icon = tab.icon;
+  return (
+    <button
+      onClick={onPress}
+      className="flex flex-col items-center gap-0.5 py-1.5 transition-colors active:scale-95"
+    >
+      <Icon
+        className={`h-5 w-5 ${isActive ? "text-accent" : "text-muted"}`}
+        strokeWidth={isActive ? 2.2 : 1.8}
+      />
+      <span
+        className={`text-[10px] font-medium ${
+          isActive ? "text-accent" : "text-muted"
+        }`}
+      >
+        {tab.label}
+      </span>
+    </button>
   );
 }

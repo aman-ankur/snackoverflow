@@ -128,7 +128,7 @@ export default function MealPlanner({
   };
 
   return (
-    <div className="rounded-2xl bg-surface border border-border overflow-hidden">
+    <div className="rounded-2xl bg-card border border-border overflow-hidden">
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="flex items-center justify-between w-full px-4 py-3 text-left"
@@ -143,9 +143,9 @@ export default function MealPlanner({
           )}
         </div>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-foreground/40" />
+          <ChevronUp className="h-4 w-4 text-muted" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-foreground/40" />
+          <ChevronDown className="h-4 w-4 text-muted" />
         )}
       </button>
 
@@ -160,13 +160,13 @@ export default function MealPlanner({
           >
             <div className="px-3 pb-3 border-t border-border pt-3">
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[10px] text-foreground/25 px-1">
+                <p className="text-[10px] text-muted-light px-1">
                   Plan meals for the week using scanned recipes
                 </p>
                 {totalMeals > 0 && (
                   <button
                     onClick={clearPlan}
-                    className="flex items-center gap-1 text-[10px] text-foreground/30 hover:text-red-400 transition-colors shrink-0"
+                    className="flex items-center gap-1 text-[10px] text-muted hover:text-red-400 transition-colors shrink-0"
                   >
                     <Trash2 className="h-3 w-3" />
                     Clear
@@ -180,10 +180,10 @@ export default function MealPlanner({
                   return (
                     <div
                       key={day}
-                      className="rounded-lg bg-background/50 border border-border/50 px-3 py-2"
+                      className="rounded-lg bg-background border border-border px-3 py-2"
                     >
                       <div className="flex items-center justify-between">
-                        <span className="text-xs font-semibold text-foreground/60 w-8">
+                        <span className="text-xs font-semibold text-foreground w-8">
                           {day}
                         </span>
                         <div className="flex items-center gap-1.5 flex-1 ml-2 flex-wrap">
@@ -202,7 +202,7 @@ export default function MealPlanner({
                             </span>
                           ))}
                           {meals.length === 0 && (
-                            <span className="text-[10px] text-foreground/20">
+                            <span className="text-[10px] text-muted-light">
                               No meals planned
                             </span>
                           )}
@@ -214,7 +214,7 @@ export default function MealPlanner({
                             }
                             className="ml-2 p-1 rounded-full hover:bg-accent/10 transition-colors shrink-0"
                           >
-                            <Plus className="h-3.5 w-3.5 text-foreground/40" />
+                            <Plus className="h-3.5 w-3.5 text-muted" />
                           </button>
                         )}
                       </div>
@@ -235,12 +235,12 @@ export default function MealPlanner({
                                 disabled={meals.some(
                                   (m) => m.name === recipe.name
                                 )}
-                                className="flex items-center gap-2 w-full rounded-md bg-surface hover:bg-surface-hover border border-border/50 px-2.5 py-1.5 text-left transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
+                                className="flex items-center gap-2 w-full rounded-md bg-card hover:bg-card-hover border border-border px-2.5 py-1.5 text-left transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
                               >
-                                <span className="text-[10px] font-medium text-foreground/70 truncate">
+                                <span className="text-[10px] font-medium text-foreground truncate">
                                   {recipe.name}
                                 </span>
-                                <span className="text-[10px] text-foreground/30 shrink-0">
+                                <span className="text-[10px] text-muted shrink-0">
                                   {recipe.time}
                                 </span>
                               </button>

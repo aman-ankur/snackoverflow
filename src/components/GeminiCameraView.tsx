@@ -52,7 +52,7 @@ export default function GeminiCameraView({
   placeholderSubtitle = "AI will identify items and suggest recipes",
 }: GeminiCameraViewProps) {
   return (
-    <div className="relative w-full overflow-hidden rounded-2xl bg-surface border border-border">
+    <div className="relative w-full overflow-hidden rounded-2xl bg-card border border-border">
       {/* Camera Feed — near full-screen when streaming */}
       <div className={`relative w-full bg-black transition-all duration-300 ${isStreaming ? "h-[50vh]" : "aspect-[4/3]"}`}>
         <video
@@ -137,15 +137,15 @@ export default function GeminiCameraView({
 
         {/* Placeholder when not streaming */}
         {!isStreaming && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-surface">
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card">
             <div className="rounded-full bg-accent-glow p-5">
               <Camera className="h-10 w-10 text-accent" />
             </div>
             <div className="text-center px-6">
-              <p className="text-sm font-medium text-foreground/80">
+              <p className="text-sm font-medium text-foreground">
                 {placeholderTitle}
               </p>
-              <p className="text-xs text-foreground/40 mt-1">
+              <p className="text-xs text-muted mt-1">
                 {placeholderSubtitle}
               </p>
             </div>
@@ -161,12 +161,12 @@ export default function GeminiCameraView({
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-center gap-2.5 p-3 bg-surface/80 backdrop-blur-sm">
+      <div className="flex items-center justify-center gap-2.5 p-3 bg-card">
         {!isStreaming ? (
           <button
             onClick={onStart}
             disabled={!hasApiKey}
-            className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-black transition-all hover:bg-accent-dim active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-accent-dim active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <Camera className="h-4 w-4" />
             Start Camera
@@ -175,16 +175,16 @@ export default function GeminiCameraView({
           <>
             <button
               onClick={onFlip}
-              className="flex items-center justify-center rounded-full bg-surface-hover border border-border p-2.5 transition-all hover:bg-border active:scale-95"
+              className="flex items-center justify-center rounded-full bg-card-hover border border-border p-2.5 transition-all hover:bg-border active:scale-95"
               title="Flip camera"
             >
-              <SwitchCamera className="h-4 w-4 text-foreground/70" />
+              <SwitchCamera className="h-4 w-4 text-muted" />
             </button>
 
             <button
               onClick={onAnalyze}
               disabled={isAnalyzing || !hasApiKey}
-              className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-black transition-all hover:bg-accent-dim active:scale-95 disabled:opacity-50"
+              className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-accent-dim active:scale-95 disabled:opacity-50"
             >
               {isAnalyzing ? (
                 <RefreshCw className="h-4 w-4 animate-spin" />
@@ -200,8 +200,8 @@ export default function GeminiCameraView({
                 disabled={!hasApiKey}
                 className={`flex items-center justify-center rounded-full border p-2.5 transition-all active:scale-95 ${
                   autoScan
-                    ? "bg-accent/20 border-accent/30 text-accent"
-                    : "bg-surface-hover border-border text-foreground/70 hover:bg-border"
+                    ? "bg-accent-light border-accent/30 text-accent"
+                    : "bg-card-hover border-border text-muted hover:bg-border"
                 }`}
                 title={autoScan ? "Stop auto-scan" : "Auto-scan every 4s"}
               >
