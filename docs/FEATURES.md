@@ -94,6 +94,7 @@
 - Fridge analysis: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout
 - Dish camera scan: Gemini 2.5 Flash → Gemini 2.0 Flash → Groq Llama 4 Scout
 - Describe meal: Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq Llama 4 Scout (parallel race)
+- Eating habits analysis: Gemini 2.5 Flash → OpenAI gpt-4.1-mini → Groq Llama 4 Scout
 - If all rate-limited, shows friendly "wait 30s" message and stops auto-scan
 - Hindi text: Groq only (free, fast)
 - Hindi TTS: Sarvam AI only (native Hindi voice)
@@ -106,6 +107,7 @@
 - Describe-meal uses Gemini 2.0 Flash-Lite (separate 15 RPM quota from camera scanner's 2.5 Flash)
 - OpenAI + Groq raced in parallel (first valid response wins, no sequential waiting)
 - 6-second per-provider timeout prevents slow providers from blocking the pipeline
+- **Eating analysis**: client-side pre-aggregation reduces AI input from ~3000-5000 tokens (raw meals) to ~400 tokens (compact summary). 95%+ of calls use Gemini free tier ($0.00). Smart caching avoids re-generation when no new meals logged.
 
 ## 13. Goal Setting & Capy Mascot (NEW)
 - **Capy** — mood-reactive capybara mascot (kawaii PNG images, 3 variants: bath/orange-hat/headphones)
@@ -247,3 +249,84 @@
 - `HealthProfileWizard.tsx` — multi-step wizard component
 - `HealthVerdictCard.tsx` — MealHealthBanner, HealthCheckButton, HealthProfilePrompt, DishVerdictPill
 - `api/health-verdict/route.ts` — POST route with tiered AI fallback
+
+## 19. Eating Habits Analysis — AI-Powered Reports (NEW)
+
+### Overview
+AI-generated eating habits report that analyzes logged meals over a selectable time window, cross-referenced with health profile data, producing actionable insights. Optimized for minimal token cost via client-side pre-aggregation.
+
+### Trigger Points
+- **Progress tab**: Prominent "Eating Habits Analysis" card below Weekly Calories chart with time-window segmented control (Today / 7 Days / 14 Days / 30 Days) and "Analyze My Eating" button
+- **Home tab**: Summary card showing latest report score + one-liner summary. Tapping navigates to Progress tab. Only visible if a report was generated in the last 7 days.
+
+### Time Windows
+- **Today** — useful after logging multiple meals in a day
+- **7 Days** — weekly check-in (default selection)
+- **14 Days** — bi-weekly trend analysis
+- **30 Days** — monthly review
+
+### Cost-Optimized Architecture
+The key design decision: **all number crunching happens client-side** via `mealAggregator.ts`. The AI receives a compact ~400-token summary instead of raw meal JSON (~3000-5000 tokens). This reduces cost by ~10x.
+
+Client-side pre-computation includes:
+- Daily calorie/macro totals and averages
+- Goal adherence rate (days within 80-105% of calorie target)
+- Weekend vs weekday calorie averages
+- Meal timing stats (breakfast skip count, late dinner count)
+- Top 10 dishes by frequency with average calories
+- Macro ratio split (protein/carbs/fat percentages)
+- Protein clustering at dinner percentage
+- Snack calorie percentage of total
+- Fried item count (from dish tags and name matching)
+- Best/worst day by distance from calorie goal
+- Unique dish count (variety metric)
+
+### AI Report Structure
+The AI returns a structured JSON report with:
+- **Score**: `great` | `good` | `needs_work` | `concerning`
+- **Score Summary**: 1-2 sentence mixed-tone assessment (data-first with warm encouragement)
+- **Macro Trends**: per-macro direction (improving / stable / declining)
+- **5-7 Insights** (dynamically selected from data):
+  - **Temporal**: weekend calorie spikes, breakfast skipping impact, late dinners, snack clustering
+  - **Macro**: protein distribution across meals, carb-heavy days, invisible snack calories, fiber gaps
+  - **Variety**: diet monotony, repeat offenders, missing food groups
+  - **Goal**: calorie target adherence, protein shortfall, best/worst day
+- **Health Notes**: condition-specific observations (only when health profile exists)
+  - Connects eating patterns to conditions (e.g. sodium + hypertension, GI + diabetes)
+- **Action Items**: 3-5 prioritized, practical Indian food swaps (paneer, makhana, brown rice, etc.)
+- **Period Comparison**: week-over-week delta when previous report exists
+
+### Tabbed Bottom Sheet UI
+Report displayed in a bottom sheet (consistent with MealTypeSheet pattern) with 4 tabs:
+- **Summary**: Score badge, 1-2 sentence summary, macro trend pills (arrows), comparison card (if previous report exists)
+- **Patterns**: Scrollable insight cards with severity color-coding (green=positive, grey=neutral, orange=warning)
+- **Health**: Condition-specific notes (tab hidden if no health profile)
+- **Actions**: Numbered priority action items with related insight references
+
+### Smart Caching
+- Last 10 analyses stored per user in `user_data.meal_analyses` (Supabase JSONB)
+- Cache check: if same window was analyzed and no new meals logged since, shows cached report with "Generated Xh ago" badge
+- "Refresh" button available to force re-generation
+- "New meals logged" indicator when cached report is stale
+
+### Provider Chain
+- **Tier 1**: Gemini 2.5 Flash (free tier, 500 req/day) — best quality for health reasoning
+- **Tier 2**: OpenAI gpt-4.1-mini (~$0.0015/call) — strong fallback with good insight depth
+- **Tier 3**: Groq Llama 4 Scout (free) — emergency fallback, adequate for structured reports
+- Temperature: 0.3 (factual, consistent)
+- Max output tokens: 1200
+- Per-provider timeout: 15 seconds
+
+### Cost Profile
+- 95%+ of calls: **$0.00** (Gemini free tier)
+- Rare fallback: **~$0.0015** (gpt-4.1-mini)
+- Emergency: **$0.00** (Groq free tier)
+- Estimated input: ~450 tokens, output: ~900 tokens per analysis
+
+### Files
+- `mealAggregator.ts` — client-side pre-aggregation engine (`aggregateMeals()` + `serializeForPrompt()`)
+- `useEatingAnalysis.ts` — React hook (state, cache logic, staleness detection, Supabase sync)
+- `api/analyze-habits/route.ts` — POST route with 3-tier provider chain
+- `EatingAnalysisSheet.tsx` — tabbed bottom sheet (Summary / Patterns / Health / Actions)
+- `EatingAnalysisCard.tsx` — trigger card with time-window picker for Progress tab
+- Types in `dishTypes.ts`: `EatingAnalysis`, `EatingReport`, `ReportInsight`, `ActionItem`, `PeriodComparison`, `MacroTrends`

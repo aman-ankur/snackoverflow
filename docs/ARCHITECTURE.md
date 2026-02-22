@@ -9,7 +9,7 @@
 | **UI** | React 19.2.3, Tailwind CSS 4, Framer Motion 12 |
 | **3D Graphics** | Three.js, React Three Fiber, Drei (lazy-loaded, Capy tab only) |
 | **Icons** | Lucide React |
-| **AI Vision** | Google Gemini 2.5 Flash (dish scan), Gemini 2.0 Flash-Lite (describe), OpenAI gpt-4.1-nano, Groq Llama 4 Scout (fallbacks) |
+| **AI Vision** | Google Gemini 2.5 Flash (dish scan, eating analysis), Gemini 2.0 Flash-Lite (describe), OpenAI gpt-4.1-nano/mini, Groq Llama 4 Scout (fallbacks) |
 | **Hindi Text Gen** | Groq (meta-llama/llama-4-scout-17b-16e-instruct) |
 | **Hindi TTS** | Sarvam AI Bulbul v3 (speaker: "kabir", male North Indian) |
 | **On-Device Detection** | YOLOv8n via ONNX Runtime Web (WASM) |
@@ -37,9 +37,10 @@ snackoverflow/
 │   │   │   ├── analyze-dish/route.ts  # Dish nutrition analysis (Gemini → Groq)
 │   │   │   ├── describe-meal/route.ts # Text meal description → nutrition (Gemini → OpenAI+Groq parallel)
 │   │   │   ├── capy-motivation/route.ts # Capy LLM motivation (Gemini → Groq)
-│   │   │   ├── health-verdict/route.ts  # AI health verdict (Gemini → Claude → GPT fallback)
-│   │   │   ├── hindi-message/route.ts # Hindi text generation (Groq)
-│   │   │   └── hindi-tts/route.ts     # Hindi audio generation (Sarvam AI)
+│   │   │   ├── analyze-habits/route.ts  # Eating habits analysis (Gemini → GPT-4.1-mini → Groq)
+    │   │   │   ├── health-verdict/route.ts  # AI health verdict (Gemini → Claude → GPT fallback)
+    │   │   │   ├── hindi-message/route.ts # Hindi text generation (Groq)
+    │   │   │   └── hindi-tts/route.ts     # Hindi audio generation (Sarvam AI)
 │   │   ├── globals.css                # Tailwind theme, CSS vars, animations
 │   │   ├── layout.tsx                 # Root layout, fonts, metadata
 │   │   └── page.tsx                   # Main page — 5-tab router (Home/Progress/Scan/Capy/Profile)
@@ -63,7 +64,9 @@ snackoverflow/
 │   │   ├── GoalDashboard.tsx          # Daily progress card with Capy
 │   │   ├── HealthProfileWizard.tsx    # Multi-step health condition wizard (Dr. Capy)
 │   │   ├── HealthVerdictCard.tsx      # MealHealthBanner + HealthCheckButton + DishVerdictPill
-│   │   ├── MealLog.tsx                # Logged meals list
+    │   │   ├── EatingAnalysisCard.tsx    # Trigger card for eating analysis (time-window picker)
+    │   │   ├── EatingAnalysisSheet.tsx   # Tabbed bottom sheet report (Summary/Patterns/Health/Actions)
+    │   │   ├── MealLog.tsx                # Logged meals list
 │   │   ├── MealHistory.tsx            # History + weekly insights
 │   │   ├── MealTypeSheet.tsx          # Bottom sheet per meal type (dish list, delete, details)
 │   │   ├── MealDetailOverlay.tsx      # Full-screen meal editor (macro chips, health badge, fiber)
@@ -97,8 +100,10 @@ snackoverflow/
 │       ├── useDetection.ts           # (Legacy) Generic detection hook
 │       ├── useDescribeMeal.ts        # Text meal description hook (API + portion state)
 │       ├── useDishScanner.ts         # Dish camera + analysis hook
-│       ├── useHealthProfile.ts       # Health profile hook (localStorage + Supabase sync)
-│       ├── useHealthVerdict.ts       # AI health verdict hook (on-demand fetch + abort)
+│       ├── useEatingAnalysis.ts       # Eating habits analysis hook (generate + cache + sync)
+    │       ├── mealAggregator.ts         # Client-side meal pre-aggregation for AI cost reduction
+    │       ├── useHealthProfile.ts       # Health profile hook (localStorage + Supabase sync)
+    │       ├── useHealthVerdict.ts       # AI health verdict hook (on-demand fetch + abort)
 │       ├── healthConditions.ts       # Conditions registry (15 conditions, gender/age filtering)
 │       ├── healthContextBuilder.ts   # Deterministic lab rules + AI prompt context builder
 │       ├── useExpiryTracker.ts       # Expiry tracker hook (localStorage)
@@ -198,6 +203,20 @@ Progress Tab (ProgressView.tsx):
   → Nutrition + Average stat cards
   → Today's Macros (protein/carbs/fat bars)
   → Weekly Calories chart
+  → **Eating Habits Analysis** (EatingAnalysisCard):
+    → Time-window picker (Today / 7d / 14d / 30d)
+    → "Analyze My Eating" button → triggers pipeline:
+      1. Client-side: mealAggregator.ts computes compact summary (~400 tokens)
+      2. Cache check: if same window + no new meals → show cached report
+      3. API call: POST /api/analyze-habits with aggregate + health context
+      4. Provider chain: Gemini 2.5 Flash → gpt-4.1-mini → Groq Llama 4 Scout
+      5. Response stored in localStorage + Supabase (last 10 analyses)
+    → Opens EatingAnalysisSheet (tabbed bottom sheet):
+      Tab 1 — Summary: score badge, trend pills, comparison card
+      Tab 2 — Patterns: 5-7 AI-selected insight cards (temporal, macro, variety, goal)
+      Tab 3 — Health: condition-specific notes (hidden if no health profile)
+      Tab 4 — Actions: prioritized action items with Indian food swaps
+    → Cached report shown with "Generated Xh ago" badge + Refresh button
   → Meal History with insights
 
 Capy Tab (CapyView.tsx — lazy-loaded with next/dynamic, ssr: false):
