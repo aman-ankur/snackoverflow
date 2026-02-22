@@ -4,7 +4,7 @@
 
 # SnackOverflow
 
-**AI-Powered Nutrition Tracker for Indian Households** 🐾
+**Your Nutrition Co-Pilot — powered by AI & a capybara** 🐾
 
 Scan meals, track macros, get health-aware eating reports, and grow a 3D garden — all guided by your capybara companion.
 
