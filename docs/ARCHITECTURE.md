@@ -60,6 +60,8 @@ snackoverflow/
 │   │   ├── GoalDashboard.tsx          # Daily progress card with Capy
 │   │   ├── MealLog.tsx                # Logged meals list
 │   │   ├── MealHistory.tsx            # History + weekly insights
+│   │   ├── MealTypeSheet.tsx          # Bottom sheet per meal type (dish list, delete, details)
+│   │   ├── MealDetailOverlay.tsx      # Full-screen meal editor (macro chips, health badge, fiber)
 │   │   ├── ApiKeyInput.tsx            # (Legacy) API key input field
 │   │   ├── CameraView.tsx            # Generic camera view (used by YOLO mode)
 │   │   ├── DetectedItems.tsx         # Generic detected items display (YOLO mode)
@@ -125,6 +127,10 @@ Home Tab (HomeView.tsx):
   → userName prop from profile.name (optional, set during onboarding)
   → Daily Intake ring (calorie progress) + macro breakdown
   → Today Meals (4 meal slots: breakfast/lunch/snack/dinner)
+    → Tap meal slot → MealTypeSheet (bottom sheet: dish list, macro summary, per-dish delete)
+    → Tap "Details" → MealDetailOverlay (full-screen editor):
+       Health badge (getMealHealthRating) + colored macro chips (tap to edit)
+       + tappable kcal + compact portions + notes + bottom actions (Save/Re-scan/Delete)
   → "Scan Your Fridge" CTA → opens FridgeOverlay
 
 Scan Tab (ScanView.tsx — center FAB):
