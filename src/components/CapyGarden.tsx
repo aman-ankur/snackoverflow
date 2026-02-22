@@ -55,8 +55,8 @@ const CAPY_BELLY = "#E8CBA8";
 const CAPY_DARK = "#5C3D20";
 const CAPY_NOSE = "#A07850";
 const SPROUT_GREEN = "#5AAC5A";
-const GRASS_GREEN = "#4DB84D";
-const GRASS_DRY = "#9BA868";
+const GRASS_GREEN = "#5B8C3E";
+const GRASS_DRY = "#A8A060";
 const EARTH_BROWN = "#8B6B4A";
 const TRUNK_BROWN = "#7A5C3A";
 const CANOPY_GREEN = "#4A9E4A";
@@ -92,10 +92,12 @@ function getTimeOfDayParams(hour: number, minute: number): TimeOfDayParams {
     { h: 7.5,skyT: "#FF9966", skyB: "#FFD4A8", ambC: "#FFCC88", ambI: 0.6, sunC: "#FFDDAA", sunI: 0.8, sunAng: 25,  fogC: "#D4A080", fogN: 12, fogF: 30, stars: 0.0, moon: 0.0, fire: 0.0 },
     { h: 9,  skyT: "#87CEEB", skyB: "#E8F5E0", ambC: "#FFF5E6", ambI: 0.65, sunC: "#FFFFFF", sunI: 0.95, sunAng: 50, fogC: "#E8F0E4", fogN: 12, fogF: 30, stars: 0.0, moon: 0.0, fire: 0.0 },
     { h: 12, skyT: "#5BA3D9", skyB: "#F5E6D0", ambC: "#FFF8F0", ambI: 0.7,  sunC: "#FFFFFF", sunI: 1.0, sunAng: 80,  fogC: "#E0E8D8", fogN: 12, fogF: 30, stars: 0.0, moon: 0.0, fire: 0.0 },
-    { h: 16, skyT: "#6BAFE0", skyB: "#F0E0C8", ambC: "#FFE8CC", ambI: 0.65, sunC: "#FFCC88", sunI: 0.85, sunAng: 50, fogC: "#D8DCC8", fogN: 12, fogF: 30, stars: 0.0, moon: 0.0, fire: 0.0 },
-    { h: 17.5,skyT: "#FF7043", skyB: "#FFD54F", ambC: "#FFAA66", ambI: 0.6,  sunC: "#FF8844", sunI: 0.7, sunAng: 20,  fogC: "#D4A060", fogN: 12, fogF: 30, stars: 0.0, moon: 0.0, fire: 0.2 },
-    { h: 19, skyT: "#4A1A6B", skyB: "#2D1B4E", ambC: "#9977CC", ambI: 0.6, sunC: "#CC8866", sunI: 0.5, sunAng: 2,  fogC: "#3A2860", fogN: 13, fogF: 35, stars: 0.5, moon: 0.5, fire: 0.6 },
-    { h: 20, skyT: "#0B1026", skyB: "#192048", ambC: "#8899CC", ambI: 0.7, sunC: "#99AADD", sunI: 0.5, sunAng: -20, fogC: "#253060", fogN: 14, fogF: 40, stars: 1.0, moon: 1.0, fire: 0.8 },
+    { h: 16, skyT: "#7BBDE8", skyB: "#F5DFC0", ambC: "#FFE8CC", ambI: 0.65, sunC: "#FFCC88", sunI: 0.85, sunAng: 45, fogC: "#E0D8C0", fogN: 14, fogF: 35, stars: 0.0, moon: 0.0, fire: 0.0 },
+    { h: 17, skyT: "#8AAED0", skyB: "#FFD89E", ambC: "#FFE8C0", ambI: 0.72, sunC: "#FFD088", sunI: 0.88, sunAng: 28, fogC: "#E8D8B8", fogN: 18, fogF: 45, stars: 0.0, moon: 0.0, fire: 0.0 },
+    { h: 17.75,skyT: "#6B7FB8", skyB: "#FF9E5E", ambC: "#FFD498", ambI: 0.70, sunC: "#FFC070", sunI: 0.82, sunAng: 15, fogC: "#D8C0A0", fogN: 18, fogF: 42, stars: 0.0, moon: 0.0, fire: 0.1 },
+    { h: 18.5,skyT: "#5A5A98", skyB: "#E87878", ambC: "#EEBB99", ambI: 0.65, sunC: "#F09878", sunI: 0.65, sunAng: 5,  fogC: "#C0A090", fogN: 16, fogF: 38, stars: 0.1, moon: 0.1, fire: 0.25 },
+    { h: 19.5,skyT: "#3D2060", skyB: "#7A4070", ambC: "#AA88BB", ambI: 0.6, sunC: "#CC8888", sunI: 0.45, sunAng: -5,  fogC: "#604060", fogN: 13, fogF: 36, stars: 0.6, moon: 0.5, fire: 0.6 },
+    { h: 20.5,skyT: "#0B1026", skyB: "#192048", ambC: "#8899CC", ambI: 0.7, sunC: "#99AADD", sunI: 0.5, sunAng: -20, fogC: "#253060", fogN: 14, fogF: 40, stars: 1.0, moon: 1.0, fire: 0.8 },
     { h: 24, skyT: "#0B1026", skyB: "#192048", ambC: "#8899CC", ambI: 0.7, sunC: "#99AADD", sunI: 0.5, sunAng: -30, fogC: "#253060", fogN: 14, fogF: 40, stars: 1.0, moon: 1.0, fire: 0.8 },
   ];
 
@@ -158,13 +160,14 @@ function DynamicSkyDome() {
     const initParams = getTimeOfDayParams(now.getHours(), now.getMinutes());
     const gradient = ctx.createLinearGradient(0, 0, 0, 256);
     gradient.addColorStop(0, colorToHex(initParams.skyTopColor));
-    gradient.addColorStop(0.5, colorToHex(lerpColor(colorToHex(initParams.skyTopColor), colorToHex(initParams.skyBottomColor), 0.5)));
+    gradient.addColorStop(0.35, colorToHex(lerpColor(colorToHex(initParams.skyTopColor), colorToHex(initParams.skyBottomColor), 0.35)));
+    gradient.addColorStop(0.55, colorToHex(initParams.skyBottomColor));
     gradient.addColorStop(1, colorToHex(initParams.skyBottomColor));
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 2, 256);
     const tex = new THREE.CanvasTexture(canvas);
     texRef.current = tex;
-    const m = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, depthWrite: false });
+    const m = new THREE.MeshBasicMaterial({ map: tex, side: THREE.BackSide, depthWrite: false, fog: false });
     matRef.current = m;
     return m;
   }, []);
@@ -184,7 +187,8 @@ function DynamicSkyDome() {
     const ctx = canvas.getContext("2d")!;
     const gradient = ctx.createLinearGradient(0, 0, 0, 256);
     gradient.addColorStop(0, colorToHex(params.skyTopColor));
-    gradient.addColorStop(0.5, colorToHex(lerpColor(colorToHex(params.skyTopColor), colorToHex(params.skyBottomColor), 0.5)));
+    gradient.addColorStop(0.35, colorToHex(lerpColor(colorToHex(params.skyTopColor), colorToHex(params.skyBottomColor), 0.35)));
+    gradient.addColorStop(0.55, colorToHex(params.skyBottomColor));
     gradient.addColorStop(1, colorToHex(params.skyBottomColor));
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, 2, 256);
@@ -1828,9 +1832,10 @@ function GardenScene({ garden, isActive, onCapyTap }: CapyGardenProps) {
         enablePan={false}
         enableZoom={true}
         minDistance={1.0}
-        maxDistance={14}
-        minPolarAngle={0.4}
+        maxDistance={16}
+        minPolarAngle={0.3}
         maxPolarAngle={Math.PI / 2.05}
+        target={[0, -0.3, 0]}
         enableDamping
         dampingFactor={0.08}
         rotateSpeed={0.5}
@@ -1898,7 +1903,7 @@ export default function CapyGarden({ garden, isActive, onCapyTap }: CapyGardenPr
       }}
     >
       <Canvas
-        camera={{ position: [3, 1.2, 3.5], fov: 38 }}
+        camera={{ position: [4, 2.2, 4.5], fov: 42 }}
         frameloop={isActive ? "always" : "never"}
         dpr={[1, 1.5]}
         gl={{ antialias: true, powerPreference: "low-power" }}
