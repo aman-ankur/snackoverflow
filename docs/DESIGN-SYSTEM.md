@@ -158,6 +158,47 @@ rounded-xl bg-accent-light border border-accent/15 px-3 py-2
 - Positioned next to CapyMascot SVG
 - Context-aware text from `capyLines.ts`
 
+### Colored Macro Chips (MealDetailOverlay)
+```
+flex-1 flex flex-col items-center py-2 rounded-[10px]
+```
+- 4 chips in a row: Protein (`bg-green-50 text-green-600`), Carbs (`bg-orange-50 text-orange-500`), Fat (`bg-violet-50 text-violet-500`), Fiber (`bg-cyan-50 text-cyan-500`)
+- Value: `text-sm font-extrabold`, Label: `text-[8px] font-semibold uppercase`
+- Active state: `ring-2 ring-current` on tapped chip, others `opacity-50`
+- Tapping opens animated inline stepper row below
+
+### Macro Stepper Row
+```
+flex items-center justify-center gap-2 px-4 py-2 bg-card-hover border-t border-border
+```
+- Label (colored per macro) + rounded stepper container (`bg-card border border-border rounded-[10px]`) + Done button
+- Stepper buttons: `h-7 w-7 rounded-lg`, value: `text-[13px] font-extrabold`
+- Animated with framer-motion `AnimatePresence` (height + opacity)
+
+### Health Rating Badge
+```
+inline-flex items-center gap-1 text-[9px] font-bold px-2 py-0.5 rounded-full
+```
+- 4 variants: Healthy (`bg-green-50 text-green-600`), Balanced (`bg-blue-50 text-blue-500`), Moderate (`bg-yellow-50 text-yellow-600`), Heavy (`bg-orange-50 text-orange-500`)
+- Uses `ShieldCheck` Lucide icon (h-2.5 w-2.5)
+- Computed via `getMealHealthRating()` from `@/lib/healthRating`
+
+### Compact Portion Pills
+```
+px-2.5 py-0.5 rounded-full text-[10px] font-semibold
+```
+- Active: `bg-accent text-white font-bold` (solid green fill)
+- Inactive: `border border-border text-muted-light`
+- Always visible row (no hidden toggle)
+
+### Bottom Actions Area
+```
+flex flex-col gap-2 mt-1
+```
+- Save: disabled (`bg-card border border-border text-muted-light opacity-50`) → enabled (`bg-accent text-white`)
+- Re-scan: `border-dashed border-accent/40 bg-accent-light text-accent-dim`
+- Delete: `border-red-200 bg-red-50 text-red-500`
+
 ## Navigation
 
 ### Bottom Tab Bar (4 tabs)

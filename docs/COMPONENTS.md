@@ -170,6 +170,36 @@ All components are in `src/components/`. All are `"use client"` components.
 - Shows grouped history by date, repeated-dish patterns, and weekly calorie chips
 - Displays Fridge↔Dish linkage badge when a logged dish matches recent fridge scan ingredients
 
+### `MealTypeSheet.tsx` (NEW)
+**Bottom sheet for a meal type slot — flat sections, per-dish management.**
+- Props: `mealType`, `meals`, `onClose`, `onOpenDetail`, `onRemoveMeal`, `onRemoveDish`, `onScanDish`, `refreshStreak`
+- Lucide icons per meal type (Coffee/Sun/Sunset/Moon) — no emojis
+- Single-line macro summary (kcal · protein · carbs · fat)
+- Per-dish rows with minus-circle for tap-to-confirm delete (Remove/Cancel pills)
+- Footer: left-aligned "Delete meal" text link, right-aligned green "Details" button
+- Animated with framer-motion (slide up, AnimatePresence for delete confirmation)
+
+### `MealDetailOverlay.tsx` (NEW)
+**Full-screen overlay for editing meal details — modern macro chip design.**
+- Props: `meal`, `mealIndex`, `onClose`, `onUpdateMeal`, `onUpdateDish`, `onRemoveDish`, `onRemoveMeal`, `onMoveMealToType`, `onRescan`, `refreshStreak`
+- **Header**: Back button + centered title + health rating badge (Healthy/Balanced/Moderate/Heavy via `getMealHealthRating`)
+- **Meal type selector**: 4-pill grid (breakfast/lunch/snack/dinner)
+- **Per-dish cards** (`DishEditCard`):
+  - Dish name + tappable kcal value (tap to edit calories with ±10 stepper)
+  - Dish meta line at 11px (portion · weight · confidence)
+  - **Colored macro chips**: 4 tappable pills — Protein (green), Carbs (orange), Fat (violet), Fiber (cyan)
+  - Tap a chip → animated inline stepper row slides in (label + −/value/+ + Done button)
+  - Active chip gets colored ring, others dim to 50%
+  - **Compact portion pills**: always visible row (0.5x/1x/1.5x/2x), solid green active state
+  - Remove link: subtle left-aligned text with Trash2 icon, tap-to-confirm
+- **Notes**: textarea for meal notes
+- **Bottom actions area** (no save in header):
+  - Save Changes — disabled/greyed until edits made, then solid green with Check icon
+  - Re-scan This Meal — dashed accent border
+  - Delete Entire Meal — red with tap-to-confirm
+- Uses `AnimatePresence` for stepper row animation
+- Imports `getMealHealthRating` from `@/lib/healthRating`
+
 ### `GeminiMode.tsx`
 **The main orchestrator for Cloud AI mode.** Wires together camera, detected items, recipes, filters, expiry tracker, shopping list, and meal planner.
 - Uses `useGeminiVision()` hook for camera + analysis state
