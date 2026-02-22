@@ -179,6 +179,11 @@ export default function Home() {
                 onSignUp={auth.signUp}
                 onSignInPassword={auth.signInWithPassword}
                 onSignOut={auth.signOut}
+                onReplayTour={() => {
+                  try { localStorage.removeItem("snackoverflow-welcome-seen"); } catch { /* ignore */ }
+                  coachMarks.resetAll();
+                  setShowWelcomeTour(true);
+                }}
               />
             </motion.div>
           )}

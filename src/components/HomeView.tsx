@@ -250,21 +250,19 @@ export default function HomeView({
             );
           })}
         </div>
-      </div>
 
-      {/* Coach mark for empty meals */}
-      {todayMeals.length === 0 && coachMarks.shouldShow("empty-meals") && (
-        <div className="relative">
-          <CoachMark
-            id="empty-meals"
-            text="Tap any meal slot to scan or describe what you ate"
-            visible={true}
-            onDismiss={coachMarks.dismiss}
-            arrow="top"
-            className="top-0 left-0"
-          />
-        </div>
-      )}
+        {/* Coach mark for empty meals */}
+        {todayMeals.length === 0 && coachMarks.shouldShow("empty-meals") && (
+          <div className="px-4 pb-3">
+            <CoachMark
+              id="empty-meals"
+              text="Tap any meal slot to scan or describe what you ate"
+              visible={true}
+              onDismiss={coachMarks.dismiss}
+            />
+          </div>
+        )}
+      </div>
 
       {/* Fridge Scanner Card */}
       <button

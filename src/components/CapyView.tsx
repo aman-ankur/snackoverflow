@@ -174,20 +174,6 @@ export default function CapyView({ streak, todayTotals, goals, isActive, coachMa
       {/* Garden Roadmap — visual milestone journey */}
       <GardenRoadmap garden={activeGarden} streak={streak} />
 
-      {/* Coach mark for garden */}
-      {coachMarks?.shouldShow("capy-garden") && (
-        <div className="relative">
-          <CoachMark
-            id="capy-garden"
-            text="Log meals daily to grow flowers and unlock milestones"
-            visible={true}
-            onDismiss={coachMarks.dismiss}
-            arrow="bottom"
-            className="top-0 left-0"
-          />
-        </div>
-      )}
-
       {/* 3D Garden Canvas */}
       <div className="relative">
         <CapyGarden
@@ -195,6 +181,17 @@ export default function CapyView({ streak, todayTotals, goals, isActive, coachMa
           isActive={isActive}
           onCapyTap={handleCapyTap}
         />
+
+        {/* Coach mark for garden — overlays on canvas */}
+        {coachMarks?.shouldShow("capy-garden") && (
+          <CoachMark
+            id="capy-garden"
+            text="Log meals daily to grow flowers and unlock milestones"
+            visible={true}
+            onDismiss={coachMarks.dismiss}
+            position="overlay-bottom"
+          />
+        )}
 
         {/* Demo mode indicator overlay */}
         {demoGarden && (

@@ -8,43 +8,49 @@ interface CoachMarkProps {
   text: string;
   visible: boolean;
   onDismiss: (id: CoachMarkId) => void;
-  arrow?: "top" | "bottom" | "left";
+  position?: "inline" | "overlay-top" | "overlay-bottom";
   className?: string;
 }
 
-export default function CoachMark({ id, text, visible, onDismiss, arrow = "top", className = "" }: CoachMarkProps) {
+export default function CoachMark({
+  id,
+  text,
+  visible,
+  onDismiss,
+  position = "inline",
+  className = "",
+}: CoachMarkProps) {
+  const isOverlay = position !== "inline";
+  const positionClass = isOverlay
+    ? position === "overlay-top"
+      ? "absolute top-3 left-3 right-3 z-50"
+      : "absolute bottom-3 left-3 right-3 z-50"
+    : "";
+
   return (
     <AnimatePresence>
       {visible && (
         <motion.div
-          initial={{ opacity: 0, y: arrow === "bottom" ? -4 : 4 }}
+          initial={{ opacity: 0, y: isOverlay ? (position === "overlay-bottom" ? 6 : -6) : 4 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: arrow === "bottom" ? -4 : 4 }}
+          exit={{ opacity: 0, y: isOverlay ? (position === "overlay-bottom" ? 6 : -6) : 4 }}
           transition={{ duration: 0.25, ease: "easeOut" }}
-          className={`absolute z-50 pointer-events-none ${className}`}
+          className={`${positionClass} ${className}`}
         >
-          <div className="relative inline-block pointer-events-auto">
-            {/* Arrow */}
-            {arrow === "top" && (
-              <div className="absolute -top-[5px] left-6 h-2.5 w-2.5 rotate-45 bg-foreground/90" />
-            )}
-            {arrow === "bottom" && (
-              <div className="absolute -bottom-[5px] left-6 h-2.5 w-2.5 rotate-45 bg-foreground/90" />
-            )}
-            {arrow === "left" && (
-              <div className="absolute -left-[5px] top-3 h-2.5 w-2.5 rotate-45 bg-foreground/90" />
-            )}
-
-            {/* Bubble */}
-            <div className="rounded-xl bg-foreground/90 backdrop-blur-sm px-3.5 py-2.5 shadow-lg max-w-[260px]">
-              <p className="text-xs font-semibold text-background leading-relaxed">{text}</p>
-              <button
-                onClick={() => onDismiss(id)}
-                className="mt-2 rounded-lg bg-accent px-3 py-1 text-[11px] font-bold text-white transition-colors hover:bg-accent-dim active:scale-95"
-              >
-                Got it
-              </button>
-            </div>
+          <div
+            className="flex items-center gap-2.5 rounded-xl bg-foreground/60 backdrop-blur-lg px-3 py-2 shadow-md"
+          >
+            <span className="relative flex h-1.5 w-1.5 shrink-0">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-accent opacity-75" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-accent" />
+            </span>
+            <p className="flex-1 text-[11px] font-medium text-white/90 leading-snug">{text}</p>
+            <button
+              onClick={() => onDismiss(id)}
+              className="shrink-0 rounded-md bg-white/15 px-2 py-0.5 text-[10px] font-bold text-white/80 transition-colors hover:bg-white/25 active:scale-95"
+            >
+              OK
+            </button>
           </div>
         </motion.div>
       )}
