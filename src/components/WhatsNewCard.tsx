@@ -43,7 +43,7 @@ export default function WhatsNewCard({ onTryIt }: WhatsNewCardProps) {
           transition={{ duration: 0.3, ease: "easeOut" }}
           className="overflow-hidden"
         >
-          <div className="relative flex items-center gap-3 rounded-2xl border border-accent bg-gradient-to-r from-[#E8F5E0] to-card p-3.5 pl-4 border-l-4">
+          <div className="relative flex items-center gap-3 rounded-2xl border border-accent/40 bg-white/70 dark:bg-card/70 backdrop-blur-md p-3.5 pl-4 border-l-4 border-l-accent">
             {/* Dismiss */}
             <button
               onClick={handleDismiss}

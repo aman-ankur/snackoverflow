@@ -224,16 +224,12 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
       </div>
       {/* Coach mark for scan toggle */}
       {coachMarks?.shouldShow("scan-toggle") && (
-        <div className="relative">
-          <CoachMark
-            id="scan-toggle"
-            text='Switch to Describe to type your meal instead of scanning'
-            visible={true}
-            onDismiss={coachMarks.dismiss}
-            arrow="top"
-            className="top-0 left-0"
-          />
-        </div>
+        <CoachMark
+          id="scan-toggle"
+          text="Tap Describe to type your meal instead of scanning"
+          visible={true}
+          onDismiss={coachMarks.dismiss}
+        />
       )}
 
       {mode === "describe" ? (

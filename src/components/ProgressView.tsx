@@ -86,16 +86,12 @@ export default function ProgressView({
       {/* Calendar View */}
       <CalendarProgressView meals={meals} goals={goals} />
       {coachMarks?.shouldShow("progress-rings") && (
-        <div className="relative">
-          <CoachMark
-            id="progress-rings"
-            text="Each ring shows your daily calories, protein, and carbs"
-            visible={true}
-            onDismiss={coachMarks.dismiss}
-            arrow="top"
-            className="top-0 left-0"
-          />
-        </div>
+        <CoachMark
+          id="progress-rings"
+          text="Each ring shows your daily calories, protein, and carbs"
+          visible={true}
+          onDismiss={coachMarks.dismiss}
+        />
       )}
 
       {/* Total Progress Card */}

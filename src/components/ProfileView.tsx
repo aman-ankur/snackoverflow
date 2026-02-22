@@ -1,6 +1,6 @@
 "use client";
 
-import { Settings2, Target, Flame, User, Scale, Ruler, Activity, LogOut, Cloud, CloudOff } from "lucide-react";
+import { Settings2, Target, Flame, User, Scale, Ruler, Activity, LogOut, Cloud, CloudOff, Play } from "lucide-react";
 import CapyMascot from "@/components/CapyMascot";
 import AuthScreen from "@/components/AuthScreen";
 import type { UserProfile, NutritionGoals, StreakData } from "@/lib/dishTypes";
@@ -18,6 +18,7 @@ interface ProfileViewProps {
   onSignUp: (email: string, password: string) => Promise<{ error: unknown }>;
   onSignInPassword: (email: string, password: string) => Promise<{ error: unknown }>;
   onSignOut: () => Promise<void>;
+  onReplayTour?: () => void;
 }
 
 const GOAL_LABELS: Record<string, string> = {
@@ -50,6 +51,7 @@ export default function ProfileView({
   onSignUp,
   onSignInPassword,
   onSignOut,
+  onReplayTour,
 }: ProfileViewProps) {
   return (
     <div className="space-y-4">
@@ -181,6 +183,18 @@ export default function ProfileView({
           <span className="text-sm font-bold text-foreground">Re-run Goal Setup</span>
         </button>
         <div className="border-t border-border" />
+        {onReplayTour && (
+          <>
+            <button
+              onClick={onReplayTour}
+              className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-card-hover transition-colors"
+            >
+              <Play className="h-4 w-4 text-accent" />
+              <span className="text-sm font-bold text-foreground">Replay Welcome Tour</span>
+            </button>
+            <div className="border-t border-border" />
+          </>
+        )}
         <button
           onClick={onResetAll}
           className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-card-hover transition-colors"
