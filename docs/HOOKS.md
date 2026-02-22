@@ -245,6 +245,40 @@ Common Indian kitchen items with default days:
 
 ---
 
+## `useDescribeMeal()` — Text-Based Meal Description Hook (NEW)
+
+**File**: `src/lib/useDescribeMeal.ts`
+
+### Purpose
+- Manages state for the "Describe Your Meal" feature
+- Calls `POST /api/describe-meal` with natural language description
+- Parses AI response into structured dishes with portion options
+- Converts described dishes to `DishNutrition[]` for `logMeal` compatibility
+
+### State & Methods
+| Return | Type | Description |
+|---|---|---|
+| `description` | string | Current text input |
+| `setDescription` | function | Update description text |
+| `mealType` | MealType | Selected meal type |
+| `setMealType` | function | Update meal type |
+| `isAnalyzing` | boolean | API call in progress |
+| `error` | string \| null | Error message |
+| `result` | DescribeMealResult \| null | Parsed AI response with dishes |
+| `selectedPortions` | Record<number, number> | Per-dish portion index selection |
+| `selectPortion(dishIndex, portionIndex)` | function | Update portion for a dish |
+| `analyze()` | function | Call API with current description + mealType |
+| `getDishNutrition()` | DishNutrition[] | Convert described dishes to loggable format |
+| `reset()` | function | Clear all state |
+
+### Key Behaviors
+- Portion selection defaults to each dish's `defaultIndex` from AI response
+- `getDishNutrition()` maps the selected portion's macros to `DishNutrition` format
+- Handles API errors gracefully with user-friendly messages
+- Supports correction context (pre-fills description from bad camera scan)
+
+---
+
 ## Utility Modules (NEW)
 
 ### `tdeeCalculator.ts`

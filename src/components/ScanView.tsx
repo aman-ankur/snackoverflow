@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calculator, PlusCircle, Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus } from "lucide-react";
+import { Calculator, PlusCircle, Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus, Camera, PenLine } from "lucide-react";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import NutritionCard from "@/components/NutritionCard";
 import CapyMascot from "@/components/CapyMascot";
+import DescribeMealView from "@/components/DescribeMealView";
 import { useDishScanner } from "@/lib/useDishScanner";
 import type { DishNutrition, MealType, MealTotals, LoggedMeal } from "@/lib/dishTypes";
 
@@ -14,6 +15,7 @@ interface ScanViewProps {
   meals: LoggedMeal[];
   refreshStreak: () => void;
   onMealLogged?: () => void;
+  initialMode?: "camera" | "describe";
 }
 
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2] as const;
@@ -70,8 +72,12 @@ function deriveTags(dish: DishNutrition): string[] {
   return Array.from(tags);
 }
 
-export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }: ScanViewProps) {
+type ScanMode = "camera" | "describe";
+
+export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode }: ScanViewProps) {
   const dish = useDishScanner();
+  const [mode, setMode] = useState<ScanMode>(initialMode || "camera");
+  const [correctionContext, setCorrectionContext] = useState<{ scannedAs: string; mealType: MealType } | undefined>(undefined);
 
   const [servingsMultiplier, setServingsMultiplier] = useState<number>(1);
   const [logMealType, setLogMealType] = useState<MealType>("lunch");
@@ -81,6 +87,20 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
   const [expandedView, setExpandedView] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   const prevAnalysisRef = useRef<typeof dish.analysis>(null);
+
+  // Sync mode when initialMode prop changes
+  useEffect(() => {
+    if (initialMode) setMode(initialMode);
+  }, [initialMode]);
+
+  const switchToDescribe = useCallback((scannedAs?: string) => {
+    if (scannedAs) {
+      setCorrectionContext({ scannedAs, mealType: logMealType });
+    } else {
+      setCorrectionContext(undefined);
+    }
+    setMode("describe");
+  }, [logMealType]);
 
   // Auto-scroll to results when analysis completes
   useEffect(() => {
@@ -171,6 +191,41 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
 
   return (
     <div className="space-y-4">
+      {/* Mode Toggle */}
+      <div className="flex gap-1 rounded-2xl bg-card border border-border p-1">
+        <button
+          onClick={() => { setMode("camera"); setCorrectionContext(undefined); }}
+          className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
+            mode === "camera"
+              ? "bg-accent-light text-accent-dim border border-accent/20"
+              : "text-muted border border-transparent hover:bg-card-hover"
+          }`}
+        >
+          <Camera className="h-4 w-4" />
+          Camera
+        </button>
+        <button
+          onClick={() => switchToDescribe()}
+          className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
+            mode === "describe"
+              ? "bg-accent-light text-accent-dim border border-accent/20"
+              : "text-muted border border-transparent hover:bg-card-hover"
+          }`}
+        >
+          <PenLine className="h-4 w-4" />
+          Describe
+        </button>
+      </div>
+
+      {mode === "describe" ? (
+        <DescribeMealView
+          logMeal={logMeal}
+          refreshStreak={refreshStreak}
+          onMealLogged={onMealLogged}
+          correctionContext={correctionContext}
+        />
+      ) : (
+      <>
       <GeminiCameraView
         videoRef={dish.videoRef}
         canvasRef={dish.canvasRef}
@@ -387,6 +442,13 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
                         onCorrect={dish.correctDish}
                       />
                       <button
+                        onClick={() => switchToDescribe(dishItem.name)}
+                        className="flex items-center gap-1 px-1 text-[10px] text-muted-light hover:text-accent transition-colors"
+                      >
+                        <PenLine className="h-3 w-3" />
+                        Describe instead
+                      </button>
+                      <button
                         onClick={() => handleRemoveDish(originalIndex)}
                         className="ml-auto flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-500 hover:bg-red-100 transition-colors"
                       >
@@ -450,6 +512,8 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged }
           </motion.div>
         )}
       </AnimatePresence>
+    </>
+    )}
     </div>
   );
 }

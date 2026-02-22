@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Trash2, ChevronRight, Clock, Coffee, Sun, Sunset, Moon, Camera, Minus } from "lucide-react";
+import { X, Trash2, ChevronRight, Clock, Coffee, Sun, Sunset, Moon, Camera, Minus, PenLine } from "lucide-react";
 import type { LoggedMeal, MealType } from "@/lib/dishTypes";
 
 const MEAL_ICONS: Record<MealType, typeof Coffee> = {
@@ -20,6 +20,7 @@ interface MealTypeSheetProps {
   onRemoveMeal: (mealId: string) => void;
   onRemoveDish: (mealId: string, dishIndex: number) => void;
   onScanDish: () => void;
+  onDescribeMeal?: () => void;
   refreshStreak: () => void;
 }
 
@@ -31,6 +32,7 @@ export default function MealTypeSheet({
   onRemoveMeal,
   onRemoveDish,
   onScanDish,
+  onDescribeMeal,
   refreshStreak,
 }: MealTypeSheetProps) {
   const filteredMeals = useMemo(
@@ -117,13 +119,24 @@ export default function MealTypeSheet({
               <div className="rounded-2xl border border-border bg-background py-10 px-6 text-center">
                 <p className="text-sm font-semibold text-muted">No {mealType} logged today</p>
                 <p className="text-xs text-muted-light mt-1">Scan a dish to get started</p>
-                <button
-                  onClick={() => { onClose(); onScanDish(); }}
-                  className="mt-4 inline-flex items-center gap-1.5 rounded-full bg-accent-light border border-accent/20 px-4 py-2 text-xs font-bold text-accent-dim transition-colors hover:bg-accent/15 active:scale-95"
-                >
-                  <Camera className="h-3.5 w-3.5" />
-                  Scan a Dish
-                </button>
+                <div className="mt-4 flex items-center justify-center gap-2">
+                  <button
+                    onClick={() => { onClose(); onScanDish(); }}
+                    className="inline-flex items-center gap-1.5 rounded-full bg-accent-light border border-accent/20 px-4 py-2 text-xs font-bold text-accent-dim transition-colors hover:bg-accent/15 active:scale-95"
+                  >
+                    <Camera className="h-3.5 w-3.5" />
+                    Scan
+                  </button>
+                  {onDescribeMeal && (
+                    <button
+                      onClick={() => { onClose(); onDescribeMeal(); }}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-xs font-bold text-muted transition-colors hover:bg-card-hover active:scale-95"
+                    >
+                      <PenLine className="h-3.5 w-3.5" />
+                      Describe
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ) : (

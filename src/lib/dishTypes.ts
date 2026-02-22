@@ -87,3 +87,29 @@ export interface StreakData {
   lastLogDate: string;
   longestStreak: number;
 }
+
+export interface PortionOption {
+  label: string;
+  weight_g: number;
+  calories: number;
+  protein_g: number;
+  carbs_g: number;
+  fat_g: number;
+  fiber_g: number;
+}
+
+export interface DescribedDish {
+  name: string;
+  hindi: string;
+  portions: [PortionOption, PortionOption, PortionOption];
+  defaultIndex: number;
+  ingredients: string[];
+  confidence: ConfidenceLevel;
+  tags: string[];
+  healthTip: string;
+  reasoning: string;
+}
+
+export interface DescribeMealResult {
+  dishes: DescribedDish[];
+}

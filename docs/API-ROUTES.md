@@ -193,3 +193,54 @@ All routes are Next.js App Router API routes in `src/app/api/`.
 **Cost**: ₹15/10K characters (~₹0.15 per message). ₹1000 free credits on signup.
 
 **Note**: Bulbul v3 does NOT support `pitch` or `loudness` parameters — will return 400 if included.
+
+---
+
+## POST `/api/describe-meal`
+
+**Purpose**: Parse a natural-language meal description into structured dishes with nutrition estimates and food-specific portion options.
+
+**File**: `src/app/api/describe-meal/route.ts`
+
+**Input**:
+```json
+{
+  "description": "chole bhature with raita, 1 papad, and lassi meethi",
+  "mealType": "lunch"
+}
+```
+
+**Output**:
+```json
+{
+  "dishes": [
+    {
+      "name": "Chole Bhature",
+      "hindi": "छोले भटूरे",
+      "portions": [
+        { "label": "Small katori (~150g)", "weight_g": 150, "calories": 250, "protein_g": 10, "carbs_g": 40, "fat_g": 7, "fiber_g": 6 },
+        { "label": "Regular katori (~300g)", "weight_g": 300, "calories": 500, "protein_g": 20, "carbs_g": 80, "fat_g": 14, "fiber_g": 12 },
+        { "label": "Large bowl (~450g)", "weight_g": 450, "calories": 750, "protein_g": 30, "carbs_g": 120, "fat_g": 21, "fiber_g": 18 }
+      ],
+      "defaultIndex": 1,
+      "ingredients": ["Chickpeas", "Onions", "Tomatoes", "Spices", "Oil", "Flour"],
+      "confidence": "high",
+      "tags": ["high-carb", "vegetarian"],
+      "healthTip": "Pair with salad for added fiber and nutrients.",
+      "reasoning": "Chole bhature is typically served in katori sizes. Estimated regular portion is ~300g."
+    }
+  ],
+  "_provider": "gemini",
+  "_latencyMs": 1823
+}
+```
+
+**Provider chain**: Gemini 2.0 Flash-Lite (Tier 1) → OpenAI gpt-4.1-nano + Groq Llama 4 Scout **raced in parallel** (Tier 2+3)  
+**Parallel race**: When Gemini fails, OpenAI and Groq fire simultaneously — first valid response wins  
+**Per-provider timeout**: 6 seconds (prevents slow providers from blocking the pipeline)  
+**Cost control**: 5-minute in-memory cache (200 entries max), 200-char input limit  
+**Prompt**: Compact ~350-token prompt with Indian food context (Hindi-English code-switching, katori/roti/cup portion labels)  
+**OpenAI optimization**: `response_format: { type: "json_object" }` for guaranteed structured output  
+**JSON parsing**: 3-tier parser (direct parse → strip markdown fences → string-aware brace-counting extraction)  
+**Normalization**: Strict type coercion for all numeric fields, confidence level validation, portion array padding to exactly 3 items  
+**Debug fields**: `_provider` and `_latencyMs` included in response for performance monitoring
