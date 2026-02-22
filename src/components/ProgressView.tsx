@@ -7,8 +7,23 @@ import CapyMascot from "@/components/CapyMascot";
 import CapyLottie from "@/components/CapyLottie";
 import CalendarProgressView from "@/components/CalendarProgressView";
 import CoachMark from "@/components/CoachMark";
-import type { LoggedMeal, MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
+import EatingAnalysisCard from "@/components/EatingAnalysisCard";
+import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, HealthProfile, EatingAnalysis } from "@/lib/dishTypes";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
+
+interface EatingAnalysisHook {
+  analyses: EatingAnalysis[];
+  isGenerating: boolean;
+  error: string | null;
+  generate: (
+    windowDays: number,
+    meals: LoggedMeal[],
+    goals: NutritionGoals,
+    healthProfile: HealthProfile | null
+  ) => Promise<EatingAnalysis | null>;
+  getLatest: (windowDays?: number) => EatingAnalysis | null;
+  isCacheFresh: (windowDays: number, meals: LoggedMeal[]) => boolean;
+}
 
 interface ProgressViewProps {
   todayTotals: MealTotals;
@@ -18,6 +33,10 @@ interface ProgressViewProps {
   weeklyByDate: { date: string; totals: MealTotals }[];
   repeatedDishes: { dish: string; count: number }[];
   coachMarks?: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
+  healthProfile: HealthProfile | null;
+  hasHealthProfile: boolean;
+  eatingAnalysis: EatingAnalysisHook;
+  onViewAnalysisReport: (analysis: EatingAnalysis, windowLabel: string) => void;
 }
 
 function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
@@ -48,6 +67,10 @@ export default function ProgressView({
   weeklyByDate,
   repeatedDishes,
   coachMarks,
+  healthProfile,
+  hasHealthProfile,
+  eatingAnalysis,
+  onViewAnalysisReport,
 }: ProgressViewProps) {
   const calPercent = goals.calories > 0 ? Math.min(Math.round((todayTotals.calories / goals.calories) * 100), 100) : 0;
 
@@ -219,6 +242,20 @@ export default function ProgressView({
           </div>
         )}
       </div>
+
+      {/* Eating Habits Analysis */}
+      <EatingAnalysisCard
+        meals={meals}
+        goals={goals}
+        healthProfile={healthProfile}
+        hasHealthProfile={hasHealthProfile}
+        latestAnalysis={eatingAnalysis.getLatest()}
+        isGenerating={eatingAnalysis.isGenerating}
+        error={eatingAnalysis.error}
+        isCacheFresh={eatingAnalysis.isCacheFresh}
+        onGenerate={eatingAnalysis.generate}
+        onViewReport={onViewAnalysisReport}
+      />
 
       {/* Patterns */}
       {repeatedDishes.length > 0 && (
