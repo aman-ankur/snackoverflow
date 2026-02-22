@@ -244,3 +244,66 @@ All routes are Next.js App Router API routes in `src/app/api/`.
 **JSON parsing**: 3-tier parser (direct parse → strip markdown fences → string-aware brace-counting extraction)  
 **Normalization**: Strict type coercion for all numeric fields, confidence level validation, portion array padding to exactly 3 items  
 **Debug fields**: `_provider` and `_latencyMs` included in response for performance monitoring
+
+---
+
+## POST `/api/analyze-habits`
+
+**Purpose**: Generate an AI-powered eating habits analysis report from pre-aggregated meal data, cross-referenced with health conditions.
+
+**File**: `src/app/api/analyze-habits/route.ts`
+
+**Input**:
+```json
+{
+  "aggregateSummary": "Period: Last 7 days | 26 meals across 7 days\nAvg daily: 1784 cal, P:68g...",
+  "healthContext": "Active conditions: Pre-diabetic (borderline). Dietary rules: Prefer low-GI options...",
+  "previousSummary": "Your average calories were slightly above target...",
+  "goalCalories": 2000,
+  "goalProtein": 120
+}
+```
+
+**Output**:
+```json
+{
+  "report": {
+    "score": "needs_work",
+    "scoreSummary": "Your average calories are slightly below target at 1784 vs 2000...",
+    "trends": { "calories": "stable", "protein": "declining", "carbs": "stable", "fat": "stable" },
+    "insights": [
+      {
+        "category": "macro",
+        "title": "Protein Concentration at Dinner",
+        "detail": "Over half (53%) of your daily protein is consumed at dinner...",
+        "severity": "warning"
+      }
+    ],
+    "healthNotes": ["Focus on low-GI carbohydrate sources to manage blood sugar."],
+    "actionItems": [
+      {
+        "priority": 1,
+        "text": "Distribute protein more evenly by adding paneer or dal to breakfast and lunch.",
+        "relatedInsight": "Protein Concentration at Dinner"
+      }
+    ],
+    "comparison": {
+      "caloriesDelta": -5,
+      "proteinDelta": 18,
+      "topImprovement": "Protein intake improved 18% vs last period",
+      "topRegression": null
+    }
+  },
+  "_provider": "gemini",
+  "_latencyMs": 4523
+}
+```
+
+**Provider chain**: Gemini 2.5 Flash (free, primary) → OpenAI gpt-4.1-mini ($0.0015/call) → Groq Llama 4 Scout (free, emergency)  
+**Cost optimization**: Input is a pre-aggregated summary (~400 tokens) computed client-side by `mealAggregator.ts`, not raw meal data  
+**Per-provider timeout**: 15 seconds  
+**Temperature**: 0.3 (factual, consistent)  
+**Max output tokens**: 1200  
+**Normalization**: Strict validation of score/trend/category/severity enums, insight/action array capping (7 insights, 5 actions)  
+**JSON parsing**: 3-tier parser (direct → strip markdown → brace-counting extraction)  
+**Debug fields**: `_provider` and `_latencyMs` included in response

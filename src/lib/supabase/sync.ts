@@ -9,7 +9,8 @@ export type SyncDomain =
   | "expiry_tracker"
   | "fridge_scans"
   | "meal_planner"
-  | "health_profile";
+  | "health_profile"
+  | "meal_analyses";
 
 export interface UserDataRow {
   id: string;
@@ -22,6 +23,7 @@ export interface UserDataRow {
   fridge_scans: unknown;
   meal_planner: unknown;
   health_profile: unknown;
+  meal_analyses: unknown;
   updated_at: string;
 }
 

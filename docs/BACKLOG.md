@@ -85,6 +85,20 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - New dep: `openai`
 - New types: `PortionOption`, `DescribedDish`, `DescribeMealResult` in `dishTypes.ts`
 
+### Eating Habits Analysis — AI-Powered Reports ✅ SHIPPED
+- AI-generated eating habits report with time-window selection (Today / 7d / 14d / 30d)
+- Client-side pre-aggregation for minimal token cost (~400 input tokens, ~700 output tokens)
+- Provider chain: Gemini 2.5 Flash (free) → gpt-4.1-mini → Groq Llama 4 Scout
+- Tabbed bottom sheet report: Summary (score + trends + comparison), Patterns (5-7 AI-selected insights), Health (condition-specific notes), Actions (prioritized items)
+- Hidden pattern detection: weekend vs weekday calorie spikes, breakfast skipping impact, protein clustering at dinner, snack calorie percentage, fried food frequency, diet monotony
+- Health-condition-aware: connects eating patterns to diabetes, hypertension, cholesterol, etc.
+- Week-over-week comparison with delta tracking
+- Smart caching: shows cached report with "Refresh" option, detects new meals since last analysis
+- Trigger card on Progress tab + summary card on Home tab
+- Stored in Supabase `user_data.meal_analyses` (JSONB, last 10 analyses)
+- New files: `mealAggregator.ts`, `useEatingAnalysis.ts`, `analyze-habits/route.ts`, `EatingAnalysisSheet.tsx`, `EatingAnalysisCard.tsx`
+- New types: `EatingAnalysis`, `EatingReport`, `ReportInsight`, `ActionItem`, `PeriodComparison` in `dishTypes.ts`
+
 ---
 
 ## Priority: Medium
