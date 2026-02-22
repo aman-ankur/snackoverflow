@@ -9,7 +9,7 @@
 | **UI** | React 19.2.3, Tailwind CSS 4, Framer Motion 12 |
 | **3D Graphics** | Three.js, React Three Fiber, Drei (lazy-loaded, Capy tab only) |
 | **Icons** | Lucide React |
-| **AI Vision** | Google Gemini 2.0 Flash (primary), Groq Llama 4 Scout (fallback) |
+| **AI Vision** | Google Gemini 2.5 Flash (dish scan), Gemini 2.0 Flash-Lite (describe), OpenAI gpt-4.1-nano, Groq Llama 4 Scout (fallbacks) |
 | **Hindi Text Gen** | Groq (meta-llama/llama-4-scout-17b-16e-instruct) |
 | **Hindi TTS** | Sarvam AI Bulbul v3 (speaker: "kabir", male North Indian) |
 | **On-Device Detection** | YOLOv8n via ONNX Runtime Web (WASM) |
@@ -35,6 +35,7 @@ snackoverflow/
 │   │   ├── api/
 │   │   │   ├── analyze/route.ts       # Fridge image analysis (Gemini → Groq)
 │   │   │   ├── analyze-dish/route.ts  # Dish nutrition analysis (Gemini → Groq)
+│   │   │   ├── describe-meal/route.ts # Text meal description → nutrition (Gemini → OpenAI+Groq parallel)
 │   │   │   ├── capy-motivation/route.ts # Capy LLM motivation (Gemini → Groq)
 │   │   │   ├── hindi-message/route.ts # Hindi text generation (Groq)
 │   │   │   └── hindi-tts/route.ts     # Hindi audio generation (Sarvam AI)
@@ -47,7 +48,8 @@ snackoverflow/
 │   │   ├── CalendarProgressView.tsx   # Calendar with Apple Fitness rings (weekly/monthly)
 │   │   ├── CapyView.tsx               # Capy's Garden tab (garden stats, 3D canvas, milestones)
 │   │   ├── HomeView.tsx               # Home dashboard (Capy, intake ring, meal slots, health badges)
-│   │   ├── ScanView.tsx               # Dish scanner view (camera, meal context, portion adjuster)
+│   │   ├── ScanView.tsx               # Dish scanner view (Camera/Describe toggle, portion adjuster)
+│   │   ├── DescribeMealView.tsx       # Text-based meal description UI (AI nutrition from text)
 │   │   ├── ProgressView.tsx           # Progress tracking (macros, weekly, history)
 │   │   ├── ProfileView.tsx            # Profile & settings (body stats, targets, reset)
 │   │   ├── FridgeOverlay.tsx          # Full-screen fridge scanner overlay (from Home CTA)
@@ -90,6 +92,7 @@ snackoverflow/
 │       ├── useUserGoals.ts           # Goal setting + streak hook (localStorage)
 │       ├── recipes.ts                # Static recipe database (YOLO mode fallback)
 │       ├── useDetection.ts           # (Legacy) Generic detection hook
+│       ├── useDescribeMeal.ts        # Text meal description hook (API + portion state)
 │       ├── useDishScanner.ts         # Dish camera + analysis hook
 │       ├── useExpiryTracker.ts       # Expiry tracker hook (localStorage)
 │       ├── useGeminiVision.ts        # Main Cloud AI hook (camera, analysis, state)
@@ -137,16 +140,30 @@ Scan Tab (ScanView.tsx — center FAB):
   First visit → GoalOnboarding (useUserGoals checks localStorage)
   → 5-step wizard (name, body stats, activity, goal, plan with rotary calorie dial)
   → TDEE calculation → save profile (incl. optional name) + goals
-  Camera → captureFrame() → /api/analyze-dish → Gemini/Groq → nutrition JSON
-  → Auto-scroll to Plate Total (items list + macro summary)
-  → Collapsed view for multi-dish plates ("Show N dishes · Edit quantities")
-  → Per-dish: WeightEditor (±10g stepper / direct input → proportional recalc),
-    CorrectionChip ("Wrong dish?"), Remove button
-  → Portion adjuster (0.5x–2x) + Meal context picker
-  → Log This Meal → page-level useMealLog.logMeal() (shared state, not internal hook)
-  → 1.2s "Logged ✓" → clearAnalysis → auto-navigate to Home tab
-  → Home immediately shows fresh data (same mealLog instance)
-  → Capy mood + motivational lines based on progress vs goals
+  → Camera/Describe toggle at top (pill switcher)
+  
+  Camera mode:
+    Camera → captureFrame() → /api/analyze-dish → Gemini 2.5 Flash/Groq → nutrition JSON
+    → Auto-scroll to Plate Total (items list + macro summary)
+    → Collapsed view for multi-dish plates ("Show N dishes · Edit quantities")
+    → Per-dish: WeightEditor (±10g stepper / direct input → proportional recalc),
+      CorrectionChip ("Wrong dish?"), "Describe instead" link, Remove button
+    → Portion adjuster (0.5x–2x) + Meal context picker
+  
+  Describe mode (DescribeMealView.tsx):
+    Textarea (200 char limit) + meal type pills → "Analyze with AI"
+    → /api/describe-meal → Gemini 2.0 Flash-Lite / OpenAI+Groq parallel race → nutrition JSON
+    → Per-dish cards with 3 food-specific portion options (katori/roti count/cup/handful)
+    → Portion picker updates macros + plate total in real-time
+    → Correction context: if opened from bad camera scan, pre-fills with scanned dish name
+  
+  Both modes:
+    → Log This Meal → page-level useMealLog.logMeal() (shared state, not internal hook)
+    → 1.2s "Logged ✓" → clearAnalysis → auto-navigate to Home tab
+    → Home immediately shows fresh data (same mealLog instance)
+    → Capy mood + motivational lines based on progress vs goals
+  
+  MealTypeSheet can open Scan tab directly in Describe mode via initialMode prop
 
 Progress Tab (ProgressView.tsx):
   CalendarProgressView (top) — weekly row with Apple Fitness rings (expandable to month)

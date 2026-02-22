@@ -92,7 +92,8 @@
 
 ## 11. Multi-Provider AI Fallback
 - Fridge analysis: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout
-- Dish analysis: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout
+- Dish camera scan: Gemini 2.5 Flash → Gemini 2.0 Flash → Groq Llama 4 Scout
+- Describe meal: Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq Llama 4 Scout (parallel race)
 - If all rate-limited, shows friendly "wait 30s" message and stops auto-scan
 - Hindi text: Groq only (free, fast)
 - Hindi TTS: Sarvam AI only (native Hindi voice)
@@ -100,7 +101,11 @@
 ## 12. Cost Controls
 - Image downscaling to max width 512px and JPEG compression before AI requests
 - Dish scan endpoint includes short-lived in-memory cache for repeated near-identical scans
+- Describe-meal endpoint includes 5-minute in-memory cache (200 entries max)
 - Manual-scan-only dish mode avoids uncontrolled background token usage
+- Describe-meal uses Gemini 2.0 Flash-Lite (separate 15 RPM quota from camera scanner's 2.5 Flash)
+- OpenAI + Groq raced in parallel (first valid response wins, no sequential waiting)
+- 6-second per-provider timeout prevents slow providers from blocking the pipeline
 
 ## 13. Goal Setting & Capy Mascot (NEW)
 - **Capy** — mood-reactive capybara mascot (kawaii PNG images, 3 variants: bath/orange-hat/headphones)
@@ -173,3 +178,26 @@
   - Re-scan and Delete Entire Meal alongside Save in bottom actions area
   - Meal type selector, notes textarea, per-dish remove with tap-to-confirm
   - All icons via Lucide (ShieldCheck, Trash2, Camera, Check, etc.) — no emojis
+
+## 17. Describe Your Meal — Text-Based Nutrition (NEW)
+- **Camera/Describe toggle** on Scan tab — pill-style switcher at top
+- Describe mode: type what you ate in natural language (Hindi-English mix supported)
+  - e.g. "rajma chawal with raita, 1 papad, and nimbu pani"
+  - e.g. "2 paratha with curd and achaar"
+- AI parses description into individual dishes with full nutrition breakdown
+- **3 food-specific portion options per dish** — culturally relevant labels:
+  - Curries/dal: "Small katori / Regular katori / Large bowl"
+  - Bread: "1 roti / 2 rotis / 3 rotis"
+  - Drinks: "Small cup / Regular cup / Tall glass"
+  - Snacks: "Small handful / Handful / Large handful"
+- **Smart defaulting**: if user says "1 papad", AI defaults to the single-papad portion
+- Per-dish: Hindi name, ingredients, tags, health tip, expandable reasoning
+- Portion picker updates macros and plate total in real-time
+- "Wrong dish?" inline name editor per dish
+- **Correction flow**: if camera scan was wrong, "Describe instead" link pre-fills context
+- **MealTypeSheet integration**: "Describe" button alongside "Scan" in empty meal slots
+- Logs to same meal system as camera scan — appears on Home immediately
+- **Provider chain**: Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq parallel race
+- **Performance**: ~1-2s when Gemini available, ~4-5s fallback (parallel race), 6s max timeout
+- New files: `describe-meal/route.ts`, `useDescribeMeal.ts`, `DescribeMealView.tsx`
+- New dep: `openai` (npm package)

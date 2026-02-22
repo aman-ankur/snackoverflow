@@ -36,18 +36,42 @@ All components are in `src/components/`. All are `"use client"` components.
 - Refreshes streak on meal log
 
 ### `ScanView.tsx`
-**Scan tab — camera, analysis, dish editing, and meal logging.**
-- Props: `logMeal`, `meals`, `refreshStreak`, `onMealLogged?`
+**Scan tab — Camera/Describe toggle, camera analysis, dish editing, and meal logging.**
+- Props: `logMeal`, `meals`, `refreshStreak`, `onMealLogged?`, `initialMode?: "camera" | "describe"`
+- **Camera/Describe toggle** at top — pill-style switcher between camera scan and text describe modes
+- `initialMode` prop allows MealTypeSheet to open directly in Describe mode
+- Syncs mode when `initialMode` prop changes (e.g. navigating from MealTypeSheet)
 - Uses page-level `mealLog` and `userGoals` (passed as props, not internal hooks) so Home tab sees fresh data instantly
-- Auto-scrolls to results when analysis completes
-- Plate Total card lists individual dishes with calories and weight
-- Collapsed/expanded view: multi-dish plates show summary + "Show N dishes · Edit quantities" toggle
-- Per-dish controls:
-  - **WeightEditor**: tap grams → inline +/- stepper or direct input → macros recalculate proportionally
-  - **CorrectionChip**: "Wrong dish?" → re-analyze with user correction
-  - **Remove button**: red pill to delete a dish from the plate
-- After logging: 1.2s "Logged ✓" animation → clears analysis → calls `onMealLogged` (navigates to Home)
-- Health tags derived per dish (High Protein, High Carb, High Fat, Low Calorie, Fiber Rich)
+- **Camera mode**:
+  - Auto-scrolls to results when analysis completes
+  - Plate Total card lists individual dishes with calories and weight
+  - Collapsed/expanded view: multi-dish plates show summary + "Show N dishes · Edit quantities" toggle
+  - Per-dish controls:
+    - **WeightEditor**: tap grams → inline +/- stepper or direct input → macros recalculate proportionally
+    - **CorrectionChip**: "Wrong dish?" → re-analyze with user correction
+    - **"Describe instead"**: switches to Describe mode with scanned dish name as correction context
+    - **Remove button**: red pill to delete a dish from the plate
+  - After logging: 1.2s "Logged ✓" animation → clears analysis → calls `onMealLogged` (navigates to Home)
+  - Health tags derived per dish (High Protein, High Carb, High Fat, Low Calorie, Fiber Rich)
+- **Describe mode**: renders `DescribeMealView` component (see below)
+
+### `DescribeMealView.tsx` (NEW)
+**Text-based meal description UI — AI interprets natural language into structured nutrition data.**
+- Props: `logMeal`, `refreshStreak`, `onMealLogged?`, `correctionContext?: { scannedAs: string; mealType: MealType }`
+- Uses `useDescribeMeal()` hook for state management and API calls
+- **Input section**:
+  - Textarea with 200-char limit and live character counter
+  - Meal type pills (breakfast/lunch/snack/dinner)
+  - "Analyze with AI" button (disabled until text entered, shows loading state)
+  - Correction banner when opened from a bad camera scan ("Scanned as X — describe what it actually is")
+- **Results section** (per dish):
+  - Dish name (English + Hindi) with "Wrong dish?" inline editor
+  - Macro cards (calories, protein, carbs, fat)
+  - **3 food-specific portion options** (e.g. "Small katori / Regular katori / Large bowl" for curries, "1 roti / 2 rotis / 3 rotis" for bread)
+  - Tags, health tip, expandable "How was this estimated?" reasoning
+- **Plate Total** bar with combined macros across all dishes
+- **Log This Meal** button with success animation
+- Portion selection updates macros and total in real-time
 
 ### `NutritionCard.tsx`
 **Per-dish nutrition presentation card.**
@@ -172,8 +196,9 @@ All components are in `src/components/`. All are `"use client"` components.
 
 ### `MealTypeSheet.tsx` (NEW)
 **Bottom sheet for a meal type slot — flat sections, per-dish management.**
-- Props: `mealType`, `meals`, `onClose`, `onOpenDetail`, `onRemoveMeal`, `onRemoveDish`, `onScanDish`, `refreshStreak`
+- Props: `mealType`, `meals`, `onClose`, `onOpenDetail`, `onRemoveMeal`, `onRemoveDish`, `onScanDish`, `onDescribeMeal?`, `refreshStreak`
 - Lucide icons per meal type (Coffee/Sun/Sunset/Moon) — no emojis
+- Empty state shows both "Scan" and "Describe" buttons side-by-side (Describe navigates to Scan tab in describe mode)
 - Single-line macro summary (kcal · protein · carbs · fat)
 - Per-dish rows with minus-circle for tap-to-confirm delete (Remove/Cancel pills)
 - Footer: left-aligned "Delete meal" text link, right-aligned green "Details" button

@@ -35,6 +35,7 @@ export default function Home() {
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [sheetMealType, setSheetMealType] = useState<MealType | null>(null);
   const [detailMealId, setDetailMealId] = useState<string | null>(null);
+  const [scanInitialMode, setScanInitialMode] = useState<"camera" | "describe">("camera");
 
   const mealLog = useMealLog();
   const userGoals = useUserGoals();
@@ -94,6 +95,7 @@ export default function Home() {
                 meals={mealLog.meals}
                 refreshStreak={userGoals.refreshStreak}
                 onMealLogged={() => setActiveTab("home")}
+                initialMode={scanInitialMode}
               />
             </motion.div>
           )}
@@ -177,7 +179,8 @@ export default function Home() {
             onOpenDetail={(mealId) => setDetailMealId(mealId)}
             onRemoveMeal={mealLog.removeMeal}
             onRemoveDish={mealLog.removeDishFromMeal}
-            onScanDish={() => setActiveTab("scan")}
+            onScanDish={() => { setScanInitialMode("camera"); setActiveTab("scan"); }}
+            onDescribeMeal={() => { setScanInitialMode("describe"); setActiveTab("scan"); }}
             refreshStreak={userGoals.refreshStreak}
           />
         )}

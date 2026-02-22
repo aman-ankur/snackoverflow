@@ -73,6 +73,18 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - ~~All 25+ components restyled — zero dark-theme remnants~~
 - See [TEST-RESULTS.md](./TEST-RESULTS.md) for E2E verification
 
+### ~~Describe Your Meal — Text-Based Nutrition~~ ✅ SHIPPED
+- ~~Camera/Describe toggle on Scan tab~~
+- ~~Natural language meal description → AI-parsed nutrition with food-specific portion options~~
+- ~~3-tier provider chain: Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq parallel race~~
+- ~~Correction flow from bad camera scans ("Describe instead")~~
+- ~~MealTypeSheet "Describe" button alongside "Scan"~~
+- ~~Hindi-English code-switching support (aloo, dal, roti, sabzi, katori)~~
+- ~~Performance optimized: ~1-2s Gemini, ~4-5s fallback, 6s max timeout~~
+- New files: `describe-meal/route.ts`, `useDescribeMeal.ts`, `DescribeMealView.tsx`
+- New dep: `openai`
+- New types: `PortionOption`, `DescribedDish`, `DescribeMealResult` in `dishTypes.ts`
+
 ---
 
 ## Priority: Medium

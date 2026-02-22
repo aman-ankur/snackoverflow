@@ -48,9 +48,10 @@ interface RingProps {
   strokeWidth: number;
   color: string;
   trackColor: string;
+  center: number;
 }
 
-function Ring({ percent, radius, strokeWidth, color, trackColor }: RingProps) {
+function Ring({ percent, radius, strokeWidth, color, trackColor, center }: RingProps) {
   const circumference = 2 * Math.PI * radius;
   const clampedPercent = Math.min(Math.max(percent, 0), 100);
   const offset = circumference - (clampedPercent / 100) * circumference;
@@ -58,16 +59,16 @@ function Ring({ percent, radius, strokeWidth, color, trackColor }: RingProps) {
   return (
     <>
       <circle
-        cx="50%"
-        cy="50%"
+        cx={center}
+        cy={center}
         r={radius}
         fill="none"
         stroke={trackColor}
         strokeWidth={strokeWidth}
       />
       <motion.circle
-        cx="50%"
-        cy="50%"
+        cx={center}
+        cy={center}
         r={radius}
         fill="none"
         stroke={color}
@@ -98,6 +99,7 @@ function ActivityRings({ calPercent, proteinPercent, carbsPercent, size, hasData
   const outerR = (size / 2) - sw;
   const midR = outerR - gap;
   const innerR = midR - gap;
+  const center = size / 2;
 
   const trackAlpha = hasData ? "0.15" : "0.08";
 
@@ -109,6 +111,7 @@ function ActivityRings({ calPercent, proteinPercent, carbsPercent, size, hasData
         strokeWidth={sw}
         color="var(--color-accent)"
         trackColor={`rgba(90,172,90,${trackAlpha})`}
+        center={center}
       />
       <Ring
         percent={hasData ? proteinPercent : 0}
@@ -116,6 +119,7 @@ function ActivityRings({ calPercent, proteinPercent, carbsPercent, size, hasData
         strokeWidth={sw}
         color="var(--color-orange)"
         trackColor={`rgba(240,140,66,${trackAlpha})`}
+        center={center}
       />
       <Ring
         percent={hasData ? carbsPercent : 0}
@@ -123,6 +127,7 @@ function ActivityRings({ calPercent, proteinPercent, carbsPercent, size, hasData
         strokeWidth={sw}
         color="#E8B931"
         trackColor={`rgba(232,185,49,${trackAlpha})`}
+        center={center}
       />
     </svg>
   );

@@ -7,18 +7,18 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
 ## Required Keys
 
 ### `GEMINI_API_KEY`
-- **Purpose**: Primary AI provider for fridge image analysis
+- **Purpose**: Primary AI provider for fridge/dish analysis and meal description
 - **Get it**: [aistudio.google.com/apikey](https://aistudio.google.com/apikey)
-- **Cost**: Free tier — 15 RPM, 1M tokens/day for Flash, 30 RPM for Flash Lite
-- **Models used**: `gemini-2.0-flash`, `gemini-2.0-flash-lite` (fallback)
-- **Used in**: `/api/analyze` (fridge scanner)
+- **Cost**: Free tier — 10 RPM for 2.5 Flash, 15 RPM for 2.0 Flash-Lite, 5 RPM for 2.0 Flash
+- **Models used**: `gemini-2.5-flash` (dish scan), `gemini-2.0-flash-lite` (describe-meal, capy), `gemini-2.0-flash` (fridge scan)
+- **Used in**: `/api/analyze` (fridge), `/api/analyze-dish` (camera scan), `/api/describe-meal` (text describe), `/api/capy-motivation`
 
 ### `GROQ_API_KEY`
-- **Purpose**: Fallback AI for fridge analysis + Hindi text generation
+- **Purpose**: Fallback AI for fridge/dish analysis, meal description, and Hindi text generation
 - **Get it**: [console.groq.com/keys](https://console.groq.com/keys)
 - **Cost**: Free tier — 30 RPM, 14,400 RPD
 - **Models used**: `meta-llama/llama-4-scout-17b-16e-instruct`
-- **Used in**: `/api/analyze` (fallback), `/api/hindi-message` (Hindi text gen)
+- **Used in**: `/api/analyze` (fallback), `/api/analyze-dish` (fallback), `/api/describe-meal` (parallel race fallback), `/api/hindi-message` (Hindi text gen)
 
 ### `SARVAM_API_KEY`
 - **Purpose**: Hindi text-to-speech (natural Indian voice)
@@ -49,11 +49,15 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
 
 ---
 
-## Optional / Legacy
+## Optional
 
 ### `OPENAI_API_KEY`
-- **Not currently used** — was previously used for TTS before switching to Sarvam AI
-- Can be removed from `.env.local` if present
+- **Purpose**: Fallback AI for text-based meal description (parallel race with Groq)
+- **Get it**: [platform.openai.com/api-keys](https://platform.openai.com/api-keys)
+- **Cost**: Prepaid credits — $20 loaded = ~10,000+ describe-meal calls with gpt-4.1-nano
+- **Models used**: `gpt-4.1-nano` (fastest OpenAI model for structured JSON)
+- **Used in**: `/api/describe-meal` (parallel race fallback with Groq)
+- **Note**: Not required — Gemini + Groq handle most calls. OpenAI adds redundancy.
 
 ---
 
@@ -68,6 +72,28 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
 3. Groq Llama 4 Scout (GROQ_API_KEY)
    ↓ rate limited?
 4. Return 429 "All providers rate limited, wait 30s"
+```
+
+### Dish Camera Scan (`/api/analyze-dish`)
+```
+1. Gemini 2.5 Flash (GEMINI_API_KEY) — most accurate for vision
+   ↓ rate limited?
+2. Gemini 2.0 Flash (GEMINI_API_KEY)
+   ↓ rate limited?
+3. Groq Llama 4 Scout (GROQ_API_KEY)
+   ↓ rate limited?
+4. Return 429
+```
+
+### Describe Meal (`/api/describe-meal`)
+```
+1. Gemini 2.0 Flash-Lite (GEMINI_API_KEY) — 15 RPM, separate quota from dish scan
+   ↓ rate limited or timeout (6s)?
+2. OpenAI gpt-4.1-nano + Groq Llama 4 Scout — RACED IN PARALLEL
+   → First valid response wins (typically Groq at ~2-3s)
+   → 6s timeout per provider
+   ↓ both fail?
+3. Return 429
 ```
 
 ### Hindi Text (`/api/hindi-message`)
