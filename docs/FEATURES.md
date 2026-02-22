@@ -155,3 +155,21 @@
 - Days with no data show empty/grey rings
 - Month navigation (left/right arrows, limited to current year)
 - Integrated at top of Progress tab
+
+## 16. Meal Type Sheet & Detail Editing (NEW)
+- **Meal Type Sheet** (bottom sheet) — tap a meal slot on Home to open:
+  - Lucide icons per meal type (Coffee/Sun/Sunset/Moon) — no emojis
+  - Single-line macro summary (kcal · protein · carbs · fat)
+  - Per-dish rows with minus-circle tap-to-confirm delete
+  - Footer: "Delete meal" left, green "Details" button right
+- **Meal Detail Overlay** (full-screen) — tap "Details" to open:
+  - **Health rating badge** in header (Healthy/Balanced/Moderate/Heavy) via `getMealHealthRating()`
+  - **Colored macro chips**: Protein (green), Carbs (orange), Fat (violet), Fiber (cyan)
+  - Tap any chip → animated inline stepper row (−/value/+/Done)
+  - Tap kcal value → calorie stepper (steps by 10)
+  - **Fiber** added as 4th macro chip
+  - **Compact portion pills** always visible (0.5x/1x/1.5x/2x), solid green active
+  - **Save at bottom** — disabled until edits made, then solid green with Check icon
+  - Re-scan and Delete Entire Meal alongside Save in bottom actions area
+  - Meal type selector, notes textarea, per-dish remove with tap-to-confirm
+  - All icons via Lucide (ShieldCheck, Trash2, Camera, Check, etc.) — no emojis
