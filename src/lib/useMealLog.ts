@@ -101,6 +101,7 @@ function normalizeMeal(raw: unknown): LoggedMeal | null {
       fiber: Math.max(0, Math.round(toNumber(totalsInput.fiber))),
     },
     fridgeLink,
+    notes: typeof raw.notes === "string" ? raw.notes : undefined,
   };
 }
 
@@ -239,6 +240,84 @@ export function useMealLog() {
     setMeals((prev) => prev.filter((meal) => meal.id !== mealId));
   }, []);
 
+  const updateMeal = useCallback(
+    (mealId: string, updates: Partial<Pick<LoggedMeal, "mealType" | "servingsMultiplier" | "notes">>) => {
+      setMeals((prev) =>
+        prev.map((meal) => {
+          if (meal.id !== mealId) return meal;
+          return { ...meal, ...updates };
+        })
+      );
+    },
+    []
+  );
+
+  const updateDishInMeal = useCallback(
+    (mealId: string, dishIndex: number, updatedDish: DishNutrition) => {
+      setMeals((prev) =>
+        prev.map((meal) => {
+          if (meal.id !== mealId) return meal;
+          const newDishes = [...meal.dishes];
+          if (dishIndex < 0 || dishIndex >= newDishes.length) return meal;
+          newDishes[dishIndex] = updatedDish;
+          const totals = newDishes.reduce(
+            (acc, d) => ({
+              calories: acc.calories + d.calories,
+              protein: acc.protein + d.protein_g,
+              carbs: acc.carbs + d.carbs_g,
+              fat: acc.fat + d.fat_g,
+              fiber: acc.fiber + d.fiber_g,
+            }),
+            { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+          );
+          return { ...meal, dishes: newDishes, totals };
+        })
+      );
+    },
+    []
+  );
+
+  const removeDishFromMeal = useCallback(
+    (mealId: string, dishIndex: number) => {
+      setMeals((prev) => {
+        const result: LoggedMeal[] = [];
+        for (const meal of prev) {
+          if (meal.id !== mealId) {
+            result.push(meal);
+            continue;
+          }
+          const newDishes = meal.dishes.filter((_, i) => i !== dishIndex);
+          if (newDishes.length === 0) continue; // remove entire meal
+          const totals = newDishes.reduce(
+            (acc, d) => ({
+              calories: acc.calories + d.calories,
+              protein: acc.protein + d.protein_g,
+              carbs: acc.carbs + d.carbs_g,
+              fat: acc.fat + d.fat_g,
+              fiber: acc.fiber + d.fiber_g,
+            }),
+            { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+          );
+          result.push({ ...meal, dishes: newDishes, totals });
+        }
+        return result;
+      });
+    },
+    []
+  );
+
+  const moveMealToType = useCallback(
+    (mealId: string, newMealType: MealType) => {
+      setMeals((prev) =>
+        prev.map((meal) => {
+          if (meal.id !== mealId) return meal;
+          return { ...meal, mealType: newMealType };
+        })
+      );
+    },
+    []
+  );
+
   const clearAllMeals = useCallback(() => {
     setMeals([]);
     localStorage.removeItem(STORAGE_KEY);
@@ -312,6 +391,10 @@ export function useMealLog() {
     insights,
     logMeal,
     removeMeal,
+    updateMeal,
+    updateDishInMeal,
+    removeDishFromMeal,
+    moveMealToType,
     clearAllMeals,
   };
 }
