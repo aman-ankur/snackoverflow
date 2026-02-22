@@ -96,6 +96,19 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - Color-coded health scores
 - Partially addressed by upcoming Dish Scanner feature
 
+### Duplicate from Past Meal
+- When logging a new meal, option to "Log again" from meal history
+- Shows recent unique meals with thumbnails (if photo storage is implemented)
+- One-tap re-log with option to adjust portions
+- Saves a full re-scan for repeated meals (e.g. daily breakfast)
+
+### Scan Photo Storage
+- Capture dish photo thumbnail during scan and persist it
+- Hybrid storage: IndexedDB (offline, ~20KB thumbnail) + Supabase Storage (cloud, ~150KB full-res)
+- New `photoId` field on `LoggedMeal` to link to stored image
+- Display: IndexedDB first → Supabase URL fallback → placeholder icon
+- Requires Supabase Storage bucket setup (`meal-photos/{userId}/{photoId}.jpg`)
+
 ---
 
 ## Priority: Low
