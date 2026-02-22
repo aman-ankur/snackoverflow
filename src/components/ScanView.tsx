@@ -8,7 +8,9 @@ import NutritionCard from "@/components/NutritionCard";
 import CapyMascot from "@/components/CapyMascot";
 import DescribeMealView from "@/components/DescribeMealView";
 import CoachMark from "@/components/CoachMark";
+import { MealHealthBanner } from "@/components/HealthVerdictCard";
 import { useDishScanner } from "@/lib/useDishScanner";
+import { useHealthVerdict } from "@/lib/useHealthVerdict";
 import type { DishNutrition, MealType, MealTotals, LoggedMeal } from "@/lib/dishTypes";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
 
@@ -19,6 +21,8 @@ interface ScanViewProps {
   onMealLogged?: () => void;
   initialMode?: "camera" | "describe";
   coachMarks?: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
+  healthContextString?: string;
+  hasHealthProfile?: boolean;
 }
 
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2] as const;
@@ -77,8 +81,9 @@ function deriveTags(dish: DishNutrition): string[] {
 
 type ScanMode = "camera" | "describe";
 
-export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode, coachMarks }: ScanViewProps) {
+export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode, coachMarks, healthContextString, hasHealthProfile }: ScanViewProps) {
   const dish = useDishScanner();
+  const healthVerdict = useHealthVerdict();
   const [mode, setMode] = useState<ScanMode>(initialMode || "camera");
   const [correctionContext, setCorrectionContext] = useState<{ scannedAs: string; mealType: MealType } | undefined>(undefined);
 
@@ -117,6 +122,22 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
     }
     prevAnalysisRef.current = dish.analysis;
   }, [dish.analysis]);
+
+  // Auto-trigger health verdict (pass 2) when camera analysis completes
+  useEffect(() => {
+    if (!dish.analysis || !healthContextString || dish.analysis.dishes.length === 0) return;
+    const dishInputs = dish.analysis.dishes.map((d) => ({
+      name: d.name,
+      calories: d.calories,
+      protein_g: d.protein_g,
+      carbs_g: d.carbs_g,
+      fat_g: d.fat_g,
+      fiber_g: d.fiber_g,
+      ingredients: d.ingredients,
+      tags: d.tags,
+    }));
+    healthVerdict.fetchVerdict(dishInputs, healthContextString);
+  }, [dish.analysis, healthContextString]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const activeDishes = useMemo(() => {
     const raw = dish.analysis?.dishes || [];
@@ -238,6 +259,8 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
           refreshStreak={refreshStreak}
           onMealLogged={onMealLogged}
           correctionContext={correctionContext}
+          healthContextString={healthContextString}
+          hasHealthProfile={hasHealthProfile}
         />
       ) : (
       <>
@@ -373,6 +396,14 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
                 ))}
               </div>
             </div>
+
+            {/* Health verdict banner */}
+            <MealHealthBanner
+              analysis={healthVerdict.verdict}
+              isLoading={healthVerdict.status === "loading"}
+              error={healthVerdict.error}
+              hasHealthProfile={!!hasHealthProfile}
+            />
 
             {/* Capy reaction */}
             <div className="flex items-center gap-3 px-1">

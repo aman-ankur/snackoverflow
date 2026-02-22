@@ -11,13 +11,15 @@ import FridgeOverlay from "@/components/FridgeOverlay";
 import MealTypeSheet from "@/components/MealTypeSheet";
 import MealDetailOverlay from "@/components/MealDetailOverlay";
 import GoalOnboarding from "@/components/GoalOnboarding";
+import HealthProfileWizard from "@/components/HealthProfileWizard";
 import WelcomeTour from "@/components/WelcomeTour";
 import dynamic from "next/dynamic";
 import { useMealLog } from "@/lib/useMealLog";
 import { useUserGoals } from "@/lib/useUserGoals";
+import { useHealthProfile } from "@/lib/useHealthProfile";
 import { useAuthContext } from "@/components/AuthProvider";
 import { useCoachMarks } from "@/lib/useCoachMarks";
-import type { UserProfile, NutritionGoals, MealType } from "@/lib/dishTypes";
+import type { UserProfile, NutritionGoals, MealType, HealthCondition, LabValue, DietPreference } from "@/lib/dishTypes";
 
 const CapyView = dynamic(() => import("@/components/CapyView"), {
   ssr: false,
@@ -39,10 +41,12 @@ export default function Home() {
   const [detailMealId, setDetailMealId] = useState<string | null>(null);
   const [scanInitialMode, setScanInitialMode] = useState<"camera" | "describe">("camera");
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+  const [showHealthWizard, setShowHealthWizard] = useState(false);
   const coachMarks = useCoachMarks();
 
   const mealLog = useMealLog();
   const userGoals = useUserGoals();
+  const healthProfile = useHealthProfile();
   const auth = useAuthContext();
 
   useEffect(() => {
@@ -57,7 +61,24 @@ export default function Home() {
       userGoals.updateGoals(goals);
     }
     setShowOnboarding(false);
+    // Show health wizard after first-time onboarding if no health profile yet
+    if (!healthProfile.hasHealthProfile) {
+      setShowHealthWizard(true);
+      return;
+    }
     // Show welcome tour after first-time onboarding
+    const tourSeen = typeof window !== "undefined" && localStorage.getItem("snackoverflow-welcome-seen");
+    if (!tourSeen) setShowWelcomeTour(true);
+  };
+
+  const handleHealthWizardComplete = (
+    conditions: HealthCondition[],
+    labValues: LabValue[],
+    freeTextNotes: string,
+    dietPreference?: DietPreference
+  ) => {
+    healthProfile.saveHealthProfile(conditions, labValues, freeTextNotes, dietPreference);
+    setShowHealthWizard(false);
     const tourSeen = typeof window !== "undefined" && localStorage.getItem("snackoverflow-welcome-seen");
     if (!tourSeen) setShowWelcomeTour(true);
   };
@@ -117,6 +138,8 @@ export default function Home() {
                 onMealLogged={() => setActiveTab("home")}
                 initialMode={scanInitialMode}
                 coachMarks={coachMarks}
+                healthContextString={healthProfile.healthContextString}
+                hasHealthProfile={healthProfile.hasHealthProfile}
               />
             </motion.div>
           )}
@@ -171,7 +194,10 @@ export default function Home() {
                 profile={userGoals.profile}
                 goals={userGoals.goals}
                 streak={userGoals.streak}
+                healthProfile={healthProfile.healthProfile}
+                hasHealthProfile={healthProfile.hasHealthProfile}
                 onEditGoals={() => setShowOnboarding(true)}
+                onEditHealthProfile={() => setShowHealthWizard(true)}
                 onResetAll={userGoals.resetAll}
                 authUser={auth.user}
                 isLoggedIn={auth.isLoggedIn}
@@ -245,6 +271,21 @@ export default function Home() {
             existingProfile={userGoals.profile}
             onComplete={handleOnboardingComplete}
             onSkip={() => setShowOnboarding(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Health Profile Wizard */}
+      <AnimatePresence>
+        {showHealthWizard && (
+          <HealthProfileWizard
+            existingProfile={healthProfile.healthProfile}
+            onComplete={handleHealthWizardComplete}
+            onSkip={() => {
+              setShowHealthWizard(false);
+              const tourSeen = typeof window !== "undefined" && localStorage.getItem("snackoverflow-welcome-seen");
+              if (!tourSeen) setShowWelcomeTour(true);
+            }}
           />
         )}
       </AnimatePresence>

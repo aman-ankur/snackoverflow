@@ -113,3 +113,57 @@ export interface DescribedDish {
 export interface DescribeMealResult {
   dishes: DescribedDish[];
 }
+
+/* ─── Health Personalization ─── */
+
+export type ConditionStatus = "active" | "family_history";
+export type ConditionSeverity = "mild" | "moderate" | "severe";
+export type HealthVerdict = "good" | "caution" | "avoid";
+export type DietPreference = "veg" | "nonveg" | "vegan" | "eggetarian" | "pescatarian";
+
+export interface HealthCondition {
+  id: string;
+  label: string;
+  status: ConditionStatus;
+  severity?: ConditionSeverity;
+}
+
+export interface LabValue {
+  key: string;
+  label: string;
+  value: number;
+  unit: string;
+  testedAt: string;
+}
+
+export interface LabHistoryEntry {
+  key: string;
+  value: number;
+  unit: string;
+  testedAt: string;
+  recordedAt: string;
+}
+
+export interface HealthProfile {
+  conditions: HealthCondition[];
+  labValues: LabValue[];
+  labHistory: LabHistoryEntry[];
+  freeTextNotes: string;
+  dietPreference?: DietPreference;
+  healthContextString: string;
+  updatedAt: string;
+}
+
+export interface DishHealthVerdict {
+  dishName: string;
+  verdict: HealthVerdict;
+  note: string;
+  conditionFlags: string[];
+  swapSuggestion?: string;
+}
+
+export interface MealHealthAnalysis {
+  dishVerdicts: DishHealthVerdict[];
+  overallSummary: string;
+  overallVerdict: HealthVerdict;
+}

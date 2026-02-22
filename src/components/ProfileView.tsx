@@ -1,16 +1,21 @@
 "use client";
 
-import { Settings2, Target, Flame, User, Scale, Ruler, Activity, LogOut, Cloud, CloudOff, Play } from "lucide-react";
+import { Settings2, Target, Flame, User, Scale, Ruler, Activity, LogOut, Cloud, CloudOff, Play, Stethoscope, ShieldCheck, ChevronRight, AlertTriangle } from "lucide-react";
 import CapyMascot from "@/components/CapyMascot";
 import AuthScreen from "@/components/AuthScreen";
-import type { UserProfile, NutritionGoals, StreakData } from "@/lib/dishTypes";
+import type { UserProfile, NutritionGoals, StreakData, HealthProfile } from "@/lib/dishTypes";
+import { getConditionById } from "@/lib/healthConditions";
+import { getHealthSummaryDisplay, getStaleLabs } from "@/lib/healthContextBuilder";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface ProfileViewProps {
   profile: UserProfile | null;
   goals: NutritionGoals;
   streak: StreakData;
+  healthProfile: HealthProfile | null;
+  hasHealthProfile: boolean;
   onEditGoals: () => void;
+  onEditHealthProfile: () => void;
   onResetAll: () => void;
   authUser: SupabaseUser | null;
   isLoggedIn: boolean;
@@ -43,7 +48,10 @@ export default function ProfileView({
   profile,
   goals,
   streak,
+  healthProfile,
+  hasHealthProfile,
   onEditGoals,
+  onEditHealthProfile,
   onResetAll,
   authUser,
   isLoggedIn,
@@ -145,6 +153,115 @@ export default function ProfileView({
           </div>
         </div>
       )}
+
+      {/* Health Profile */}
+      <div className="rounded-2xl bg-card border border-border p-4">
+        <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center gap-2">
+            <Stethoscope className="h-4 w-4 text-accent" />
+            <h3 className="text-sm font-extrabold text-foreground">Health Profile</h3>
+          </div>
+          <button
+            onClick={onEditHealthProfile}
+            className="text-[10px] text-accent font-semibold hover:text-accent-dim transition-colors"
+          >
+            {hasHealthProfile ? "Edit" : "Set Up"}
+          </button>
+        </div>
+        {hasHealthProfile && healthProfile ? (
+          <div className="space-y-2.5">
+            {/* Active conditions */}
+            {healthProfile.conditions.filter((c) => c.status === "active").length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-muted-light font-medium uppercase tracking-wider">Active Conditions</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {healthProfile.conditions
+                    .filter((c) => c.status === "active")
+                    .map((c) => {
+                      const def = getConditionById(c.id);
+                      const Icon = def?.icon;
+                      return (
+                        <span
+                          key={c.id}
+                          className="inline-flex items-center gap-1 rounded-full bg-red-50 border border-red-200/60 px-2.5 py-1 text-[10px] font-semibold text-red-700"
+                        >
+                          {Icon && <Icon className="h-3 w-3" />}
+                          {def?.shortLabel ?? c.label}
+                        </span>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+            {/* Family history */}
+            {healthProfile.conditions.filter((c) => c.status === "family_history").length > 0 && (
+              <div className="space-y-1.5">
+                <p className="text-[10px] text-muted-light font-medium uppercase tracking-wider">Family History</p>
+                <div className="flex flex-wrap gap-1.5">
+                  {healthProfile.conditions
+                    .filter((c) => c.status === "family_history")
+                    .map((c) => {
+                      const def = getConditionById(c.id);
+                      const Icon = def?.icon;
+                      return (
+                        <span
+                          key={c.id}
+                          className="inline-flex items-center gap-1 rounded-full bg-amber-50 border border-amber-200/60 px-2.5 py-1 text-[10px] font-semibold text-amber-700"
+                        >
+                          {Icon && <Icon className="h-3 w-3" />}
+                          {def?.shortLabel ?? c.label}
+                        </span>
+                      );
+                    })}
+                </div>
+              </div>
+            )}
+            {/* Diet preference */}
+            {healthProfile.dietPreference && (
+              <div className="flex items-center gap-2 pt-1 border-t border-border">
+                <span className="text-[10px] text-muted-light">Diet:</span>
+                <span className="text-[10px] font-bold text-foreground capitalize">{healthProfile.dietPreference}</span>
+              </div>
+            )}
+            {/* Stale labs warning */}
+            {healthProfile.labValues.length > 0 && (() => {
+              const stale = getStaleLabs(healthProfile.labValues);
+              if (stale.length === 0) return null;
+              const oldest = Math.max(...stale.map((s) => s.daysOld));
+              const months = Math.floor(oldest / 30);
+              return (
+                <div className="flex items-start gap-2 rounded-lg bg-amber-50 border border-amber-200/60 px-2.5 py-1.5">
+                  <AlertTriangle className="h-3 w-3 text-amber-500 shrink-0 mt-0.5" />
+                  <p className="text-[10px] text-amber-700 leading-relaxed">
+                    {stale.length === 1 ? "1 lab value is" : `${stale.length} lab values are`} over {months} month{months !== 1 ? "s" : ""} old. Consider updating with recent results.
+                  </p>
+                </div>
+              );
+            })()}
+            {/* Summary */}
+            <div className="pt-1 border-t border-border">
+              <p className="text-[10px] text-muted-light">
+                <ShieldCheck className="h-3 w-3 text-accent inline mr-1 -mt-0.5" />
+                {getHealthSummaryDisplay(healthProfile)} &mdash; Dr. Capy personalizes every scan
+              </p>
+            </div>
+          </div>
+        ) : (
+          <button
+            onClick={onEditHealthProfile}
+            className="w-full flex items-center gap-3 rounded-xl bg-accent-light/50 border border-accent/15 px-4 py-3 text-left transition-all hover:bg-accent-light active:scale-[0.98]"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent/15 shrink-0">
+              <Stethoscope className="h-4.5 w-4.5 text-accent" />
+            </div>
+            <div className="flex-1">
+              <p className="text-xs font-bold text-accent-dim">Set up your health profile</p>
+              <p className="text-[10px] text-muted">Get personalized food advice from Dr. Capy</p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-accent/50 shrink-0" />
+          </button>
+        )}
+      </div>
 
       {/* Nutrition Targets */}
       <div className="rounded-2xl bg-card border border-border p-4">

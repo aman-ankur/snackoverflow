@@ -8,7 +8,8 @@ export type SyncDomain =
   | "garden"
   | "expiry_tracker"
   | "fridge_scans"
-  | "meal_planner";
+  | "meal_planner"
+  | "health_profile";
 
 export interface UserDataRow {
   id: string;
@@ -20,6 +21,7 @@ export interface UserDataRow {
   expiry_tracker: unknown;
   fridge_scans: unknown;
   meal_planner: unknown;
+  health_profile: unknown;
   updated_at: string;
 }
 
@@ -154,6 +156,11 @@ export async function migrateLocalStorageToCloud(
   try {
     const plannerRaw = localStorage.getItem("snackoverflow-meal-planner");
     if (plannerRaw) localData.meal_planner = JSON.parse(plannerRaw);
+  } catch { /* ignore */ }
+
+  try {
+    const healthRaw = localStorage.getItem("snackoverflow-health-profile-v1");
+    if (healthRaw) localData.health_profile = JSON.parse(healthRaw);
   } catch { /* ignore */ }
 
   if (Object.keys(localData).length > 0) {
