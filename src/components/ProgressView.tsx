@@ -6,7 +6,9 @@ import { Flame, TrendingUp, Utensils, Link2, History } from "lucide-react";
 import CapyMascot from "@/components/CapyMascot";
 import CapyLottie from "@/components/CapyLottie";
 import CalendarProgressView from "@/components/CalendarProgressView";
+import CoachMark from "@/components/CoachMark";
 import type { LoggedMeal, MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
+import type { CoachMarkId } from "@/lib/useCoachMarks";
 
 interface ProgressViewProps {
   todayTotals: MealTotals;
@@ -15,6 +17,7 @@ interface ProgressViewProps {
   meals: LoggedMeal[];
   weeklyByDate: { date: string; totals: MealTotals }[];
   repeatedDishes: { dish: string; count: number }[];
+  coachMarks?: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
 }
 
 function ProgressBar({ value, max, color }: { value: number; max: number; color: string }) {
@@ -44,6 +47,7 @@ export default function ProgressView({
   meals,
   weeklyByDate,
   repeatedDishes,
+  coachMarks,
 }: ProgressViewProps) {
   const calPercent = goals.calories > 0 ? Math.min(Math.round((todayTotals.calories / goals.calories) * 100), 100) : 0;
 
@@ -81,6 +85,18 @@ export default function ProgressView({
 
       {/* Calendar View */}
       <CalendarProgressView meals={meals} goals={goals} />
+      {coachMarks?.shouldShow("progress-rings") && (
+        <div className="relative">
+          <CoachMark
+            id="progress-rings"
+            text="Each ring shows your daily calories, protein, and carbs"
+            visible={true}
+            onDismiss={coachMarks.dismiss}
+            arrow="top"
+            className="top-0 left-0"
+          />
+        </div>
+      )}
 
       {/* Total Progress Card */}
       <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-white border border-accent/10 p-4">
