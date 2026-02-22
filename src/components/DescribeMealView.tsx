@@ -16,7 +16,9 @@ import {
   Droplets,
   Heart,
 } from "lucide-react";
+import { MealHealthBanner } from "@/components/HealthVerdictCard";
 import { useDescribeMeal } from "@/lib/useDescribeMeal";
+import { useHealthVerdict } from "@/lib/useHealthVerdict";
 import type { DishNutrition, MealTotals, MealType, LoggedMeal, DescribedDish } from "@/lib/dishTypes";
 
 /* ─── Props ─── */
@@ -31,6 +33,8 @@ interface DescribeMealViewProps {
   refreshStreak: () => void;
   onMealLogged?: () => void;
   correctionContext?: { scannedAs: string; mealType: MealType };
+  healthContextString?: string;
+  hasHealthProfile?: boolean;
 }
 
 /* ─── Constants ─── */
@@ -287,8 +291,11 @@ export default function DescribeMealView({
   refreshStreak,
   onMealLogged,
   correctionContext,
+  healthContextString,
+  hasHealthProfile,
 }: DescribeMealViewProps) {
   const dm = useDescribeMeal();
+  const healthVerdict = useHealthVerdict();
   const [logSuccess, setLogSuccess] = useState(false);
   const [editingDishIndex, setEditingDishIndex] = useState<number | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
@@ -308,6 +315,25 @@ export default function DescribeMealView({
       }, 200);
     }
   }, [dm.result]);
+
+  // Auto-trigger health verdict (pass 2) when describe results arrive
+  useEffect(() => {
+    if (!dm.result || !healthContextString || dm.result.dishes.length === 0) return;
+    const dishInputs = dm.result.dishes.map((d) => {
+      const portion = d.portions[dm.selectedPortions.get(0) ?? d.defaultIndex ?? 1] ?? d.portions[1] ?? d.portions[0];
+      return {
+        name: d.name,
+        calories: portion.calories,
+        protein_g: portion.protein_g,
+        carbs_g: portion.carbs_g,
+        fat_g: portion.fat_g,
+        fiber_g: portion.fiber_g,
+        ingredients: d.ingredients,
+        tags: d.tags,
+      };
+    });
+    healthVerdict.fetchVerdict(dishInputs, healthContextString);
+  }, [dm.result, healthContextString]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogMeal = () => {
     if (dm.scaledDishes.length === 0) return;
@@ -465,6 +491,14 @@ export default function DescribeMealView({
                 )}
               </div>
             ))}
+
+            {/* Health verdict banner */}
+            <MealHealthBanner
+              analysis={healthVerdict.verdict}
+              isLoading={healthVerdict.status === "loading"}
+              error={healthVerdict.error}
+              hasHealthProfile={!!hasHealthProfile}
+            />
 
             {/* Total bar */}
             <div className="rounded-2xl bg-accent-light border border-accent/15 p-4">
