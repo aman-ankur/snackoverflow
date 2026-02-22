@@ -101,12 +101,13 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - Staples running low (e.g., "no onions detected in 3 scans")
 - Could use Groq/Gemini with fridge history context
 
-### Health Categorization
-- Categorize detected items as healthy/unhealthy
-- Show macros per item (protein, carbs, fat, calories)
-- Nutrition data per ingredient
-- Color-coded health scores
-- Partially addressed by upcoming Dish Scanner feature
+### ~~Health Categorization~~ ✅ SHIPPED (as Health Personalization)
+- ~~Categorize detected items as healthy/unhealthy~~
+- ~~Show macros per item (protein, carbs, fat, calories)~~
+- ~~Nutrition data per ingredient~~
+- ~~Color-coded health scores~~
+- Shipped as full Health Personalization feature: 15-condition wizard with gender/age filtering, inline Me/Family pills, on-demand AI Health Check button, per-dish Good/Caution/Avoid verdicts with swap suggestions
+- See FEATURES.md §18 for full details
 
 ### Duplicate from Past Meal
 - When logging a new meal, option to "Log again" from meal history

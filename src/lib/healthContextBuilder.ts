@@ -317,9 +317,9 @@ export function buildHealthContextString(profile: HealthProfile): string {
 
   const parts: string[] = [];
 
-  // Active conditions
-  const activeConditions = profile.conditions.filter((c) => c.status === "active");
-  const familyHistory = profile.conditions.filter((c) => c.status === "family_history");
+  // Active conditions (includes "both")
+  const activeConditions = profile.conditions.filter((c) => c.status === "active" || c.status === "both");
+  const familyHistory = profile.conditions.filter((c) => c.status === "family_history" || c.status === "both");
 
   if (activeConditions.length > 0) {
     const contexts = activeConditions.map((c) =>
@@ -344,6 +344,13 @@ export function buildHealthContextString(profile: HealthProfile): string {
   if (familyHistory.length > 0) {
     const labels = familyHistory.map((c) => c.label);
     parts.push(`Family history risk: ${labels.join(", ")}. Give gentle nudges about related foods.`);
+  }
+
+  // Conditions with both active + family history get elevated risk note
+  const bothConditions = profile.conditions.filter((c) => c.status === "both");
+  if (bothConditions.length > 0) {
+    const labels = bothConditions.map((c) => c.label);
+    parts.push(`ELEVATED RISK: ${labels.join(", ")} — patient has condition AND family history. Weight dietary advice more heavily.`);
   }
 
   // Diet preference
@@ -397,8 +404,8 @@ export function getHealthSummaryDisplay(profile: HealthProfile): string {
   const count = profile.conditions.length;
   if (count === 0) return "No conditions added";
 
-  const active = profile.conditions.filter((c) => c.status === "active").length;
-  const fh = profile.conditions.filter((c) => c.status === "family_history").length;
+  const active = profile.conditions.filter((c) => c.status === "active" || c.status === "both").length;
+  const fh = profile.conditions.filter((c) => c.status === "family_history" || c.status === "both").length;
 
   const parts: string[] = [];
   if (active > 0) parts.push(`${active} active condition${active > 1 ? "s" : ""}`);

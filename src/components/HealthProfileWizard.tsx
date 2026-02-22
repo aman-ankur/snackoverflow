@@ -29,12 +29,11 @@ import type {
   ConditionStatus,
   DietPreference,
   HealthProfile,
+  UserProfile,
 } from "@/lib/dishTypes";
 import {
   CONDITIONS_REGISTRY,
   ALLERGY_OPTIONS,
-  getHighImpactConditions,
-  getMediumImpactConditions,
   getConditionById,
 } from "@/lib/healthConditions";
 import type { ConditionDef } from "@/lib/healthConditions";
@@ -43,6 +42,7 @@ import type { ConditionDef } from "@/lib/healthConditions";
 
 interface HealthProfileWizardProps {
   existingProfile?: HealthProfile | null;
+  userProfile?: UserProfile | null;
   onComplete: (
     conditions: HealthCondition[],
     labValues: LabValue[],
@@ -75,6 +75,7 @@ const slideVariants = {
 
 export default function HealthProfileWizard({
   existingProfile,
+  userProfile,
   onComplete,
   onSkip,
   isStandalone = false,
@@ -140,19 +141,37 @@ export default function HealthProfileWizard({
     }
   }, [step]);
 
-  // Toggle condition: off → family_history → active → off
-  const cycleCondition = useCallback((conditionId: string) => {
+  // Toggle condition row: tap to select (default "active"), tap again to deselect
+  const toggleCondition = useCallback((conditionId: string) => {
+    setSelectedConditions((prev) => {
+      const next = new Map(prev);
+      if (next.has(conditionId)) {
+        next.delete(conditionId);
+        setExpandedCondition((e) => (e === conditionId ? null : e));
+      } else {
+        next.set(conditionId, "active");
+      }
+      return next;
+    });
+  }, []);
+
+  // Toggle a specific pill ("me" or "family") for a condition
+  const togglePill = useCallback((conditionId: string, pill: "me" | "family") => {
     setSelectedConditions((prev) => {
       const next = new Map(prev);
       const current = next.get(conditionId);
-      if (!current) {
-        next.set(conditionId, "family_history");
-      } else if (current === "family_history") {
-        next.set(conditionId, "active");
+      if (pill === "me") {
+        // Toggle "Me" on/off
+        if (current === "active") { next.delete(conditionId); setExpandedCondition((e) => (e === conditionId ? null : e)); }
+        else if (current === "family_history") next.set(conditionId, "both");
+        else if (current === "both") next.set(conditionId, "family_history");
+        else next.set(conditionId, "active");
       } else {
-        next.delete(conditionId);
-        // Collapse if expanded
-        setExpandedCondition((e) => (e === conditionId ? null : e));
+        // Toggle "Family" on/off
+        if (current === "family_history") { next.delete(conditionId); setExpandedCondition((e) => (e === conditionId ? null : e)); }
+        else if (current === "active") next.set(conditionId, "both");
+        else if (current === "both") next.set(conditionId, "active");
+        else next.set(conditionId, "family_history");
       }
       return next;
     });
@@ -203,22 +222,35 @@ export default function HealthProfileWizard({
     });
   }, []);
 
+  // Filter conditions by gender + age from user profile
+  const visibleConditions = useMemo(() => {
+    return CONDITIONS_REGISTRY.filter((c) => {
+      if (c.genderFilter && userProfile?.gender) {
+        if (!c.genderFilter.includes(userProfile.gender)) return false;
+      }
+      if (c.minAge && userProfile?.age) {
+        if (userProfile.age < c.minAge) return false;
+      }
+      return true;
+    });
+  }, [userProfile]);
+
   // Filtered conditions for search
   const filteredConditions = useMemo(() => {
-    if (!searchQuery.trim()) return CONDITIONS_REGISTRY;
+    if (!searchQuery.trim()) return visibleConditions;
     const q = searchQuery.toLowerCase();
-    return CONDITIONS_REGISTRY.filter(
+    return visibleConditions.filter(
       (c) =>
         c.label.toLowerCase().includes(q) ||
         c.shortLabel.toLowerCase().includes(q) ||
         c.description.toLowerCase().includes(q)
     );
-  }, [searchQuery]);
+  }, [searchQuery, visibleConditions]);
 
-  // Conditions that have lab fields and are selected as active
+  // Conditions that have lab fields and are selected as active or both
   const conditionsWithLabs = useMemo(() => {
     return CONDITIONS_REGISTRY.filter(
-      (c) => c.labFields.length > 0 && selectedConditions.get(c.id) === "active"
+      (c) => c.labFields.length > 0 && (selectedConditions.get(c.id) === "active" || selectedConditions.get(c.id) === "both")
     );
   }, [selectedConditions]);
 
@@ -366,7 +398,7 @@ export default function HealthProfileWizard({
                     <div>
                       <h2 className="text-lg font-extrabold text-foreground">Any health conditions?</h2>
                       <p className="text-xs text-muted">
-                        Tap once for family history, twice for active condition
+                        Tap to select, then choose Me / Family
                       </p>
                     </div>
                   </div>
@@ -391,22 +423,6 @@ export default function HealthProfileWizard({
                     )}
                   </div>
 
-                  {/* Legend */}
-                  <div className="flex items-center gap-4 text-[10px] text-muted px-1">
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2.5 w-2.5 rounded-full bg-border/80" />
-                      <span>Not selected</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2.5 w-2.5 rounded-full bg-amber-400" />
-                      <span>Family history</span>
-                    </div>
-                    <div className="flex items-center gap-1.5">
-                      <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
-                      <span>I have this</span>
-                    </div>
-                  </div>
-
                   {/* High Impact */}
                   {!searchQuery && (
                     <p className="text-[10px] font-bold text-muted uppercase tracking-wider px-1">
@@ -414,11 +430,12 @@ export default function HealthProfileWizard({
                     </p>
                   )}
                   <ConditionGrid
-                    conditions={searchQuery ? filteredConditions : getHighImpactConditions()}
+                    conditions={searchQuery ? filteredConditions : visibleConditions.filter(c => c.category === "high_impact")}
                     selectedConditions={selectedConditions}
                     expandedCondition={expandedCondition}
                     labValues={labValues}
-                    onCycle={cycleCondition}
+                    onToggle={toggleCondition}
+                    onTogglePill={togglePill}
                     onSetStatus={setConditionStatus}
                     onExpand={setExpandedCondition}
                     onUpdateLab={updateLabValue}
@@ -432,11 +449,12 @@ export default function HealthProfileWizard({
                         Medium Dietary Impact
                       </p>
                       <ConditionGrid
-                        conditions={getMediumImpactConditions()}
+                        conditions={visibleConditions.filter(c => c.category === "medium_impact")}
                         selectedConditions={selectedConditions}
                         expandedCondition={expandedCondition}
                         labValues={labValues}
-                        onCycle={cycleCondition}
+                        onToggle={toggleCondition}
+                        onTogglePill={togglePill}
                         onSetStatus={setConditionStatus}
                         onExpand={setExpandedCondition}
                         onUpdateLab={updateLabValue}
@@ -639,8 +657,8 @@ export default function HealthProfileWizard({
                     {/* Active conditions */}
                     <ReviewSection title="Active Conditions" icon={Stethoscope}>
                       {Array.from(selectedConditions.entries())
-                        .filter(([, status]) => status === "active")
-                        .map(([id]) => {
+                        .filter(([, status]) => status === "active" || status === "both")
+                        .map(([id, status]) => {
                           const def = getConditionById(id);
                           if (!def) return null;
                           const Icon = def.icon;
@@ -650,10 +668,13 @@ export default function HealthProfileWizard({
                                 <Icon className="h-3 w-3 text-red-500" />
                               </div>
                               <span className="text-xs font-medium text-foreground">{def.label}</span>
+                              {status === "both" && (
+                                <span className="text-[9px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1.5 py-0">+ Family</span>
+                              )}
                             </div>
                           );
                         })}
-                      {Array.from(selectedConditions.values()).filter((s) => s === "active").length === 0 && (
+                      {Array.from(selectedConditions.values()).filter((s) => s === "active" || s === "both").length === 0 && (
                         <p className="text-xs text-muted-light">None</p>
                       )}
                     </ReviewSection>
@@ -661,8 +682,8 @@ export default function HealthProfileWizard({
                     {/* Family history */}
                     <ReviewSection title="Family History" icon={Users}>
                       {Array.from(selectedConditions.entries())
-                        .filter(([, status]) => status === "family_history")
-                        .map(([id]) => {
+                        .filter(([, status]) => status === "family_history" || status === "both")
+                        .map(([id, status]) => {
                           const def = getConditionById(id);
                           if (!def) return null;
                           const Icon = def.icon;
@@ -672,10 +693,13 @@ export default function HealthProfileWizard({
                                 <Icon className="h-3 w-3 text-amber-600" />
                               </div>
                               <span className="text-xs font-medium text-foreground">{def.label}</span>
+                              {status === "both" && (
+                                <span className="text-[9px] font-bold text-red-600 bg-red-50 border border-red-200 rounded-full px-1.5 py-0">+ Me</span>
+                              )}
                             </div>
                           );
                         })}
-                      {Array.from(selectedConditions.values()).filter((s) => s === "family_history").length === 0 && (
+                      {Array.from(selectedConditions.values()).filter((s) => s === "family_history" || s === "both").length === 0 && (
                         <p className="text-xs text-muted-light">None</p>
                       )}
                     </ReviewSection>
@@ -808,7 +832,8 @@ function ConditionGrid({
   selectedConditions,
   expandedCondition,
   labValues,
-  onCycle,
+  onToggle,
+  onTogglePill,
   onSetStatus,
   onExpand,
   onUpdateLab,
@@ -818,79 +843,83 @@ function ConditionGrid({
   selectedConditions: Map<string, ConditionStatus>;
   expandedCondition: string | null;
   labValues: Map<string, { value: string; testedAt: string }>;
-  onCycle: (id: string) => void;
+  onToggle: (id: string) => void;
+  onTogglePill: (id: string, pill: "me" | "family") => void;
   onSetStatus: (id: string, status: ConditionStatus | null) => void;
   onExpand: (id: string | null) => void;
   onUpdateLab: (key: string, value: string, testedAt?: string) => void;
   onUpdateLabDate: (key: string, testedAt: string) => void;
 }) {
   return (
-    <div className="space-y-2">
+    <div className="space-y-1.5">
       {conditions.map((cond) => {
         const status = selectedConditions.get(cond.id);
+        const isSelected = !!status;
         const isExpanded = expandedCondition === cond.id;
-        const hasLabs = cond.labFields.length > 0 && status === "active";
+        const hasLabs = cond.labFields.length > 0 && (status === "active" || status === "both");
         const Icon = cond.icon;
+        const meOn = status === "active" || status === "both";
+        const fhOn = status === "family_history" || status === "both";
 
         return (
           <div key={cond.id}>
-            <button
-              onClick={() => onCycle(cond.id)}
-              className={`w-full flex items-center gap-3 rounded-xl border px-3.5 py-2.5 text-left transition-all active:scale-[0.98] ${
-                status === "active"
-                  ? "border-red-300/60 bg-red-50/60"
-                  : status === "family_history"
-                  ? "border-amber-300/60 bg-amber-50/60"
+            <div
+              className={`flex items-center gap-2.5 rounded-xl border px-3 py-2.5 transition-all ${
+                isSelected
+                  ? "border-green-200 bg-green-50/50"
                   : "border-border bg-card hover:bg-card-hover"
               }`}
             >
-              {/* Status dot */}
-              <div
-                className={`flex h-8 w-8 items-center justify-center rounded-full shrink-0 ${
-                  status === "active"
-                    ? "bg-red-100"
-                    : status === "family_history"
-                    ? "bg-amber-100"
-                    : "bg-border/30"
-                }`}
+              {/* Icon + text: tappable to toggle selection */}
+              <button
+                onClick={() => onToggle(cond.id)}
+                className="flex items-center gap-2.5 flex-1 min-w-0 text-left active:scale-[0.98] transition-transform"
               >
-                <Icon
-                  className={`h-4 w-4 ${
-                    status === "active"
-                      ? "text-red-500"
-                      : status === "family_history"
-                      ? "text-amber-600"
-                      : "text-muted-light"
-                  }`}
-                />
-              </div>
-
-              <div className="flex-1 min-w-0">
-                <p
-                  className={`text-sm font-semibold ${
-                    status === "active"
-                      ? "text-red-700"
-                      : status === "family_history"
-                      ? "text-amber-700"
-                      : "text-foreground"
+                <div
+                  className={`flex h-7 w-7 items-center justify-center rounded-full shrink-0 ${
+                    isSelected ? "bg-green-100" : "bg-border/30"
                   }`}
                 >
-                  {cond.label}
-                </p>
-                <p className="text-[10px] text-muted truncate">{cond.description}</p>
-              </div>
+                  <Icon
+                    className={`h-3.5 w-3.5 ${
+                      isSelected ? "text-green-600" : "text-muted-light"
+                    }`}
+                  />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className={`text-xs font-semibold ${isSelected ? "text-foreground" : "text-foreground"}`}>
+                    {cond.label}
+                  </p>
+                  <p className="text-[10px] text-muted truncate">{cond.description}</p>
+                </div>
+              </button>
 
-              {/* Status badge */}
-              {status && (
-                <span
-                  className={`shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${
-                    status === "active"
-                      ? "bg-red-100 text-red-600"
-                      : "bg-amber-100 text-amber-600"
-                  }`}
-                >
-                  {status === "active" ? "Active" : "Family"}
-                </span>
+              {/* Inline pills — only show when selected */}
+              {isSelected && (
+                <div className="flex items-center gap-1 shrink-0">
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onTogglePill(cond.id, "me"); }}
+                    className={`rounded-full px-2 py-0.5 text-[9px] font-bold border transition-all active:scale-95 ${
+                      meOn
+                        ? "border-red-300 bg-red-50 text-red-600"
+                        : "border-border bg-white text-muted-light"
+                    }`}
+                  >
+                    Me
+                  </button>
+                  {cond.hasFamilyHistory && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onTogglePill(cond.id, "family"); }}
+                      className={`rounded-full px-2 py-0.5 text-[9px] font-bold border transition-all active:scale-95 ${
+                        fhOn
+                          ? "border-amber-300 bg-amber-50 text-amber-600"
+                          : "border-border bg-white text-muted-light"
+                      }`}
+                    >
+                      Family
+                    </button>
+                  )}
+                </div>
               )}
 
               {/* Expand arrow for lab inputs */}
@@ -900,16 +929,16 @@ function ConditionGrid({
                     e.stopPropagation();
                     onExpand(isExpanded ? null : cond.id);
                   }}
-                  className="shrink-0 p-1"
+                  className="shrink-0 p-0.5"
                 >
                   {isExpanded ? (
-                    <ChevronUp className="h-4 w-4 text-muted" />
+                    <ChevronUp className="h-3.5 w-3.5 text-muted" />
                   ) : (
-                    <ChevronDown className="h-4 w-4 text-muted" />
+                    <ChevronDown className="h-3.5 w-3.5 text-muted" />
                   )}
                 </button>
               )}
-            </button>
+            </div>
 
             {/* Inline lab inputs */}
             <AnimatePresence>
@@ -921,7 +950,7 @@ function ConditionGrid({
                   transition={{ duration: 0.2 }}
                   className="overflow-hidden"
                 >
-                  <div className="ml-11 mr-2 mt-1 mb-2 space-y-2 rounded-lg border border-border/60 bg-card/80 p-3">
+                  <div className="ml-10 mr-2 mt-1 mb-1.5 space-y-2 rounded-lg border border-border/60 bg-card/80 p-3">
                     <p className="text-[10px] text-muted font-medium uppercase tracking-wider">
                       Lab Values (optional)
                     </p>

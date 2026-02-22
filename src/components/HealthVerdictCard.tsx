@@ -11,8 +11,10 @@ import {
   ArrowRightLeft,
   Stethoscope,
   Loader2,
+  Sparkles,
 } from "lucide-react";
-import type { MealHealthAnalysis, DishHealthVerdict, HealthVerdict } from "@/lib/dishTypes";
+import type { MealHealthAnalysis, DishHealthVerdict, HealthVerdict, HealthCondition } from "@/lib/dishTypes";
+import { getConditionById } from "@/lib/healthConditions";
 
 /* ─── Verdict styling ─── */
 
@@ -116,7 +118,7 @@ export function MealHealthBanner({
               Dr. Capy&apos;s Verdict: {config.label}
             </span>
           </div>
-          <p className="text-[10px] text-muted truncate mt-0.5">
+          <p className="text-[10px] text-muted mt-0.5 leading-relaxed">
             {analysis.overallSummary}
           </p>
         </div>
@@ -228,5 +230,77 @@ export function DishVerdictPill({ dishName, analysis, isLoading }: DishVerdictPi
       <VerdictIcon className={`h-2.5 w-2.5 ${config.iconColor}`} />
       <span className={`text-[9px] font-bold ${config.pillText}`}>{config.label}</span>
     </span>
+  );
+}
+
+/* ─── AI Health Check Button (on-demand) ─── */
+
+function buildConditionSubtitle(conditions: HealthCondition[]): string {
+  if (conditions.length === 0) return "";
+  const labels = conditions.map((c) => {
+    const def = getConditionById(c.id);
+    return def?.shortLabel ?? c.label;
+  });
+  if (labels.length <= 2) return `Is this right for your ${labels.join(", ")}?`;
+  return `Is this right for your ${labels.slice(0, 2).join(", ")} +${labels.length - 2} more?`;
+}
+
+interface HealthCheckButtonProps {
+  conditions: HealthCondition[];
+  isLoading: boolean;
+  onCheck: () => void;
+}
+
+export function HealthCheckButton({ conditions, isLoading, onCheck }: HealthCheckButtonProps) {
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center gap-1 py-2">
+        <div className="inline-flex items-center gap-2 rounded-full border border-violet-300 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 px-4 py-2">
+          <Loader2 className="h-3.5 w-3.5 text-violet-500 animate-spin" />
+          <span className="text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+            Analyzing...
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  const subtitle = buildConditionSubtitle(conditions);
+
+  return (
+    <button
+      onClick={onCheck}
+      className="flex flex-col items-center gap-1 py-1.5 w-full group"
+    >
+      <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite] px-4 py-2 transition-all group-hover:border-violet-400 group-hover:shadow-[0_0_8px_2px_rgba(139,92,246,0.12)] group-active:scale-[0.97]">
+        <Sparkles className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+        <span className="text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+          AI Health Check
+        </span>
+      </div>
+      {subtitle && (
+        <span className="text-[9px] text-muted">{subtitle}</span>
+      )}
+    </button>
+  );
+}
+
+/* ─── Health Profile Prompt (soft upsell when no profile) ─── */
+
+interface HealthProfilePromptProps {
+  onSetup: () => void;
+}
+
+export function HealthProfilePrompt({ onSetup }: HealthProfilePromptProps) {
+  return (
+    <button
+      onClick={onSetup}
+      className="flex items-center justify-center gap-1.5 py-2 w-full opacity-50 hover:opacity-70 transition-opacity"
+    >
+      <Sparkles className="h-3 w-3 text-muted-light shrink-0" />
+      <span className="text-[10px] text-muted font-medium">
+        Get AI health advice &mdash; set up your profile
+      </span>
+    </button>
   );
 }

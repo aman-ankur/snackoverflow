@@ -73,6 +73,41 @@ All components are in `src/components/`. All are `"use client"` components.
 - **Log This Meal** button with success animation
 - Portion selection updates macros and total in real-time
 
+### `HealthProfileWizard.tsx`
+**Multi-step health condition wizard with Dr. Capy mascot.**
+- Props: `existingProfile?`, `userProfile?`, `onComplete`, `onSkip`, `isStandalone?`
+- 5-step animated wizard (conditions → labs → allergies/diet → notes → review)
+- **Step 1 — Condition Selector**:
+  - 15 conditions from `CONDITIONS_REGISTRY` (diabetes, hypertension, cholesterol, heart disease, kidney, thyroid, PCOS, gout, IBS, lactose intolerance, celiac, iron deficiency, vitamin D deficiency, pregnancy, menopause)
+  - Conditions filtered by `userProfile.gender` and `userProfile.age` (e.g. pregnancy/menopause hidden for males, menopause hidden for age < 40)
+  - Tap condition row to select (defaults to "active"), tap again to deselect
+  - Inline "Me" (red) and "Family" (amber) pills appear when selected — can toggle independently
+  - "Family" pill only shown when `hasFamilyHistory: true` on the condition definition
+  - Status: `"active"` | `"family_history"` | `"both"` (selecting both Me + Family)
+  - Search filter for conditions
+  - Separated into "High Dietary Impact" and "Medium Dietary Impact" sections
+- **Step 2 — Lab Values**: optional numeric inputs for conditions with lab fields (HbA1c, BP, cholesterol, etc.)
+- **Step 3 — Allergies & Diet**: allergy multi-select + diet preference (veg/nonveg/vegan/eggetarian/pescatarian)
+- **Step 4 — Free-text Notes**: additional health notes
+- **Step 5 — Review**: summary of all selections with "both" status showing cross-badges
+
+### `HealthVerdictCard.tsx`
+**AI health verdict display components.**
+- **`MealHealthBanner`** — expandable verdict card (Good/Caution/Avoid) with per-dish breakdown
+  - Props: `analysis`, `isLoading`, `error`, `hasHealthProfile`
+  - Summary bar with verdict icon + overall summary (wraps, not truncated)
+  - Expandable: per-dish `DishVerdictRow` with swap suggestions + medical disclaimer
+- **`HealthCheckButton`** — on-demand AI health check trigger (animated gradient pill)
+  - Props: `conditions`, `isLoading`, `onCheck`
+  - Violet gradient shimmer animation with Sparkles icon
+  - Contextual subtitle: "Is this right for your Diabetes, Cholesterol?" (truncates at 2 + "+N more")
+  - Loading state: spinner + "Analyzing..."
+- **`HealthProfilePrompt`** — muted upsell when no health profile
+  - Props: `onSetup`
+  - "Get AI health advice — set up your profile" link
+- **`DishVerdictPill`** — inline verdict badge for dish cards
+  - Props: `dishName`, `analysis`, `isLoading`
+
 ### `NutritionCard.tsx`
 **Per-dish nutrition presentation card.**
 - Props: `dish`, `servingsMultiplier`

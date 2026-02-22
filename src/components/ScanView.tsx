@@ -8,7 +8,8 @@ import NutritionCard from "@/components/NutritionCard";
 import CapyMascot from "@/components/CapyMascot";
 import DescribeMealView from "@/components/DescribeMealView";
 import CoachMark from "@/components/CoachMark";
-import { MealHealthBanner } from "@/components/HealthVerdictCard";
+import { MealHealthBanner, HealthCheckButton, HealthProfilePrompt } from "@/components/HealthVerdictCard";
+import type { HealthCondition } from "@/lib/dishTypes";
 import { useDishScanner } from "@/lib/useDishScanner";
 import { useHealthVerdict } from "@/lib/useHealthVerdict";
 import type { DishNutrition, MealType, MealTotals, LoggedMeal } from "@/lib/dishTypes";
@@ -23,6 +24,8 @@ interface ScanViewProps {
   coachMarks?: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
   healthContextString?: string;
   hasHealthProfile?: boolean;
+  healthConditions?: HealthCondition[];
+  onSetupHealthProfile?: () => void;
 }
 
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2] as const;
@@ -81,7 +84,7 @@ function deriveTags(dish: DishNutrition): string[] {
 
 type ScanMode = "camera" | "describe";
 
-export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode, coachMarks, healthContextString, hasHealthProfile }: ScanViewProps) {
+export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode, coachMarks, healthContextString, hasHealthProfile, healthConditions, onSetupHealthProfile }: ScanViewProps) {
   const dish = useDishScanner();
   const healthVerdict = useHealthVerdict();
   const [mode, setMode] = useState<ScanMode>(initialMode || "camera");
@@ -123,8 +126,8 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
     prevAnalysisRef.current = dish.analysis;
   }, [dish.analysis]);
 
-  // Auto-trigger health verdict (pass 2) when camera analysis completes
-  useEffect(() => {
+  // On-demand health verdict trigger
+  const triggerHealthCheck = useCallback(() => {
     if (!dish.analysis || !healthContextString || dish.analysis.dishes.length === 0) return;
     const dishInputs = dish.analysis.dishes.map((d) => ({
       name: d.name,
@@ -261,6 +264,8 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
           correctionContext={correctionContext}
           healthContextString={healthContextString}
           hasHealthProfile={hasHealthProfile}
+          healthConditions={healthConditions}
+          onSetupHealthProfile={onSetupHealthProfile}
         />
       ) : (
       <>
@@ -397,13 +402,23 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
               </div>
             </div>
 
-            {/* Health verdict banner */}
-            <MealHealthBanner
-              analysis={healthVerdict.verdict}
-              isLoading={healthVerdict.status === "loading"}
-              error={healthVerdict.error}
-              hasHealthProfile={!!hasHealthProfile}
-            />
+            {/* Health verdict: on-demand button or result */}
+            {hasHealthProfile && healthVerdict.verdict ? (
+              <MealHealthBanner
+                analysis={healthVerdict.verdict}
+                isLoading={false}
+                error={healthVerdict.error}
+                hasHealthProfile={true}
+              />
+            ) : hasHealthProfile && healthConditions && healthConditions.length > 0 ? (
+              <HealthCheckButton
+                conditions={healthConditions}
+                isLoading={healthVerdict.status === "loading"}
+                onCheck={triggerHealthCheck}
+              />
+            ) : !hasHealthProfile && onSetupHealthProfile ? (
+              <HealthProfilePrompt onSetup={onSetupHealthProfile} />
+            ) : null}
 
             {/* Capy reaction */}
             <div className="flex items-center gap-3 px-1">
