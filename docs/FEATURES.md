@@ -201,3 +201,49 @@
 - **Performance**: ~1-2s when Gemini available, ~4-5s fallback (parallel race), 6s max timeout
 - New files: `describe-meal/route.ts`, `useDescribeMeal.ts`, `DescribeMealView.tsx`
 - New dep: `openai` (npm package)
+
+## 18. Health Personalization
+
+### Health Profile Wizard
+- Multi-step Dr. Capy wizard for setting up health conditions, lab values, allergies, diet preference, and free-text notes
+- **15 conditions** in registry: Diabetes (Type 1 & 2), Hypertension, High Cholesterol, Heart Disease, Kidney Disease, Thyroid, PCOS, Gout, IBS, Lactose Intolerance, Celiac Disease, Iron Deficiency, Vitamin D Deficiency, Pregnancy, Menopause
+- **Gender/age filtering**: conditions like Pregnancy, Menopause, PCOS only shown for relevant genders; Menopause requires age ≥ 40
+- **Condition status**: `"active"` (user has it), `"family_history"` (runs in family), or `"both"` (user has it AND family history)
+- Inline "Me" (red pill) and "Family" (amber pill) toggles per condition — can select both simultaneously
+- "Family" pill only shown for conditions where `hasFamilyHistory: true` (not shown for pregnancy, menopause, IBS, lactose intolerance, celiac, iron/vitamin D deficiency)
+- Optional lab value inputs (HbA1c, blood pressure, cholesterol, etc.) with date tracking
+- Stale lab warning (>180 days) shown in Profile view
+- Review step shows cross-badges for "both" status conditions
+
+### Health Context Builder
+- Deterministic rules engine (`healthContextBuilder.ts`) — no AI needed for lab interpretation
+- Builds compact context string injected into AI health verdict prompts
+- Conditions with "both" status get ELEVATED RISK note for stronger dietary advice
+- Severity classification based on lab values (e.g. HbA1c > 9 = "severe")
+- Dietary rules generated per condition (e.g. "Limit sodium to 1500mg/day" for hypertension)
+
+### On-Demand AI Health Check
+- **Not auto-triggered** — user taps "AI Health Check" button after viewing scan/describe results
+- Animated violet gradient pill with Sparkles icon and shimmer animation
+- Contextual subtitle: "Is this right for your Diabetes, Cholesterol?" (shows first 2 conditions, "+N more" if overflow)
+- Loading state: spinner + "Analyzing..."
+- Result: expandable `MealHealthBanner` with overall verdict (Good/Caution/Avoid) + per-dish verdicts with swap suggestions
+- If no health profile: muted "Get AI health advice — set up your profile" link opens wizard
+- **Provider chain**: Gemini 2.5 Flash → Claude 3.5 Haiku → GPT-4.1-mini (tiered fallback)
+- Medical disclaimer: "For informational purposes only. Consult your doctor."
+
+### Profile View Integration
+- Health Profile card shows active conditions (red pills) and family history (amber pills)
+- Conditions with "both" status show in Active section with "FH" badge
+- Diet preference display
+- Stale labs warning with age in months
+- Summary line: "2 active conditions, 1 family history — Dr. Capy personalizes every scan"
+
+### Files
+- `healthConditions.ts` — conditions registry with `ConditionDef` (id, label, shortLabel, category, icon, description, dietaryImpact, labFields, hasFamilyHistory, genderFilter, minAge)
+- `healthContextBuilder.ts` — deterministic lab rules + `buildHealthContextString()` + `getStaleLabs()` + `getHealthSummaryDisplay()`
+- `useHealthProfile.ts` — React hook with localStorage + Supabase sync
+- `useHealthVerdict.ts` — on-demand verdict fetch hook with abort support
+- `HealthProfileWizard.tsx` — multi-step wizard component
+- `HealthVerdictCard.tsx` — MealHealthBanner, HealthCheckButton, HealthProfilePrompt, DishVerdictPill
+- `api/health-verdict/route.ts` — POST route with tiered AI fallback

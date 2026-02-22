@@ -356,6 +356,76 @@ interface GardenState {
 
 ---
 
+## `useHealthProfile()` — Health Profile Hook
+
+**File**: `src/lib/useHealthProfile.ts`
+
+Manages health profile state (conditions, lab values, allergies, diet preference, notes) with localStorage persistence and Supabase cloud sync.
+
+### Returns
+```ts
+{
+  healthProfile: HealthProfile | null;
+  hasHealthProfile: boolean;
+  healthContextString: string;       // Pre-built AI prompt context
+  saveHealthProfile: (conditions, labValues, notes, diet?) => void;
+  clearHealthProfile: () => void;
+}
+```
+
+### Key Types
+```ts
+type ConditionStatus = "active" | "family_history" | "both";
+
+interface HealthCondition {
+  id: string;
+  label: string;
+  status: ConditionStatus;
+}
+
+interface HealthProfile {
+  conditions: HealthCondition[];
+  labValues: LabValue[];
+  freeTextNotes: string;
+  dietPreference?: DietPreference;
+  healthContextString: string;
+}
+```
+
+### Behavior
+- On save: builds `healthContextString` via `buildHealthContextString()` (deterministic, no AI)
+- Conditions with `"both"` status appear in both active and family history sections of the context
+- Elevated risk note added for "both" conditions
+- Syncs to Supabase `health_profile` domain when authenticated
+
+---
+
+## `useHealthVerdict()` — AI Health Verdict Hook
+
+**File**: `src/lib/useHealthVerdict.ts`
+
+On-demand AI health verdict fetcher with abort support.
+
+### Returns
+```ts
+{
+  verdict: MealHealthAnalysis | null;
+  status: "idle" | "loading" | "done" | "error";
+  error: string | null;
+  fetchVerdict: (dishes, healthContextString) => void;
+  reset: () => void;
+}
+```
+
+### Behavior
+- **Not auto-triggered** — called explicitly when user taps "AI Health Check" button
+- Sends dish nutrition + health context to `/api/health-verdict`
+- API uses tiered fallback: Gemini 2.5 Flash → Claude 3.5 Haiku → GPT-4.1-mini
+- Returns per-dish verdicts (good/caution/avoid) with notes and swap suggestions
+- Supports abort via AbortController when component unmounts
+
+---
+
 ## `useYoloDetection()` — YOLO On-Device Hook
 
 **File**: `src/lib/useYoloDetection.ts`

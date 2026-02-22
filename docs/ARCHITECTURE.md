@@ -37,6 +37,7 @@ snackoverflow/
 │   │   │   ├── analyze-dish/route.ts  # Dish nutrition analysis (Gemini → Groq)
 │   │   │   ├── describe-meal/route.ts # Text meal description → nutrition (Gemini → OpenAI+Groq parallel)
 │   │   │   ├── capy-motivation/route.ts # Capy LLM motivation (Gemini → Groq)
+│   │   │   ├── health-verdict/route.ts  # AI health verdict (Gemini → Claude → GPT fallback)
 │   │   │   ├── hindi-message/route.ts # Hindi text generation (Groq)
 │   │   │   └── hindi-tts/route.ts     # Hindi audio generation (Sarvam AI)
 │   │   ├── globals.css                # Tailwind theme, CSS vars, animations
@@ -60,6 +61,8 @@ snackoverflow/
 │   │   ├── CapyMascot.tsx             # SVG capybara mascot with 5 moods + animations
 │   │   ├── GoalOnboarding.tsx         # 5-step animated onboarding wizard
 │   │   ├── GoalDashboard.tsx          # Daily progress card with Capy
+│   │   ├── HealthProfileWizard.tsx    # Multi-step health condition wizard (Dr. Capy)
+│   │   ├── HealthVerdictCard.tsx      # MealHealthBanner + HealthCheckButton + DishVerdictPill
 │   │   ├── MealLog.tsx                # Logged meals list
 │   │   ├── MealHistory.tsx            # History + weekly insights
 │   │   ├── MealTypeSheet.tsx          # Bottom sheet per meal type (dish list, delete, details)
@@ -94,6 +97,10 @@ snackoverflow/
 │       ├── useDetection.ts           # (Legacy) Generic detection hook
 │       ├── useDescribeMeal.ts        # Text meal description hook (API + portion state)
 │       ├── useDishScanner.ts         # Dish camera + analysis hook
+│       ├── useHealthProfile.ts       # Health profile hook (localStorage + Supabase sync)
+│       ├── useHealthVerdict.ts       # AI health verdict hook (on-demand fetch + abort)
+│       ├── healthConditions.ts       # Conditions registry (15 conditions, gender/age filtering)
+│       ├── healthContextBuilder.ts   # Deterministic lab rules + AI prompt context builder
 │       ├── useExpiryTracker.ts       # Expiry tracker hook (localStorage)
 │       ├── useGeminiVision.ts        # Main Cloud AI hook (camera, analysis, state)
 │       ├── useMealLog.ts             # Dish meal logging + insights hook
@@ -158,12 +165,30 @@ Scan Tab (ScanView.tsx — center FAB):
     → Correction context: if opened from bad camera scan, pre-fills with scanned dish name
   
   Both modes:
+    → After results: "AI Health Check" button (on-demand, not auto-triggered)
+      → Tap → /api/health-verdict → Gemini 2.5 Flash / Claude 3.5 Haiku / GPT-4.1-mini fallback
+      → Result replaces button with expandable MealHealthBanner (Good/Caution/Avoid per dish)
+      → If no health profile: muted "Get AI health advice — set up your profile" link → opens wizard
     → Log This Meal → page-level useMealLog.logMeal() (shared state, not internal hook)
     → 1.2s "Logged ✓" → clearAnalysis → auto-navigate to Home tab
     → Home immediately shows fresh data (same mealLog instance)
     → Capy mood + motivational lines based on progress vs goals
   
   MealTypeSheet can open Scan tab directly in Describe mode via initialMode prop
+
+Health Personalization (HealthProfileWizard.tsx):
+  Profile tab or scan prompt → HealthProfileWizard (multi-step Dr. Capy wizard)
+  → Step 1: Condition selector — 15 conditions with inline "Me"/"Family" pills
+    → Conditions filtered by gender + age from UserProfile
+    → Family pill only shown where hasFamilyHistory is true
+    → Status: "active" | "family_history" | "both" (can select both simultaneously)
+  → Step 2: Lab values (optional, for conditions with lab fields)
+  → Step 3: Allergies + diet preference
+  → Step 4: Free-text notes
+  → Step 5: Review summary
+  → Save → useHealthProfile (localStorage + Supabase sync)
+  → healthContextBuilder.ts builds deterministic AI prompt string
+  → "both" status generates ELEVATED RISK note in prompt
 
 Progress Tab (ProgressView.tsx):
   CalendarProgressView (top) — weekly row with Apple Fitness rings (expandable to month)

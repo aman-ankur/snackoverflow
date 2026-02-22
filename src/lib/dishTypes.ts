@@ -116,7 +116,7 @@ export interface DescribeMealResult {
 
 /* ─── Health Personalization ─── */
 
-export type ConditionStatus = "active" | "family_history";
+export type ConditionStatus = "active" | "family_history" | "both";
 export type ConditionSeverity = "mild" | "moderate" | "severe";
 export type HealthVerdict = "good" | "caution" | "avoid";
 export type DietPreference = "veg" | "nonveg" | "vegan" | "eggetarian" | "pescatarian";

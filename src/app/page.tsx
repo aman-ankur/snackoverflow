@@ -140,6 +140,8 @@ export default function Home() {
                 coachMarks={coachMarks}
                 healthContextString={healthProfile.healthContextString}
                 hasHealthProfile={healthProfile.hasHealthProfile}
+                healthConditions={healthProfile.healthProfile?.conditions}
+                onSetupHealthProfile={() => setShowHealthWizard(true)}
               />
             </motion.div>
           )}
@@ -280,6 +282,7 @@ export default function Home() {
         {showHealthWizard && (
           <HealthProfileWizard
             existingProfile={healthProfile.healthProfile}
+            userProfile={userGoals.profile}
             onComplete={handleHealthWizardComplete}
             onSkip={() => {
               setShowHealthWizard(false);

@@ -16,7 +16,10 @@ import {
   ShieldAlert,
   Sparkles,
   CircleDot,
+  Baby,
+  Heart,
 } from "lucide-react";
+import type { Gender } from "@/lib/dishTypes";
 
 /* ─── Lab Field Definition ─── */
 
@@ -44,6 +47,9 @@ export interface ConditionDef {
   description: string;
   dietaryImpact: string[];
   labFields: LabFieldDef[];
+  hasFamilyHistory: boolean;
+  genderFilter?: Gender[];
+  minAge?: number;
 }
 
 /* ─── Lab Field Definitions ─── */
@@ -237,6 +243,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Insulin-dependent diabetes",
     dietaryImpact: ["carb-counting", "glycemic-index", "sugar-control"],
     labFields: [LAB_HBA1C, LAB_FASTING_GLUCOSE],
+    hasFamilyHistory: true,
   },
   {
     id: "diabetes_type2",
@@ -247,6 +254,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Insulin resistance / high blood sugar",
     dietaryImpact: ["low-GI", "sugar-control", "fiber-boost", "weight-management"],
     labFields: [LAB_HBA1C, LAB_FASTING_GLUCOSE],
+    hasFamilyHistory: true,
   },
   {
     id: "prediabetic",
@@ -257,6 +265,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Borderline blood sugar levels",
     dietaryImpact: ["low-GI", "sugar-awareness", "fiber-boost"],
     labFields: [LAB_HBA1C, LAB_FASTING_GLUCOSE],
+    hasFamilyHistory: true,
   },
   {
     id: "hypertension",
@@ -267,16 +276,29 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "High blood pressure",
     dietaryImpact: ["low-sodium", "potassium-boost", "DASH-diet"],
     labFields: [LAB_SYSTOLIC_BP, LAB_DIASTOLIC_BP],
+    hasFamilyHistory: true,
   },
   {
     id: "high_cholesterol",
-    label: "High Cholesterol / Heart Disease",
-    shortLabel: "High Cholesterol",
+    label: "High Cholesterol",
+    shortLabel: "Cholesterol",
     category: "high_impact",
     icon: Activity,
-    description: "Elevated LDL, triglycerides, or heart condition",
+    description: "Elevated LDL, triglycerides",
     dietaryImpact: ["low-saturated-fat", "omega-3", "fiber-boost", "limit-trans-fat"],
     labFields: [LAB_LDL, LAB_HDL, LAB_TRIGLYCERIDES, LAB_TOTAL_CHOLESTEROL],
+    hasFamilyHistory: true,
+  },
+  {
+    id: "heart_disease",
+    label: "Heart Disease",
+    shortLabel: "Heart",
+    category: "high_impact",
+    icon: Heart,
+    description: "CAD, heart attack history, stents",
+    dietaryImpact: ["low-sodium", "omega-3", "limit-saturated-fat", "limit-trans-fat", "fiber-boost"],
+    labFields: [],
+    hasFamilyHistory: true,
   },
   {
     id: "kidney_disease",
@@ -287,6 +309,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Chronic kidney disease / high creatinine / protein in urine",
     dietaryImpact: ["low-protein", "low-sodium", "low-potassium", "low-phosphorus"],
     labFields: [LAB_CREATININE, LAB_EGFR],
+    hasFamilyHistory: true,
   },
   {
     id: "fatty_liver",
@@ -297,6 +320,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Non-alcoholic fatty liver disease (NAFLD)",
     dietaryImpact: ["low-sugar", "low-saturated-fat", "weight-management", "no-alcohol"],
     labFields: [],
+    hasFamilyHistory: false,
   },
   {
     id: "pcos",
@@ -307,6 +331,20 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Polycystic ovary syndrome or hormonal issues",
     dietaryImpact: ["low-GI", "anti-inflammatory", "weight-management"],
     labFields: [],
+    hasFamilyHistory: true,
+    genderFilter: ["female", "other"],
+  },
+  {
+    id: "pregnancy",
+    label: "Pregnancy",
+    shortLabel: "Pregnancy",
+    category: "high_impact",
+    icon: Baby,
+    description: "Expecting — special nutrition needs",
+    dietaryImpact: ["folate-rich", "iron-rich", "calcium", "avoid-raw-fish", "limit-caffeine"],
+    labFields: [],
+    hasFamilyHistory: false,
+    genderFilter: ["female", "other"],
   },
   {
     id: "gout",
@@ -317,6 +355,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Elevated uric acid causing joint pain",
     dietaryImpact: ["low-purine", "hydration", "limit-alcohol", "limit-red-meat"],
     labFields: [LAB_URIC_ACID],
+    hasFamilyHistory: true,
   },
 
   // ── Group B: Medium dietary impact ──
@@ -329,6 +368,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Underactive thyroid",
     dietaryImpact: ["iodine-aware", "selenium", "limit-goitrogens", "weight-management"],
     labFields: [LAB_TSH],
+    hasFamilyHistory: false,
   },
   {
     id: "hyperthyroid",
@@ -339,6 +379,20 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Overactive thyroid",
     dietaryImpact: ["calorie-dense", "calcium", "limit-caffeine"],
     labFields: [LAB_TSH],
+    hasFamilyHistory: false,
+  },
+  {
+    id: "menopause",
+    label: "Menopause",
+    shortLabel: "Menopause",
+    category: "medium_impact",
+    icon: Sparkles,
+    description: "Hormonal changes affecting metabolism",
+    dietaryImpact: ["calcium", "vitamin-D", "phytoestrogens", "weight-management"],
+    labFields: [],
+    hasFamilyHistory: false,
+    genderFilter: ["female", "other"],
+    minAge: 40,
   },
   {
     id: "iron_deficiency",
@@ -349,6 +403,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Low hemoglobin or iron stores",
     dietaryImpact: ["iron-rich-foods", "vitamin-C-pairing", "limit-tea-with-meals"],
     labFields: [LAB_HEMOGLOBIN, LAB_FERRITIN],
+    hasFamilyHistory: false,
   },
   {
     id: "vitamin_d_deficiency",
@@ -359,6 +414,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Low vitamin D levels",
     dietaryImpact: ["vitamin-D-foods", "calcium-pairing", "sun-exposure"],
     labFields: [LAB_VITAMIN_D],
+    hasFamilyHistory: false,
   },
   {
     id: "vitamin_b12_deficiency",
@@ -369,6 +425,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Low B12 — common in vegetarians",
     dietaryImpact: ["B12-foods", "fortified-foods", "supplementation"],
     labFields: [LAB_VITAMIN_B12],
+    hasFamilyHistory: false,
   },
   {
     id: "ibs_digestive",
@@ -379,6 +436,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Irritable bowel, bloating, GERD, or acid reflux",
     dietaryImpact: ["low-FODMAP", "avoid-triggers", "small-meals", "limit-spicy"],
     labFields: [],
+    hasFamilyHistory: false,
   },
   {
     id: "lactose_intolerant",
@@ -389,6 +447,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Cannot digest dairy / milk sugar",
     dietaryImpact: ["dairy-free", "calcium-alternatives", "lactose-free-options"],
     labFields: [],
+    hasFamilyHistory: false,
   },
   {
     id: "gluten_intolerant",
@@ -399,6 +458,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Cannot tolerate gluten / wheat protein",
     dietaryImpact: ["gluten-free", "wheat-alternatives", "cross-contamination"],
     labFields: [],
+    hasFamilyHistory: false,
   },
   {
     id: "food_allergies",
@@ -409,6 +469,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Allergic to specific foods (nuts, shellfish, soy, eggs, etc.)",
     dietaryImpact: ["allergen-avoidance", "label-reading"],
     labFields: [],
+    hasFamilyHistory: false,
   },
   {
     id: "migraine",
@@ -419,6 +480,7 @@ export const CONDITIONS_REGISTRY: ConditionDef[] = [
     description: "Chronic migraines triggered by food",
     dietaryImpact: ["avoid-tyramine", "limit-aged-cheese", "limit-alcohol", "hydration"],
     labFields: [],
+    hasFamilyHistory: false,
   },
 ];
 

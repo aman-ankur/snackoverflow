@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -16,10 +16,10 @@ import {
   Droplets,
   Heart,
 } from "lucide-react";
-import { MealHealthBanner } from "@/components/HealthVerdictCard";
+import { MealHealthBanner, HealthCheckButton, HealthProfilePrompt } from "@/components/HealthVerdictCard";
 import { useDescribeMeal } from "@/lib/useDescribeMeal";
 import { useHealthVerdict } from "@/lib/useHealthVerdict";
-import type { DishNutrition, MealTotals, MealType, LoggedMeal, DescribedDish } from "@/lib/dishTypes";
+import type { DishNutrition, MealTotals, MealType, LoggedMeal, DescribedDish, HealthCondition } from "@/lib/dishTypes";
 
 /* ─── Props ─── */
 
@@ -35,6 +35,8 @@ interface DescribeMealViewProps {
   correctionContext?: { scannedAs: string; mealType: MealType };
   healthContextString?: string;
   hasHealthProfile?: boolean;
+  healthConditions?: HealthCondition[];
+  onSetupHealthProfile?: () => void;
 }
 
 /* ─── Constants ─── */
@@ -293,6 +295,8 @@ export default function DescribeMealView({
   correctionContext,
   healthContextString,
   hasHealthProfile,
+  healthConditions,
+  onSetupHealthProfile,
 }: DescribeMealViewProps) {
   const dm = useDescribeMeal();
   const healthVerdict = useHealthVerdict();
@@ -316,8 +320,8 @@ export default function DescribeMealView({
     }
   }, [dm.result]);
 
-  // Auto-trigger health verdict (pass 2) when describe results arrive
-  useEffect(() => {
+  // On-demand health verdict trigger
+  const triggerHealthCheck = useCallback(() => {
     if (!dm.result || !healthContextString || dm.result.dishes.length === 0) return;
     const dishInputs = dm.result.dishes.map((d) => {
       const portion = d.portions[dm.selectedPortions.get(0) ?? d.defaultIndex ?? 1] ?? d.portions[1] ?? d.portions[0];
@@ -492,13 +496,23 @@ export default function DescribeMealView({
               </div>
             ))}
 
-            {/* Health verdict banner */}
-            <MealHealthBanner
-              analysis={healthVerdict.verdict}
-              isLoading={healthVerdict.status === "loading"}
-              error={healthVerdict.error}
-              hasHealthProfile={!!hasHealthProfile}
-            />
+            {/* Health verdict: on-demand button or result */}
+            {hasHealthProfile && healthVerdict.verdict ? (
+              <MealHealthBanner
+                analysis={healthVerdict.verdict}
+                isLoading={false}
+                error={healthVerdict.error}
+                hasHealthProfile={true}
+              />
+            ) : hasHealthProfile && healthConditions && healthConditions.length > 0 ? (
+              <HealthCheckButton
+                conditions={healthConditions}
+                isLoading={healthVerdict.status === "loading"}
+                onCheck={triggerHealthCheck}
+              />
+            ) : !hasHealthProfile && onSetupHealthProfile ? (
+              <HealthProfilePrompt onSetup={onSetupHealthProfile} />
+            ) : null}
 
             {/* Total bar */}
             <div className="rounded-2xl bg-accent-light border border-accent/15 p-4">

@@ -170,13 +170,13 @@ export default function ProfileView({
         </div>
         {hasHealthProfile && healthProfile ? (
           <div className="space-y-2.5">
-            {/* Active conditions */}
-            {healthProfile.conditions.filter((c) => c.status === "active").length > 0 && (
+            {/* Active conditions (includes "both") */}
+            {healthProfile.conditions.filter((c) => c.status === "active" || c.status === "both").length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-[10px] text-muted-light font-medium uppercase tracking-wider">Active Conditions</p>
                 <div className="flex flex-wrap gap-1.5">
                   {healthProfile.conditions
-                    .filter((c) => c.status === "active")
+                    .filter((c) => c.status === "active" || c.status === "both")
                     .map((c) => {
                       const def = getConditionById(c.id);
                       const Icon = def?.icon;
@@ -187,13 +187,16 @@ export default function ProfileView({
                         >
                           {Icon && <Icon className="h-3 w-3" />}
                           {def?.shortLabel ?? c.label}
+                          {c.status === "both" && (
+                            <span className="text-[8px] font-bold text-amber-600 bg-amber-50 border border-amber-200 rounded-full px-1 ml-0.5">FH</span>
+                          )}
                         </span>
                       );
                     })}
                 </div>
               </div>
             )}
-            {/* Family history */}
+            {/* Family history (only pure family_history, not "both" which is already shown above) */}
             {healthProfile.conditions.filter((c) => c.status === "family_history").length > 0 && (
               <div className="space-y-1.5">
                 <p className="text-[10px] text-muted-light font-medium uppercase tracking-wider">Family History</p>
