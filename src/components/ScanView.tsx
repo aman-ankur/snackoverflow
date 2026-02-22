@@ -7,8 +7,10 @@ import GeminiCameraView from "@/components/GeminiCameraView";
 import NutritionCard from "@/components/NutritionCard";
 import CapyMascot from "@/components/CapyMascot";
 import DescribeMealView from "@/components/DescribeMealView";
+import CoachMark from "@/components/CoachMark";
 import { useDishScanner } from "@/lib/useDishScanner";
 import type { DishNutrition, MealType, MealTotals, LoggedMeal } from "@/lib/dishTypes";
+import type { CoachMarkId } from "@/lib/useCoachMarks";
 
 interface ScanViewProps {
   logMeal: (input: { mealType: MealType; servingsMultiplier: number; dishes: DishNutrition[]; totals: MealTotals }) => LoggedMeal;
@@ -16,6 +18,7 @@ interface ScanViewProps {
   refreshStreak: () => void;
   onMealLogged?: () => void;
   initialMode?: "camera" | "describe";
+  coachMarks?: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
 }
 
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2] as const;
@@ -74,7 +77,7 @@ function deriveTags(dish: DishNutrition): string[] {
 
 type ScanMode = "camera" | "describe";
 
-export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode }: ScanViewProps) {
+export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode, coachMarks }: ScanViewProps) {
   const dish = useDishScanner();
   const [mode, setMode] = useState<ScanMode>(initialMode || "camera");
   const [correctionContext, setCorrectionContext] = useState<{ scannedAs: string; mealType: MealType } | undefined>(undefined);
@@ -192,6 +195,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
   return (
     <div className="space-y-4">
       {/* Mode Toggle */}
+      <div className="relative">
       <div className="flex gap-1 rounded-2xl bg-card border border-border p-1">
         <button
           onClick={() => { setMode("camera"); setCorrectionContext(undefined); }}
@@ -216,6 +220,21 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
           Describe
         </button>
       </div>
+
+      </div>
+      {/* Coach mark for scan toggle */}
+      {coachMarks?.shouldShow("scan-toggle") && (
+        <div className="relative">
+          <CoachMark
+            id="scan-toggle"
+            text='Switch to Describe to type your meal instead of scanning'
+            visible={true}
+            onDismiss={coachMarks.dismiss}
+            arrow="top"
+            className="top-0 left-0"
+          />
+        </div>
+      )}
 
       {mode === "describe" ? (
         <DescribeMealView

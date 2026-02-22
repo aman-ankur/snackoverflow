@@ -11,10 +11,12 @@ import FridgeOverlay from "@/components/FridgeOverlay";
 import MealTypeSheet from "@/components/MealTypeSheet";
 import MealDetailOverlay from "@/components/MealDetailOverlay";
 import GoalOnboarding from "@/components/GoalOnboarding";
+import WelcomeTour from "@/components/WelcomeTour";
 import dynamic from "next/dynamic";
 import { useMealLog } from "@/lib/useMealLog";
 import { useUserGoals } from "@/lib/useUserGoals";
 import { useAuthContext } from "@/components/AuthProvider";
+import { useCoachMarks } from "@/lib/useCoachMarks";
 import type { UserProfile, NutritionGoals, MealType } from "@/lib/dishTypes";
 
 const CapyView = dynamic(() => import("@/components/CapyView"), {
@@ -36,6 +38,8 @@ export default function Home() {
   const [sheetMealType, setSheetMealType] = useState<MealType | null>(null);
   const [detailMealId, setDetailMealId] = useState<string | null>(null);
   const [scanInitialMode, setScanInitialMode] = useState<"camera" | "describe">("camera");
+  const [showWelcomeTour, setShowWelcomeTour] = useState(false);
+  const coachMarks = useCoachMarks();
 
   const mealLog = useMealLog();
   const userGoals = useUserGoals();
@@ -53,6 +57,20 @@ export default function Home() {
       userGoals.updateGoals(goals);
     }
     setShowOnboarding(false);
+    // Show welcome tour after first-time onboarding
+    const tourSeen = typeof window !== "undefined" && localStorage.getItem("snackoverflow-welcome-seen");
+    if (!tourSeen) setShowWelcomeTour(true);
+  };
+
+  const handleWelcomeTourComplete = () => {
+    setShowWelcomeTour(false);
+    try { localStorage.setItem("snackoverflow-welcome-seen", "true"); } catch { /* ignore */ }
+    setActiveTab("scan");
+  };
+
+  const handleWhatsNewTryIt = () => {
+    setScanInitialMode("describe");
+    setActiveTab("scan");
   };
 
   return (
@@ -78,6 +96,8 @@ export default function Home() {
                 onScanDish={() => setActiveTab("scan")}
                 onRemoveMeal={mealLog.removeMeal}
                 onMealTypeClick={(type) => setSheetMealType(type)}
+                onWhatsNewTryIt={handleWhatsNewTryIt}
+                coachMarks={coachMarks}
               />
             </motion.div>
           )}
@@ -96,6 +116,7 @@ export default function Home() {
                 refreshStreak={userGoals.refreshStreak}
                 onMealLogged={() => setActiveTab("home")}
                 initialMode={scanInitialMode}
+                coachMarks={coachMarks}
               />
             </motion.div>
           )}
@@ -115,6 +136,7 @@ export default function Home() {
                 meals={mealLog.meals}
                 weeklyByDate={mealLog.weeklyByDate}
                 repeatedDishes={mealLog.insights.repeatedDishes}
+                coachMarks={coachMarks}
               />
             </motion.div>
           )}
@@ -132,6 +154,7 @@ export default function Home() {
                 todayTotals={mealLog.todayTotals}
                 goals={userGoals.goals}
                 isActive={activeTab === "capy"}
+                coachMarks={coachMarks}
               />
             </motion.div>
           )}
@@ -218,6 +241,13 @@ export default function Home() {
             onComplete={handleOnboardingComplete}
             onSkip={() => setShowOnboarding(false)}
           />
+        )}
+      </AnimatePresence>
+
+      {/* Welcome Tour */}
+      <AnimatePresence>
+        {showWelcomeTour && (
+          <WelcomeTour onComplete={handleWelcomeTourComplete} />
         )}
       </AnimatePresence>
     </div>
