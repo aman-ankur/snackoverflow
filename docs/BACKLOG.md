@@ -124,6 +124,50 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 
 ---
 
+## Priority: Medium (UX Improvements)
+
+### Smart Portion Size Selection
+- **Current**: Describe meal flow shows 3 fixed portion options (e.g., "small handful with grams")
+- **Improvement**: Expand to 4-5 more granular options with better intelligence
+- **Goal**: More flexible and accurate portion estimation
+- **Context**: Users need finer control over portion sizes when describing meals via text
+
+### Upload Photo Mode for Scan
+- **Current**: Scan tab only supports live camera capture
+- **Improvement**: Add "Upload Photo" option alongside camera mode
+- **Use case**: Users want to analyze food photos from gallery (screenshots, shared images, etc.)
+- **Implementation**: File input picker → same analyze-dish API flow
+
+### Extended Macro Tracking
+- **Current**: Tracks only Protein, Carbs, Fats, Calories
+- **Improvement**: Add commonly tracked micronutrients
+- **Suggested additions**: Calcium, Sodium, Fiber, Sugar, Saturated Fat, Cholesterol
+- **UI**: Expandable macro section or dedicated "Nutrition Details" view per meal
+- **API**: Update AI prompts to extract additional nutrients from dishes
+
+### Smart Meal Type Auto-Selection
+- **Current**: Meal type defaults to "Lunch" regardless of time of day
+- **Improvement**: Auto-select meal type based on current time
+  - Morning (5am-11am) → Breakfast
+  - Midday (11am-3pm) → Lunch
+  - Afternoon (3pm-5pm) → Snack
+  - Evening (5pm-9pm) → Dinner
+  - Night (9pm-5am) → Snack
+- **UX**: Still allow manual override, but start with smart default
+- **Files**: Update `MealTypeSheet.tsx` and meal logging flows
+
+### Calorie Goal Exceeded Warning
+- **Current**: Shows green "Goal achieved" even when calories exceed target (e.g., 2388/2029 cal)
+- **Issue**: Misleading positive feedback when user has overeaten
+- **Fix**: 
+  - Ring color: Green (under goal) → Orange (5-10% over) → Red (>10% over)
+  - Message: "Daily goal complete!" → "Over goal by X cal" when exceeded
+  - Visual: Progress ring should show overflow state
+- **Files**: `HomeView.tsx` calorie ring logic, `capyMotivation.ts` message selection
+- **Screenshot reference**: User logged 2388/2029 cal but still saw green ring + positive message
+
+---
+
 ## Priority: Low
 
 ### Item Ordering
