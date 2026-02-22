@@ -167,3 +167,57 @@ export interface MealHealthAnalysis {
   overallSummary: string;
   overallVerdict: HealthVerdict;
 }
+
+/* ─── Eating Habits Analysis ─── */
+
+export type AnalysisScore = "great" | "good" | "needs_work" | "concerning";
+export type TrendDirection = "improving" | "stable" | "declining";
+export type InsightCategory = "temporal" | "macro" | "variety" | "goal";
+export type InsightSeverity = "positive" | "neutral" | "warning";
+
+export interface MacroTrends {
+  calories: TrendDirection;
+  protein: TrendDirection;
+  carbs: TrendDirection;
+  fat: TrendDirection;
+}
+
+export interface ReportInsight {
+  category: InsightCategory;
+  title: string;
+  detail: string;
+  severity: InsightSeverity;
+}
+
+export interface ActionItem {
+  priority: 1 | 2 | 3;
+  text: string;
+  relatedInsight?: string;
+}
+
+export interface PeriodComparison {
+  caloriesDelta: number;
+  proteinDelta: number;
+  topImprovement: string;
+  topRegression?: string;
+}
+
+export interface EatingReport {
+  score: AnalysisScore;
+  scoreSummary: string;
+  trends: MacroTrends;
+  insights: ReportInsight[];
+  healthNotes: string[];
+  actionItems: ActionItem[];
+  comparison?: PeriodComparison;
+}
+
+export interface EatingAnalysis {
+  id: string;
+  windowDays: number;
+  generatedAt: string;
+  mealsCount: number;
+  report: EatingReport;
+  previousReportId?: string;
+  provider: string;
+}

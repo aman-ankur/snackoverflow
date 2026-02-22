@@ -108,6 +108,31 @@ All components are in `src/components/`. All are `"use client"` components.
 - **`DishVerdictPill`** — inline verdict badge for dish cards
   - Props: `dishName`, `analysis`, `isLoading`
 
+### `EatingAnalysisCard.tsx` (NEW)
+**Trigger card for AI eating habits analysis on Progress tab.**
+- Props: `meals`, `goals`, `healthProfile`, `latestAnalysis`, `isGenerating`, `error`, `onGenerate`, `onViewReport`
+- **Time-window segmented control**: Today / 7 Days / 14 Days / 30 Days (pill-style, green active)
+- **State-aware button**:
+  - No cached report → "Analyze My Eating" (green, Brain icon)
+  - Cached report → "View Report" (shows score badge) + "Refresh" secondary button
+  - Generating → spinner + "Analyzing your meals..."
+  - Error → red error message with retry
+- **Cache freshness indicator**: "Generated 2h ago" or "New meals logged — refresh recommended"
+- **Score badge**: color-coded (green=great, lime=good, orange=needs_work, red=concerning)
+- Animated with framer-motion (fade in, button spring)
+
+### `EatingAnalysisSheet.tsx` (NEW)
+**Tabbed bottom sheet for displaying AI eating habits report.**
+- Props: `report`, `onClose`
+- Backdrop overlay with slide-up animation (consistent with MealTypeSheet pattern)
+- **4 tabs** with horizontal scrollable tab bar:
+  - **Summary**: Score badge (large, color-coded), 1-2 sentence summary, macro trend pills (arrows: ↑ improving, → stable, ↓ declining), comparison card (if previous report exists with delta percentages)
+  - **Patterns**: Scrollable insight cards (5-7), each with category icon, title, detail text, severity color (green/grey/orange border)
+  - **Health**: Condition-specific health notes (tab hidden when no health profile). Medical disclaimer at bottom.
+  - **Actions**: Numbered priority action items with related insight reference. Practical Indian food swaps (paneer, makhana, brown rice, etc.)
+- Swipe-to-close gesture
+- Max height 85vh, scrollable content per tab
+
 ### `NutritionCard.tsx`
 **Per-dish nutrition presentation card.**
 - Props: `dish`, `servingsMultiplier`

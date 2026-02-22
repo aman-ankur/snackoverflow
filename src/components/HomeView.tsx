@@ -2,14 +2,14 @@
 
 import { useMemo } from "react";
 import { motion } from "framer-motion";
-import { Flame, Refrigerator, ChevronRight, Plus, Coffee, Sun, Moon, Sunset, ShieldCheck, CheckCircle2, AlertTriangle, Circle } from "lucide-react";
+import { Flame, Refrigerator, ChevronRight, Plus, Coffee, Sun, Moon, Sunset, ShieldCheck, CheckCircle2, AlertTriangle, Circle, Brain } from "lucide-react";
 import { getMealHealthRating, type HealthRating } from "@/lib/healthRating";
 import CapyMascot from "@/components/CapyMascot";
 import CapyLottie from "@/components/CapyLottie";
 import WhatsNewCard from "@/components/WhatsNewCard";
 import CoachMark from "@/components/CoachMark";
 import { getCapyState, getGreeting } from "@/lib/capyLines";
-import type { LoggedMeal, MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
+import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, EatingAnalysis, AnalysisScore } from "@/lib/dishTypes";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
 
 interface HomeViewProps {
@@ -24,6 +24,8 @@ interface HomeViewProps {
   onMealTypeClick: (mealType: "breakfast" | "lunch" | "snack" | "dinner") => void;
   onWhatsNewTryIt: () => void;
   coachMarks: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
+  latestAnalysis: EatingAnalysis | null;
+  onViewAnalysis: () => void;
 }
 
 const MEAL_ICONS: Record<string, typeof Coffee> = {
@@ -107,6 +109,13 @@ function MacroPill({ label, value, max, color }: { label: string; value: number;
   );
 }
 
+const SCORE_LABELS: Record<AnalysisScore, { label: string; color: string }> = {
+  great: { label: "Great", color: "text-accent" },
+  good: { label: "Good", color: "text-accent-dim" },
+  needs_work: { label: "Needs Work", color: "text-orange" },
+  concerning: { label: "Concerning", color: "text-red-600" },
+};
+
 export default function HomeView({
   todayMeals,
   todayTotals,
@@ -119,6 +128,8 @@ export default function HomeView({
   onMealTypeClick,
   onWhatsNewTryIt,
   coachMarks,
+  latestAnalysis,
+  onViewAnalysis,
 }: HomeViewProps) {
   const greeting = getGreeting(userName);
   const capyState = useMemo(
@@ -160,6 +171,37 @@ export default function HomeView({
 
       {/* What's New */}
       <WhatsNewCard onTryIt={onWhatsNewTryIt} />
+
+      {/* Latest Eating Analysis */}
+      {latestAnalysis && (() => {
+        const daysSince = Math.floor(
+          (Date.now() - new Date(latestAnalysis.generatedAt).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        if (daysSince > 7) return null;
+        const scoreInfo = SCORE_LABELS[latestAnalysis.report.score];
+        return (
+          <button
+            onClick={onViewAnalysis}
+            className="w-full rounded-2xl bg-gradient-to-br from-[#F0E8FF] to-white border border-purple-200/40 p-3.5 flex items-center gap-3 text-left transition-colors hover:bg-purple-50 active:scale-[0.98]"
+          >
+            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 shrink-0">
+              <Brain className="h-4 w-4 text-purple-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2">
+                <p className="text-xs font-extrabold text-foreground">Eating Analysis</p>
+                <span className={`text-[10px] font-bold ${scoreInfo.color}`}>
+                  {scoreInfo.label}
+                </span>
+              </div>
+              <p className="text-[10px] text-muted mt-0.5 line-clamp-1">
+                {latestAnalysis.report.scoreSummary}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-light shrink-0" />
+          </button>
+        );
+      })()}
 
       {/* Calorie Ring + Macros */}
       <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-white border border-accent/10 p-4">

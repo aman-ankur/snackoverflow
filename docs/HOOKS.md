@@ -426,6 +426,63 @@ On-demand AI health verdict fetcher with abort support.
 
 ---
 
+## `useEatingAnalysis()` — Eating Habits Analysis Hook (NEW)
+
+**File**: `src/lib/useEatingAnalysis.ts`
+
+### Purpose
+- Manages eating analysis state (generation, caching, staleness detection)
+- Orchestrates client-side pre-aggregation → API call → storage
+- Syncs analyses to Supabase `meal_analyses` domain
+
+### localStorage Key
+`snackoverflow-meal-analyses-v1`
+
+### State & Methods
+| Return | Type | Description |
+|---|---|---|
+| `analyses` | EatingAnalysis[] | All stored analyses (max 10, latest first) |
+| `isGenerating` | boolean | API call in progress |
+| `error` | string \| null | Error message from last attempt |
+| `generate(windowDays, meals, goals, healthProfile)` | async function | Full pipeline: aggregate → cache check → API → store |
+| `getLatest(windowDays?)` | function | Most recent analysis (optionally filtered by window) |
+| `isCacheFresh(windowDays, meals)` | function | Whether cached report is still valid (no new meals since) |
+
+### Key Behaviors
+- On generate: calls `aggregateMeals()` + `serializeForPrompt()` client-side, then POSTs compact summary to `/api/analyze-habits`
+- Includes previous report's `scoreSummary` in API call for week-over-week comparison
+- Stores last 10 analyses (FIFO eviction)
+- Cache freshness: compares newest meal's `loggedAt` against analysis `generatedAt`
+- If logged in, pulls from Supabase on mount and syncs on every change (debounced)
+
+---
+
+## Utility: `mealAggregator.ts` (NEW)
+
+**File**: `src/lib/mealAggregator.ts`
+
+Pure functions for client-side meal data pre-aggregation. Reduces AI prompt size from ~3000-5000 tokens (raw meals) to ~200-300 tokens (compact summary).
+
+### Exported Functions
+| Function | Description |
+|---|---|
+| `aggregateMeals(meals, windowDays, goals)` | Computes `MealAggregate` from raw meals for a time window |
+| `serializeForPrompt(aggregate)` | Converts aggregate to compact multi-line string for AI prompt |
+
+### MealAggregate Fields
+- `avgDaily` — average daily calories, protein, carbs, fat, fiber
+- `goalHitDays` — days within 80-105% of calorie target
+- `weekdayAvgCal` / `weekendAvgCal` — weekend vs weekday comparison
+- `timing` — breakfast/lunch/snack/dinner counts, breakfast skip days, late dinner count
+- `topDishes` — top 10 dishes by frequency with average calories and tags
+- `macroRatios` — protein/carbs/fat percentage split
+- `proteinAtDinnerPct` — protein clustering signal
+- `snackCaloriePct` — snack calorie percentage of total
+- `friedItemCount` — count of fried items (from tags + name matching)
+- `bestDay` / `worstDay` — by distance from calorie goal
+
+---
+
 ## `useYoloDetection()` — YOLO On-Device Hook
 
 **File**: `src/lib/useYoloDetection.ts`

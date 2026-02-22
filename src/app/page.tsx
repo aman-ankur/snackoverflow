@@ -13,13 +13,15 @@ import MealDetailOverlay from "@/components/MealDetailOverlay";
 import GoalOnboarding from "@/components/GoalOnboarding";
 import HealthProfileWizard from "@/components/HealthProfileWizard";
 import WelcomeTour from "@/components/WelcomeTour";
+import EatingAnalysisSheet from "@/components/EatingAnalysisSheet";
 import dynamic from "next/dynamic";
 import { useMealLog } from "@/lib/useMealLog";
 import { useUserGoals } from "@/lib/useUserGoals";
 import { useHealthProfile } from "@/lib/useHealthProfile";
+import { useEatingAnalysis } from "@/lib/useEatingAnalysis";
 import { useAuthContext } from "@/components/AuthProvider";
 import { useCoachMarks } from "@/lib/useCoachMarks";
-import type { UserProfile, NutritionGoals, MealType, HealthCondition, LabValue, DietPreference } from "@/lib/dishTypes";
+import type { UserProfile, NutritionGoals, MealType, HealthCondition, LabValue, DietPreference, EatingAnalysis } from "@/lib/dishTypes";
 
 const CapyView = dynamic(() => import("@/components/CapyView"), {
   ssr: false,
@@ -42,11 +44,16 @@ export default function Home() {
   const [scanInitialMode, setScanInitialMode] = useState<"camera" | "describe">("camera");
   const [showWelcomeTour, setShowWelcomeTour] = useState(false);
   const [showHealthWizard, setShowHealthWizard] = useState(false);
+  const [analysisSheetData, setAnalysisSheetData] = useState<{
+    analysis: EatingAnalysis;
+    windowLabel: string;
+  } | null>(null);
   const coachMarks = useCoachMarks();
 
   const mealLog = useMealLog();
   const userGoals = useUserGoals();
   const healthProfile = useHealthProfile();
+  const eatingAnalysis = useEatingAnalysis();
   const auth = useAuthContext();
 
   useEffect(() => {
@@ -119,6 +126,8 @@ export default function Home() {
                 onMealTypeClick={(type) => setSheetMealType(type)}
                 onWhatsNewTryIt={handleWhatsNewTryIt}
                 coachMarks={coachMarks}
+                latestAnalysis={eatingAnalysis.getLatest()}
+                onViewAnalysis={() => setActiveTab("progress")}
               />
             </motion.div>
           )}
@@ -162,6 +171,12 @@ export default function Home() {
                 weeklyByDate={mealLog.weeklyByDate}
                 repeatedDishes={mealLog.insights.repeatedDishes}
                 coachMarks={coachMarks}
+                healthProfile={healthProfile.healthProfile}
+                hasHealthProfile={healthProfile.hasHealthProfile}
+                eatingAnalysis={eatingAnalysis}
+                onViewAnalysisReport={(analysis, windowLabel) =>
+                  setAnalysisSheetData({ analysis, windowLabel })
+                }
               />
             </motion.div>
           )}
@@ -297,6 +312,20 @@ export default function Home() {
       <AnimatePresence>
         {showWelcomeTour && (
           <WelcomeTour onComplete={handleWelcomeTourComplete} />
+        )}
+      </AnimatePresence>
+
+      {/* Eating Analysis Sheet */}
+      <AnimatePresence>
+        {analysisSheetData && (
+          <EatingAnalysisSheet
+            report={analysisSheetData.analysis.report}
+            windowLabel={analysisSheetData.windowLabel}
+            generatedAt={analysisSheetData.analysis.generatedAt}
+            provider={analysisSheetData.analysis.provider}
+            hasHealthProfile={healthProfile.hasHealthProfile}
+            onClose={() => setAnalysisSheetData(null)}
+          />
         )}
       </AnimatePresence>
     </div>
