@@ -6,8 +6,11 @@ import { Flame, Refrigerator, ChevronRight, Plus, Coffee, Sun, Moon, Sunset, Shi
 import { getMealHealthRating, type HealthRating } from "@/lib/healthRating";
 import CapyMascot from "@/components/CapyMascot";
 import CapyLottie from "@/components/CapyLottie";
+import WhatsNewCard from "@/components/WhatsNewCard";
+import CoachMark from "@/components/CoachMark";
 import { getCapyState, getGreeting } from "@/lib/capyLines";
 import type { LoggedMeal, MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
+import type { CoachMarkId } from "@/lib/useCoachMarks";
 
 interface HomeViewProps {
   todayMeals: LoggedMeal[];
@@ -19,6 +22,8 @@ interface HomeViewProps {
   onScanDish: () => void;
   onRemoveMeal: (id: string) => void;
   onMealTypeClick: (mealType: "breakfast" | "lunch" | "snack" | "dinner") => void;
+  onWhatsNewTryIt: () => void;
+  coachMarks: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
 }
 
 const MEAL_ICONS: Record<string, typeof Coffee> = {
@@ -112,6 +117,8 @@ export default function HomeView({
   onScanDish,
   onRemoveMeal,
   onMealTypeClick,
+  onWhatsNewTryIt,
+  coachMarks,
 }: HomeViewProps) {
   const greeting = getGreeting(userName);
   const capyState = useMemo(
@@ -151,6 +158,9 @@ export default function HomeView({
         </div>
       </div>
 
+      {/* What's New */}
+      <WhatsNewCard onTryIt={onWhatsNewTryIt} />
+
       {/* Calorie Ring + Macros */}
       <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-white border border-accent/10 p-4">
         <div className="flex items-center justify-between mb-3">
@@ -187,7 +197,7 @@ export default function HomeView({
           </button>
         </div>
 
-        <div className="px-4 pb-4 space-y-1">
+        <div className="px-4 pb-4 space-y-1 relative">
           {(["breakfast", "lunch", "snack", "dinner"] as const).map((mealType) => {
             const meals = mealsByType[mealType] || [];
             const Icon = MEAL_ICONS[mealType] || Coffee;
@@ -241,6 +251,20 @@ export default function HomeView({
           })}
         </div>
       </div>
+
+      {/* Coach mark for empty meals */}
+      {todayMeals.length === 0 && coachMarks.shouldShow("empty-meals") && (
+        <div className="relative">
+          <CoachMark
+            id="empty-meals"
+            text="Tap any meal slot to scan or describe what you ate"
+            visible={true}
+            onDismiss={coachMarks.dismiss}
+            arrow="top"
+            className="top-0 left-0"
+          />
+        </div>
+      )}
 
       {/* Fridge Scanner Card */}
       <button

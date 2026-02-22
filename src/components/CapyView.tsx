@@ -6,7 +6,9 @@ import { Flame, Sparkles, MessageCircle, Trophy, ChevronRight, ChevronDown, Eye,
 import dynamic from "next/dynamic";
 import { useGardenState, type GardenState, type GardenEvent, type NextUnlock } from "@/lib/useGardenState";
 import { getContextualMotivation } from "@/lib/capyMotivation";
+import CoachMark from "@/components/CoachMark";
 import type { MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
+import type { CoachMarkId } from "@/lib/useCoachMarks";
 
 // ── Demo garden presets for each achievement stage ────────────────────
 // Order matches the 8-milestone progression exactly
@@ -70,9 +72,10 @@ interface CapyViewProps {
   todayTotals: MealTotals;
   goals: NutritionGoals;
   isActive: boolean;
+  coachMarks?: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
 }
 
-export default function CapyView({ streak, todayTotals, goals, isActive }: CapyViewProps) {
+export default function CapyView({ streak, todayTotals, goals, isActive, coachMarks }: CapyViewProps) {
   const { garden, nextUnlock } = useGardenState(streak, todayTotals, goals);
   const [motivation, setMotivation] = useState<{ text: string; mood: string } | null>(null);
   const [showMotivation, setShowMotivation] = useState(false);
@@ -170,6 +173,20 @@ export default function CapyView({ streak, todayTotals, goals, isActive }: CapyV
 
       {/* Garden Roadmap — visual milestone journey */}
       <GardenRoadmap garden={activeGarden} streak={streak} />
+
+      {/* Coach mark for garden */}
+      {coachMarks?.shouldShow("capy-garden") && (
+        <div className="relative">
+          <CoachMark
+            id="capy-garden"
+            text="Log meals daily to grow flowers and unlock milestones"
+            visible={true}
+            onDismiss={coachMarks.dismiss}
+            arrow="bottom"
+            className="top-0 left-0"
+          />
+        </div>
+      )}
 
       {/* 3D Garden Canvas */}
       <div className="relative">
