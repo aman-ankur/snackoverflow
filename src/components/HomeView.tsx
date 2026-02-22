@@ -18,6 +18,7 @@ interface HomeViewProps {
   onOpenFridge: () => void;
   onScanDish: () => void;
   onRemoveMeal: (id: string) => void;
+  onMealTypeClick: (mealType: "breakfast" | "lunch" | "snack" | "dinner") => void;
 }
 
 const MEAL_ICONS: Record<string, typeof Coffee> = {
@@ -110,6 +111,7 @@ export default function HomeView({
   onOpenFridge,
   onScanDish,
   onRemoveMeal,
+  onMealTypeClick,
 }: HomeViewProps) {
   const greeting = getGreeting(userName);
   const capyState = useMemo(
@@ -198,7 +200,11 @@ export default function HomeView({
             const BadgeIcon = badge ? HEALTH_ICONS[badge.rating] : null;
 
             return (
-              <div key={mealType} className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-card-hover transition-colors">
+              <div
+                key={mealType}
+                onClick={() => meals.length > 0 ? onMealTypeClick(mealType) : onScanDish()}
+                className="flex items-center gap-3 rounded-xl px-3 py-2.5 hover:bg-card-hover transition-colors cursor-pointer active:scale-[0.98]"
+              >
                 <div className="flex h-9 w-9 items-center justify-center rounded-full bg-accent-light">
                   <Icon className="h-4 w-4 text-accent" />
                 </div>
@@ -217,19 +223,17 @@ export default function HomeView({
                     <p className="text-[10px] text-muted-light">Not logged yet</p>
                   )}
                 </div>
-                <div className="text-right shrink-0">
+                <div className="text-right shrink-0 flex items-center gap-1.5">
                   {meals.length > 0 && badge && BadgeIcon ? (
-                    <div className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: badge.bgColor }}>
-                      <BadgeIcon className="h-3 w-3" style={{ color: badge.color }} />
-                      <span className="text-[10px] font-bold" style={{ color: badge.color }}>{badge.label}</span>
-                    </div>
+                    <>
+                      <div className="flex items-center gap-1 rounded-full px-2 py-0.5" style={{ backgroundColor: badge.bgColor }}>
+                        <BadgeIcon className="h-3 w-3" style={{ color: badge.color }} />
+                        <span className="text-[10px] font-bold" style={{ color: badge.color }}>{badge.label}</span>
+                      </div>
+                      <ChevronRight className="h-3.5 w-3.5 text-muted-light" />
+                    </>
                   ) : (
-                    <button
-                      onClick={onScanDish}
-                      className="text-[10px] text-accent font-semibold"
-                    >
-                      Add
-                    </button>
+                    <span className="text-[10px] text-accent font-semibold">Add</span>
                   )}
                 </div>
               </div>

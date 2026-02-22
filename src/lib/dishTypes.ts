@@ -47,6 +47,7 @@ export interface LoggedMeal {
     fromScanAt: string;
     matchedItems: string[];
   };
+  notes?: string;
 }
 
 export type Gender = "male" | "female" | "other";

@@ -8,12 +8,14 @@ import ScanView from "@/components/ScanView";
 import ProgressView from "@/components/ProgressView";
 import ProfileView from "@/components/ProfileView";
 import FridgeOverlay from "@/components/FridgeOverlay";
+import MealTypeSheet from "@/components/MealTypeSheet";
+import MealDetailOverlay from "@/components/MealDetailOverlay";
 import GoalOnboarding from "@/components/GoalOnboarding";
 import dynamic from "next/dynamic";
 import { useMealLog } from "@/lib/useMealLog";
 import { useUserGoals } from "@/lib/useUserGoals";
 import { useAuthContext } from "@/components/AuthProvider";
-import type { UserProfile, NutritionGoals } from "@/lib/dishTypes";
+import type { UserProfile, NutritionGoals, MealType } from "@/lib/dishTypes";
 
 const CapyView = dynamic(() => import("@/components/CapyView"), {
   ssr: false,
@@ -31,6 +33,8 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<AppTab>("home");
   const [showFridge, setShowFridge] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+  const [sheetMealType, setSheetMealType] = useState<MealType | null>(null);
+  const [detailMealId, setDetailMealId] = useState<string | null>(null);
 
   const mealLog = useMealLog();
   const userGoals = useUserGoals();
@@ -72,6 +76,7 @@ export default function Home() {
                 onOpenFridge={() => setShowFridge(true)}
                 onScanDish={() => setActiveTab("scan")}
                 onRemoveMeal={mealLog.removeMeal}
+                onMealTypeClick={(type) => setSheetMealType(type)}
               />
             </motion.div>
           )}
@@ -160,6 +165,46 @@ export default function Home() {
       {/* Fridge Overlay */}
       <AnimatePresence>
         {showFridge && <FridgeOverlay onClose={() => setShowFridge(false)} />}
+      </AnimatePresence>
+
+      {/* Meal Type Bottom Sheet */}
+      <AnimatePresence>
+        {sheetMealType && (
+          <MealTypeSheet
+            mealType={sheetMealType}
+            meals={mealLog.todayMeals}
+            onClose={() => setSheetMealType(null)}
+            onOpenDetail={(mealId) => setDetailMealId(mealId)}
+            onRemoveMeal={mealLog.removeMeal}
+            onRemoveDish={mealLog.removeDishFromMeal}
+            onScanDish={() => setActiveTab("scan")}
+            refreshStreak={userGoals.refreshStreak}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Meal Detail Overlay */}
+      <AnimatePresence>
+        {detailMealId && (() => {
+          const meal = mealLog.meals.find((m) => m.id === detailMealId);
+          if (!meal) return null;
+          const mealsOfType = mealLog.todayMeals.filter((m) => m.mealType === meal.mealType);
+          const mealIndex = mealsOfType.findIndex((m) => m.id === detailMealId) + 1;
+          return (
+            <MealDetailOverlay
+              meal={meal}
+              mealIndex={mealIndex || 1}
+              onClose={() => setDetailMealId(null)}
+              onUpdateMeal={mealLog.updateMeal}
+              onUpdateDish={mealLog.updateDishInMeal}
+              onRemoveDish={mealLog.removeDishFromMeal}
+              onRemoveMeal={(id) => { mealLog.removeMeal(id); setDetailMealId(null); setSheetMealType(null); }}
+              onMoveMealToType={mealLog.moveMealToType}
+              onRescan={(mealType) => { setDetailMealId(null); setSheetMealType(null); setActiveTab("scan"); }}
+              refreshStreak={userGoals.refreshStreak}
+            />
+          );
+        })()}
       </AnimatePresence>
 
       {/* Onboarding */}
