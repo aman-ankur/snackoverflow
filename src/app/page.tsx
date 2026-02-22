@@ -176,8 +176,7 @@ export default function Home() {
             onClose={() => setSheetMealType(null)}
             onOpenDetail={(mealId) => setDetailMealId(mealId)}
             onRemoveMeal={mealLog.removeMeal}
-            onUpdateMeal={mealLog.updateMeal}
-            onMoveMealToType={mealLog.moveMealToType}
+            onRemoveDish={mealLog.removeDishFromMeal}
             onScanDish={() => setActiveTab("scan")}
             refreshStreak={userGoals.refreshStreak}
           />

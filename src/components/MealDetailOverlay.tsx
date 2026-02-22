@@ -2,7 +2,7 @@
 
 import { useState, useCallback } from "react";
 import { motion } from "framer-motion";
-import { ArrowLeft, Trash2, Camera, Save, Minus, Plus } from "lucide-react";
+import { ArrowLeft, Trash2, Camera, Save, Minus, Plus, UtensilsCrossed, StickyNote } from "lucide-react";
 import type { LoggedMeal, MealType, DishNutrition } from "@/lib/dishTypes";
 
 const MEAL_TYPE_OPTIONS: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
@@ -114,7 +114,7 @@ export default function MealDetailOverlay({
         {/* Meal type selector */}
         <div className="rounded-2xl border border-border bg-card p-4">
           <h4 className="text-xs font-extrabold text-foreground mb-3 flex items-center gap-1.5">
-            🍽 Meal Type
+            <UtensilsCrossed className="h-3.5 w-3.5 text-muted" /> Meal Type
           </h4>
           <div className="grid grid-cols-4 gap-1.5">
             {MEAL_TYPE_OPTIONS.map((type) => (
@@ -149,7 +149,7 @@ export default function MealDetailOverlay({
         {/* Notes */}
         <div className="rounded-2xl border border-border bg-card p-4">
           <h4 className="text-xs font-extrabold text-foreground mb-3 flex items-center gap-1.5">
-            📝 Notes
+            <StickyNote className="h-3.5 w-3.5 text-muted" /> Notes
           </h4>
           <textarea
             value={localNotes}
