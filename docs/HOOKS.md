@@ -207,7 +207,8 @@ Common Indian kitchen items with default days:
 ### Key Behaviors
 - On mount, checks for existing session via `supabase.auth.getSession()`
 - Listens to `onAuthStateChange` for login/logout events
-- On `SIGNED_IN` event, triggers `migrateLocalStorageToCloud()` to push local data to Supabase (only if cloud row is empty)
+- On `SIGNED_IN` event, triggers `migrateLocalStorageToCloud()` to push local data to Supabase (per-domain merge: only backfills domains where cloud is empty)
+- Registers `beforeunload` and `visibilitychange` listeners to flush pending debounced Supabase writes before the page unloads
 - Used via `useAuthContext()` from `AuthProvider.tsx` (React context)
 
 ---

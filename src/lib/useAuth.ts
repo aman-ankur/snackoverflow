@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { migrateLocalStorageToCloud } from "@/lib/supabase/sync";
+import { migrateLocalStorageToCloud, flushPendingPushes } from "@/lib/supabase/sync";
 
 interface AuthState {
   user: User | null;
@@ -44,7 +44,17 @@ export function useAuth() {
       }
     });
 
-    return () => subscription.unsubscribe();
+    // Flush pending Supabase writes on tab close / navigation
+    const handleUnload = () => flushPendingPushes();
+    window.addEventListener("beforeunload", handleUnload);
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "hidden") flushPendingPushes();
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      window.removeEventListener("beforeunload", handleUnload);
+    };
   }, []);
 
   const signInWithMagicLink = useCallback(async (email: string) => {
