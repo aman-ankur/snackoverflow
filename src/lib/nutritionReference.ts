@@ -488,6 +488,7 @@ const PACKAGED_ANCHORS = `
 PER-PIECE WEIGHTS: 1 biscuit(Parle-G)=9g, 1 Maggi packet=70g dry=310kcal total, 1 small chips packet=30g, 1 sugar sachet=4g=15kcal, 1 pizza slice=110g=280kcal, 1 gulab jamun=50g, 1 shawarma roll=250g, 1 paneer tikka piece=30g`.trim();
 
 export function buildReferenceTable(): string {
+  if (process.env.DISABLE_NUTRITION_REF === "true") return "";
   const lines: string[] = [];
   for (const key of PROMPT_ITEMS) {
     const item = NUTRITION_REF[key];
