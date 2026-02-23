@@ -1,0 +1,200 @@
+{
+  "label": "after-v2",
+  "timestamp": "2026-02-23T17:03:52.747Z",
+  "mape": 9,
+  "passing": 7,
+  "warning": 3,
+  "failing": 0,
+  "results": [
+    {
+      "meal": "2 roti, 1 katori dal tadka, 1 serving paneer bhurji",
+      "expected": 480,
+      "got": 502,
+      "error": 22,
+      "errorPct": 5,
+      "dishes": [
+        {
+          "name": "Roti",
+          "calories": 91
+        },
+        {
+          "name": "Dal Tadka",
+          "calories": 171
+        },
+        {
+          "name": "Paneer Bhurji",
+          "calories": 240
+        }
+      ]
+    },
+    {
+      "meal": "1 plate rajma chawal, 1 cup rice and 1 katori rajma",
+      "expected": 470,
+      "got": 476,
+      "error": 6,
+      "errorPct": 1,
+      "dishes": [
+        {
+          "name": "Rajma",
+          "calories": 216
+        },
+        {
+          "name": "Chawal (Rice)",
+          "calories": 260
+        }
+      ]
+    },
+    {
+      "meal": "2 plain dosa with coconut chutney and sambar",
+      "expected": 400,
+      "got": 395,
+      "error": -5,
+      "errorPct": 1,
+      "dishes": [
+        {
+          "name": "Plain Dosa",
+          "calories": 165
+        },
+        {
+          "name": "Coconut Chutney",
+          "calories": 120
+        },
+        {
+          "name": "Sambar",
+          "calories": 110
+        }
+      ]
+    },
+    {
+      "meal": "1 plate chicken biryani, about 300g serving",
+      "expected": 480,
+      "got": 480,
+      "error": 0,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "Chicken Biryani",
+          "calories": 480
+        }
+      ]
+    },
+    {
+      "meal": "1 bowl poha with peanuts and lemon",
+      "expected": 280,
+      "got": 343,
+      "error": 63,
+      "errorPct": 23,
+      "dishes": [
+        {
+          "name": "Poha",
+          "calories": 220
+        },
+        {
+          "name": "Peanuts",
+          "calories": 113
+        },
+        {
+          "name": "Lemon",
+          "calories": 10
+        }
+      ]
+    },
+    {
+      "meal": "2 slices white bread with butter and 1 boiled egg",
+      "expected": 330,
+      "got": 256,
+      "error": -74,
+      "errorPct": 22,
+      "dishes": [
+        {
+          "name": "White Bread",
+          "calories": 79
+        },
+        {
+          "name": "Butter",
+          "calories": 100
+        },
+        {
+          "name": "Boiled Egg",
+          "calories": 77
+        }
+      ]
+    },
+    {
+      "meal": "1 plate chole bhature, 2 bhature and 1 katori chole",
+      "expected": 680,
+      "got": 760,
+      "error": 80,
+      "errorPct": 12,
+      "dishes": [
+        {
+          "name": "Chole",
+          "calories": 252
+        },
+        {
+          "name": "Bhature",
+          "calories": 280
+        },
+        {
+          "name": "Bhature",
+          "calories": 228
+        }
+      ]
+    },
+    {
+      "meal": "1 cup vanilla ice cream, about 130g",
+      "expected": 270,
+      "got": 269,
+      "error": -1,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "Vanilla Ice Cream",
+          "calories": 269
+        }
+      ]
+    },
+    {
+      "meal": "1 masala dosa with sambar and coconut chutney",
+      "expected": 370,
+      "got": 405,
+      "error": 35,
+      "errorPct": 9,
+      "dishes": [
+        {
+          "name": "Masala Dosa",
+          "calories": 175
+        },
+        {
+          "name": "Sambar",
+          "calories": 110
+        },
+        {
+          "name": "Coconut Chutney",
+          "calories": 120
+        }
+      ]
+    },
+    {
+      "meal": "3 idli with sambar and coconut chutney",
+      "expected": 290,
+      "got": 236,
+      "error": -54,
+      "errorPct": 19,
+      "dishes": [
+        {
+          "name": "Idli",
+          "calories": 63
+        },
+        {
+          "name": "Sambar",
+          "calories": 83
+        },
+        {
+          "name": "Coconut Chutney",
+          "calories": 90
+        }
+      ]
+    }
+  ]
+}

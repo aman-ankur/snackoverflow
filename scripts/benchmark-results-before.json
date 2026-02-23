@@ -1,0 +1,200 @@
+{
+  "label": "before",
+  "timestamp": "2026-02-23T16:54:46.801Z",
+  "mape": 26,
+  "passing": 3,
+  "warning": 3,
+  "failing": 4,
+  "results": [
+    {
+      "meal": "2 roti, 1 katori dal tadka, 1 serving paneer bhurji",
+      "expected": 480,
+      "got": 545,
+      "error": 65,
+      "errorPct": 14,
+      "dishes": [
+        {
+          "name": "Roti",
+          "calories": 120
+        },
+        {
+          "name": "Katori Dal Tadka",
+          "calories": 200
+        },
+        {
+          "name": "Paneer Bhurji",
+          "calories": 225
+        }
+      ]
+    },
+    {
+      "meal": "1 plate rajma chawal, 1 cup rice and 1 katori rajma",
+      "expected": 470,
+      "got": 515,
+      "error": 45,
+      "errorPct": 10,
+      "dishes": [
+        {
+          "name": "Rajma",
+          "calories": 120
+        },
+        {
+          "name": "Chawal",
+          "calories": 165
+        },
+        {
+          "name": "Rajma Chawal",
+          "calories": 230
+        }
+      ]
+    },
+    {
+      "meal": "2 plain dosa with coconut chutney and sambar",
+      "expected": 400,
+      "got": 305,
+      "error": -95,
+      "errorPct": 24,
+      "dishes": [
+        {
+          "name": "Plain Dosa",
+          "calories": 120
+        },
+        {
+          "name": "Coconut Chutney",
+          "calories": 80
+        },
+        {
+          "name": "Sambar",
+          "calories": 105
+        }
+      ]
+    },
+    {
+      "meal": "1 plate chicken biryani, about 300g serving",
+      "expected": 480,
+      "got": 375,
+      "error": -105,
+      "errorPct": 22,
+      "dishes": [
+        {
+          "name": "Chicken Biryani",
+          "calories": 375
+        }
+      ]
+    },
+    {
+      "meal": "1 bowl poha with peanuts and lemon",
+      "expected": 280,
+      "got": 336,
+      "error": 56,
+      "errorPct": 20,
+      "dishes": [
+        {
+          "name": "Poha",
+          "calories": 200
+        },
+        {
+          "name": "Peanuts",
+          "calories": 116
+        },
+        {
+          "name": "Lemon",
+          "calories": 20
+        }
+      ]
+    },
+    {
+      "meal": "2 slices white bread with butter and 1 boiled egg",
+      "expected": 330,
+      "got": 240,
+      "error": -90,
+      "errorPct": 27,
+      "dishes": [
+        {
+          "name": "White Bread",
+          "calories": 100
+        },
+        {
+          "name": "Butter",
+          "calories": 70
+        },
+        {
+          "name": "Boiled Egg",
+          "calories": 70
+        }
+      ]
+    },
+    {
+      "meal": "1 plate chole bhature, 2 bhature and 1 katori chole",
+      "expected": 680,
+      "got": 340,
+      "error": -340,
+      "errorPct": 50,
+      "dishes": [
+        {
+          "name": "Chole",
+          "calories": 120
+        },
+        {
+          "name": "Bhature",
+          "calories": 220
+        }
+      ]
+    },
+    {
+      "meal": "1 cup vanilla ice cream, about 130g",
+      "expected": 270,
+      "got": 130,
+      "error": -140,
+      "errorPct": 52,
+      "dishes": [
+        {
+          "name": "Vanilla Ice Cream",
+          "calories": 130
+        }
+      ]
+    },
+    {
+      "meal": "1 masala dosa with sambar and coconut chutney",
+      "expected": 370,
+      "got": 330,
+      "error": -40,
+      "errorPct": 11,
+      "dishes": [
+        {
+          "name": "Masala Dosa",
+          "calories": 150
+        },
+        {
+          "name": "Sambar",
+          "calories": 100
+        },
+        {
+          "name": "Coconut Chutney",
+          "calories": 80
+        }
+      ]
+    },
+    {
+      "meal": "3 idli with sambar and coconut chutney",
+      "expected": 290,
+      "got": 210,
+      "error": -80,
+      "errorPct": 28,
+      "dishes": [
+        {
+          "name": "Idli",
+          "calories": 80
+        },
+        {
+          "name": "Sambar",
+          "calories": 50
+        },
+        {
+          "name": "Coconut Chutney",
+          "calories": 80
+        }
+      ]
+    }
+  ]
+}

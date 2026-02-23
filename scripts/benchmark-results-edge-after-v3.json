@@ -1,0 +1,287 @@
+{
+  "label": "edge-after-v3",
+  "timestamp": "2026-02-23T17:19:53.042Z",
+  "mape": 24,
+  "passing": 9,
+  "warning": 1,
+  "failing": 5,
+  "results": [
+    {
+      "meal": "1 small packet Lays chips, 30g",
+      "category": "Packaged snack",
+      "expected": 160,
+      "got": 161,
+      "error": 1,
+      "errorPct": 1,
+      "dishes": [
+        {
+          "name": "Lays chips",
+          "calories": 161
+        }
+      ]
+    },
+    {
+      "meal": "1 packet Maggi noodles, 70g pack cooked",
+      "category": "Packaged snack",
+      "expected": 310,
+      "got": 440,
+      "error": 130,
+      "errorPct": 42,
+      "dishes": [
+        {
+          "name": "Maggi noodles",
+          "calories": 440
+        }
+      ]
+    },
+    {
+      "meal": "2 Parle-G biscuits with chai",
+      "category": "Packaged snack",
+      "expected": 100,
+      "got": 250,
+      "error": 150,
+      "errorPct": 150,
+      "dishes": [
+        {
+          "name": "Parle-G biscuits with chai",
+          "calories": 250
+        }
+      ]
+    },
+    {
+      "meal": "1 veg sandwich from canteen with mayo and cheese",
+      "category": "Office food",
+      "expected": 350,
+      "got": 360,
+      "error": 10,
+      "errorPct": 3,
+      "dishes": [
+        {
+          "name": "Veg Sandwich with Mayo and Cheese",
+          "calories": 360
+        }
+      ]
+    },
+    {
+      "meal": "1 cup black coffee with 2 sugar packets",
+      "category": "Office food",
+      "expected": 30,
+      "got": 38,
+      "error": 8,
+      "errorPct": 27,
+      "dishes": [
+        {
+          "name": "Black coffee with 2 sugar packets",
+          "calories": 38
+        }
+      ]
+    },
+    {
+      "meal": "1 plate hakka noodles with vegetables, restaurant style",
+      "category": "Restaurant",
+      "expected": 450,
+      "got": 450,
+      "error": 0,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "Hakka Noodles",
+          "calories": 450
+        }
+      ]
+    },
+    {
+      "meal": "1 plate paneer tikka, 6 pieces with mint chutney",
+      "category": "Restaurant",
+      "expected": 350,
+      "got": 355,
+      "error": 5,
+      "errorPct": 1,
+      "dishes": [
+        {
+          "name": "Paneer Tikka",
+          "calories": 315
+        },
+        {
+          "name": "Mint Chutney",
+          "calories": 40
+        }
+      ]
+    },
+    {
+      "meal": "1 shawarma roll, chicken",
+      "category": "Restaurant",
+      "expected": 400,
+      "got": 400,
+      "error": 0,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "Shawarma Roll",
+          "calories": 400
+        }
+      ]
+    },
+    {
+      "meal": "1 medium mango, about 200g flesh",
+      "category": "Fruit",
+      "expected": 120,
+      "got": 120,
+      "error": 0,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "Mango",
+          "calories": 120
+        }
+      ]
+    },
+    {
+      "meal": "1 glass mango shake with milk and sugar, 300ml",
+      "category": "Drink",
+      "expected": 210,
+      "got": 180,
+      "error": -30,
+      "errorPct": 14,
+      "dishes": [
+        {
+          "name": "Mango Shake",
+          "calories": 180
+        }
+      ]
+    },
+    {
+      "meal": "1 plate fried rice with manchurian gravy",
+      "category": "Indo-Chinese",
+      "expected": 550,
+      "got": 835,
+      "error": 285,
+      "errorPct": 52,
+      "dishes": [
+        {
+          "name": "Fried Rice",
+          "calories": 510
+        },
+        {
+          "name": "Manchurian Gravy",
+          "calories": 325
+        }
+      ]
+    },
+    {
+      "meal": "2 slices Dominos cheese pizza with garlic bread 2 pieces",
+      "category": "Fast food",
+      "expected": 650,
+      "got": 812,
+      "error": 162,
+      "errorPct": 25,
+      "dishes": [
+        {
+          "name": "Dominos cheese pizza",
+          "calories": 532
+        },
+        {
+          "name": "garlic bread",
+          "calories": 280
+        }
+      ]
+    },
+    {
+      "meal": "1 plate lemon rice with papad and pickle",
+      "category": "South Indian",
+      "expected": 380,
+      "got": 420,
+      "error": 40,
+      "errorPct": 11,
+      "dishes": [
+        {
+          "name": "Lemon Rice",
+          "calories": 280
+        },
+        {
+          "name": "Papad",
+          "calories": 120
+        },
+        {
+          "name": "Pickle",
+          "calories": 20
+        }
+      ]
+    },
+    {
+      "meal": "1 plate pongal with coconut chutney and sambar",
+      "category": "South Indian",
+      "expected": 350,
+      "got": 480,
+      "error": 130,
+      "errorPct": 37,
+      "dishes": [
+        {
+          "name": "Pongal with Coconut Chutney and Sambar",
+          "calories": 480
+        }
+      ]
+    },
+    {
+      "meal": "2 pieces gulab jamun",
+      "category": "Indian sweet",
+      "expected": 300,
+      "got": 300,
+      "error": 0,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "Gulab Jamun",
+          "calories": 300
+        }
+      ]
+    }
+  ],
+  "byCategory": {
+    "Packaged snack": {
+      "mape": 64,
+      "pass": 1,
+      "total": 3
+    },
+    "Office food": {
+      "mape": 15,
+      "pass": 1,
+      "total": 2
+    },
+    "Restaurant": {
+      "mape": 0,
+      "pass": 3,
+      "total": 3
+    },
+    "Fruit": {
+      "mape": 0,
+      "pass": 1,
+      "total": 1
+    },
+    "Drink": {
+      "mape": 14,
+      "pass": 1,
+      "total": 1
+    },
+    "Indo-Chinese": {
+      "mape": 52,
+      "pass": 0,
+      "total": 1
+    },
+    "Fast food": {
+      "mape": 25,
+      "pass": 0,
+      "total": 1
+    },
+    "South Indian": {
+      "mape": 24,
+      "pass": 1,
+      "total": 2
+    },
+    "Indian sweet": {
+      "mape": 0,
+      "pass": 1,
+      "total": 1
+    }
+  }
+}
