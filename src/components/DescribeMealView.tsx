@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useEffect, useState, useCallback } from "react";
+import { useRef, useEffect, useState, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Sparkles,
@@ -15,6 +15,8 @@ import {
   Wheat,
   Droplets,
   Heart,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { MealHealthBanner, HealthCheckButton, HealthProfilePrompt } from "@/components/HealthVerdictCard";
 import { useDescribeMeal } from "@/lib/useDescribeMeal";
@@ -114,14 +116,21 @@ function DishResultCard({
   dishIndex,
   selectedPortionIndex,
   onSelectPortion,
+  overriddenDish,
+  isCalorieOverridden,
+  onCalorieChange,
+  onCalorieReset,
 }: {
   dish: DescribedDish;
   dishIndex: number;
   selectedPortionIndex: number;
   onSelectPortion: (dishIndex: number, portionIndex: number) => void;
+  overriddenDish: DishNutrition;
+  isCalorieOverridden: boolean;
+  onCalorieChange: (dishIndex: number, newCal: number) => void;
+  onCalorieReset: (dishIndex: number) => void;
 }) {
   const [showReasoning, setShowReasoning] = useState(false);
-  const portion = dish.portions[selectedPortionIndex] ?? dish.portions[1] ?? dish.portions[0];
 
   return (
     <motion.div
@@ -150,31 +159,39 @@ function DishResultCard({
           <div className="flex items-center justify-center gap-1 mb-0.5">
             <Flame className="h-3 w-3 text-accent" />
           </div>
-          <p className="text-xs font-extrabold text-foreground">{portion.calories}</p>
+          <p className="text-xs font-extrabold text-foreground">{overriddenDish.calories}</p>
           <p className="text-[9px] text-muted-light">kcal</p>
         </div>
         <div className="rounded-lg bg-background p-2 text-center">
           <div className="flex items-center justify-center gap-1 mb-0.5">
             <Dumbbell className="h-3 w-3 text-orange" />
           </div>
-          <p className="text-xs font-extrabold text-foreground">{portion.protein_g}g</p>
+          <p className="text-xs font-extrabold text-foreground">{overriddenDish.protein_g}g</p>
           <p className="text-[9px] text-muted-light">Protein</p>
         </div>
         <div className="rounded-lg bg-background p-2 text-center">
           <div className="flex items-center justify-center gap-1 mb-0.5">
             <Wheat className="h-3 w-3" style={{ color: "#E8B931" }} />
           </div>
-          <p className="text-xs font-extrabold text-foreground">{portion.carbs_g}g</p>
+          <p className="text-xs font-extrabold text-foreground">{overriddenDish.carbs_g}g</p>
           <p className="text-[9px] text-muted-light">Carbs</p>
         </div>
         <div className="rounded-lg bg-background p-2 text-center">
           <div className="flex items-center justify-center gap-1 mb-0.5">
             <Droplets className="h-3 w-3 text-amber-600" />
           </div>
-          <p className="text-xs font-extrabold text-foreground">{portion.fat_g}g</p>
+          <p className="text-xs font-extrabold text-foreground">{overriddenDish.fat_g}g</p>
           <p className="text-[9px] text-muted-light">Fat</p>
         </div>
       </div>
+
+      {/* Calorie editor */}
+      <DescribeCalorieEditor
+        calories={overriddenDish.calories}
+        isOverridden={isCalorieOverridden}
+        onChange={(c) => onCalorieChange(dishIndex, c)}
+        onReset={() => onCalorieReset(dishIndex)}
+      />
 
       {/* Portion picker */}
       <PortionPicker
@@ -228,6 +245,118 @@ function DishResultCard({
         )}
       </AnimatePresence>
     </motion.div>
+  );
+}
+
+function DescribeCalorieEditor({
+  calories,
+  isOverridden,
+  onChange,
+  onReset,
+}: {
+  calories: number;
+  isOverridden: boolean;
+  onChange: (c: number) => void;
+  onReset: () => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputVal, setInputVal] = useState(String(calories));
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isEditing) setInputVal(String(calories));
+  }, [calories, isEditing]);
+
+  if (!isEditing) {
+    return (
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => { setInputVal(String(calories)); setIsEditing(true); }}
+          className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold transition-colors ${
+            isOverridden
+              ? "border-accent/30 bg-accent-light text-accent-dim"
+              : "border-border bg-background text-muted hover:text-foreground"
+          }`}
+        >
+          <Pencil className="h-2.5 w-2.5" />
+          Edit calories
+        </button>
+        {isOverridden && (
+          <button
+            onClick={onReset}
+            className="text-[10px] text-muted hover:text-red-500 transition-colors"
+          >
+            Reset
+          </button>
+        )}
+      </div>
+    );
+  }
+
+  const commitAndClose = () => {
+    const n = parseInt(inputVal, 10);
+    if (n > 0) onChange(n);
+    setIsEditing(false);
+  };
+
+  return (
+    <div ref={containerRef} className="flex items-center gap-1">
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          const next = Math.max(1, calories - 10);
+          onChange(next);
+          setInputVal(String(next));
+        }}
+        className="rounded-full border border-border bg-background p-1 text-muted hover:text-foreground"
+      >
+        <Minus className="h-3 w-3" />
+      </button>
+      <input
+        autoFocus
+        type="number"
+        value={inputVal}
+        onChange={(e) => setInputVal(e.target.value)}
+        onBlur={(e) => {
+          if (containerRef.current?.contains(e.relatedTarget as Node)) return;
+          commitAndClose();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commitAndClose();
+          if (e.key === "Escape") setIsEditing(false);
+        }}
+        className="w-14 rounded-full border border-accent/30 bg-background px-2 py-1 text-center text-[10px] font-semibold text-foreground outline-none"
+      />
+      <span className="text-[10px] text-muted">kcal</span>
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          const next = calories + 10;
+          onChange(next);
+          setInputVal(String(next));
+        }}
+        className="rounded-full border border-border bg-background p-1 text-muted hover:text-foreground"
+      >
+        <Plus className="h-3 w-3" />
+      </button>
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={commitAndClose}
+        className="rounded-full border border-border p-1 text-muted hover:text-foreground"
+      >
+        <Check className="h-3 w-3" />
+      </button>
+      {isOverridden && (
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => { onReset(); setIsEditing(false); }}
+          className="rounded-full border border-border p-1 text-muted hover:text-red-500"
+          title="Reset to AI estimate"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
+    </div>
   );
 }
 
@@ -302,7 +431,50 @@ export default function DescribeMealView({
   const healthVerdict = useHealthVerdict();
   const [logSuccess, setLogSuccess] = useState(false);
   const [editingDishIndex, setEditingDishIndex] = useState<number | null>(null);
+  const [calorieOverrides, setCalorieOverrides] = useState<Map<number, number>>(new Map());
   const resultsRef = useRef<HTMLDivElement>(null);
+
+  const handleCalorieChange = useCallback((dishIndex: number, newCal: number) => {
+    setCalorieOverrides((prev) => {
+      const next = new Map(prev);
+      if (newCal <= 0) {
+        next.delete(dishIndex);
+      } else {
+        next.set(dishIndex, newCal);
+      }
+      return next;
+    });
+  }, []);
+
+  const finalDishes = useMemo(() => {
+    return dm.scaledDishes.map((dish, i) => {
+      const overrideCal = calorieOverrides.get(i);
+      if (overrideCal === undefined || dish.calories <= 0) return dish;
+      const ratio = overrideCal / dish.calories;
+      return {
+        ...dish,
+        calories: overrideCal,
+        protein_g: Math.round(dish.protein_g * ratio),
+        carbs_g: Math.round(dish.carbs_g * ratio),
+        fat_g: Math.round(dish.fat_g * ratio),
+        fiber_g: Math.round(dish.fiber_g * ratio),
+        estimated_weight_g: Math.round(dish.estimated_weight_g * ratio),
+      };
+    });
+  }, [dm.scaledDishes, calorieOverrides]);
+
+  const finalTotals = useMemo(() => {
+    return finalDishes.reduce(
+      (acc, d) => ({
+        calories: acc.calories + d.calories,
+        protein: acc.protein + d.protein_g,
+        carbs: acc.carbs + d.carbs_g,
+        fat: acc.fat + d.fat_g,
+        fiber: acc.fiber + d.fiber_g,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
+    );
+  }, [finalDishes]);
 
   // Pre-fill from correction context
   useEffect(() => {
@@ -311,9 +483,10 @@ export default function DescribeMealView({
     }
   }, [correctionContext]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Auto-scroll to results
+  // Auto-scroll to results + reset overrides
   useEffect(() => {
     if (dm.result && dm.result.dishes.length > 0) {
+      setCalorieOverrides(new Map());
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 200);
@@ -340,12 +513,12 @@ export default function DescribeMealView({
   }, [dm.result, healthContextString]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleLogMeal = () => {
-    if (dm.scaledDishes.length === 0) return;
+    if (finalDishes.length === 0) return;
     logMeal({
       mealType: dm.mealType,
       servingsMultiplier: 1,
-      dishes: dm.scaledDishes,
-      totals: dm.scaledTotals,
+      dishes: finalDishes,
+      totals: finalTotals,
     });
     setLogSuccess(true);
     refreshStreak();
@@ -466,7 +639,14 @@ export default function DescribeMealView({
                   dish={dish}
                   dishIndex={i}
                   selectedPortionIndex={dm.selectedPortions.get(i) ?? dish.defaultIndex ?? 1}
-                  onSelectPortion={dm.selectPortion}
+                  onSelectPortion={(dIdx, pIdx) => {
+                    dm.selectPortion(dIdx, pIdx);
+                    setCalorieOverrides((prev) => { const next = new Map(prev); next.delete(dIdx); return next; });
+                  }}
+                  overriddenDish={finalDishes[i]}
+                  isCalorieOverridden={calorieOverrides.has(i)}
+                  onCalorieChange={handleCalorieChange}
+                  onCalorieReset={(idx) => handleCalorieChange(idx, 0)}
                 />
                 {/* Edit dish name */}
                 {editingDishIndex === i ? (
@@ -520,17 +700,17 @@ export default function DescribeMealView({
                 <div>
                   <h3 className="text-sm font-extrabold text-foreground">
                     Plate Total
-                    {dm.scaledDishes.length > 1 && (
+                    {finalDishes.length > 1 && (
                       <span className="text-muted font-normal ml-1">
-                        — {dm.scaledDishes.length} items
+                        — {finalDishes.length} items
                       </span>
                     )}
                   </h3>
                   <p className="text-[10px] text-muted mt-0.5">
-                    {dm.scaledTotals.protein}g protein · {dm.scaledTotals.carbs}g carbs · {dm.scaledTotals.fat}g fat
+                    {finalTotals.protein}g protein · {finalTotals.carbs}g carbs · {finalTotals.fat}g fat
                   </p>
                 </div>
-                <p className="text-lg font-black text-accent-dim">{dm.scaledTotals.calories} kcal</p>
+                <p className="text-lg font-black text-accent-dim">{finalTotals.calories} kcal</p>
               </div>
             </div>
 
