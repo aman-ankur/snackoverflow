@@ -1,0 +1,156 @@
+{
+  "label": "core-final2",
+  "timestamp": "2026-02-23T17:22:49.354Z",
+  "mape": 14,
+  "passing": 5,
+  "warning": 3,
+  "failing": 2,
+  "results": [
+    {
+      "meal": "2 roti, 1 katori dal tadka, 1 serving paneer bhurji",
+      "expected": 480,
+      "got": 502,
+      "error": 22,
+      "errorPct": 5,
+      "dishes": [
+        {
+          "name": "Roti",
+          "calories": 91
+        },
+        {
+          "name": "Katori Dal Tadka",
+          "calories": 171
+        },
+        {
+          "name": "Paneer Bhurji",
+          "calories": 240
+        }
+      ]
+    },
+    {
+      "meal": "1 plate rajma chawal, 1 cup rice and 1 katori rajma",
+      "expected": 470,
+      "got": 360,
+      "error": -110,
+      "errorPct": 23,
+      "dishes": [
+        {
+          "name": "Rajma Chawal",
+          "calories": 360
+        }
+      ]
+    },
+    {
+      "meal": "2 plain dosa with coconut chutney and sambar",
+      "expected": 400,
+      "got": 520,
+      "error": 120,
+      "errorPct": 30,
+      "dishes": [
+        {
+          "name": "Dosa with Sambar and Coconut Chutney",
+          "calories": 520
+        }
+      ]
+    },
+    {
+      "meal": "1 plate chicken biryani, about 300g serving",
+      "expected": 480,
+      "got": 480,
+      "error": 0,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "Chicken Biryani",
+          "calories": 480
+        }
+      ]
+    },
+    {
+      "meal": "1 bowl poha with peanuts and lemon",
+      "expected": 280,
+      "got": 220,
+      "error": -60,
+      "errorPct": 21,
+      "dishes": [
+        {
+          "name": "Poha with Peanuts and Lemon",
+          "calories": 220
+        }
+      ]
+    },
+    {
+      "meal": "2 slices white bread with butter and 1 boiled egg",
+      "expected": 330,
+      "got": 330,
+      "error": 0,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "White Bread with Butter and Boiled Egg",
+          "calories": 330
+        }
+      ]
+    },
+    {
+      "meal": "1 plate chole bhature, 2 bhature and 1 katori chole",
+      "expected": 680,
+      "got": 732,
+      "error": 52,
+      "errorPct": 8,
+      "dishes": [
+        {
+          "name": "Chole Bhature",
+          "calories": 252
+        },
+        {
+          "name": "Bhature",
+          "calories": 228
+        },
+        {
+          "name": "Chole",
+          "calories": 252
+        }
+      ]
+    },
+    {
+      "meal": "1 cup vanilla ice cream, about 130g",
+      "expected": 270,
+      "got": 269,
+      "error": -1,
+      "errorPct": 0,
+      "dishes": [
+        {
+          "name": "Vanilla Ice Cream",
+          "calories": 269
+        }
+      ]
+    },
+    {
+      "meal": "1 masala dosa with sambar and coconut chutney",
+      "expected": 370,
+      "got": 495,
+      "error": 125,
+      "errorPct": 34,
+      "dishes": [
+        {
+          "name": "Masala Dosa with Sambar and Coconut Chutney",
+          "calories": 495
+        }
+      ]
+    },
+    {
+      "meal": "3 idli with sambar and coconut chutney",
+      "expected": 290,
+      "got": 350,
+      "error": 60,
+      "errorPct": 21,
+      "dishes": [
+        {
+          "name": "Idli with Sambar and Coconut Chutney",
+          "calories": 350
+        }
+      ]
+    }
+  ]
+}
