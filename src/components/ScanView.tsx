@@ -95,6 +95,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
   const [logSuccess, setLogSuccess] = useState(false);
   const [removedIndices, setRemovedIndices] = useState<Set<number>>(new Set());
   const [weightOverrides, setWeightOverrides] = useState<Map<number, number>>(new Map());
+  const [calorieOverrides, setCalorieOverrides] = useState<Map<number, number>>(new Map());
   const [expandedView, setExpandedView] = useState(false);
   const resultsRef = useRef<HTMLDivElement>(null);
   const prevAnalysisRef = useRef<typeof dish.analysis>(null);
@@ -118,6 +119,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
     if (dish.analysis && dish.analysis !== prevAnalysisRef.current && dish.analysis.dishes.length > 0) {
       setRemovedIndices(new Set());
       setWeightOverrides(new Map());
+      setCalorieOverrides(new Map());
       setExpandedView(false);
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
@@ -153,13 +155,32 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
     () =>
       activeDishes.map(({ item, originalIndex }) => {
         const overrideWeight = weightOverrides.get(originalIndex);
+        const overrideCal = calorieOverrides.get(originalIndex);
+
+        let scaled: DishNutrition;
         if (overrideWeight !== undefined && item.estimated_weight_g > 0) {
           const ratio = overrideWeight / item.estimated_weight_g;
-          return scaleDish(item, servingsMultiplier * ratio);
+          scaled = scaleDish(item, servingsMultiplier * ratio);
+        } else {
+          scaled = scaleDish(item, servingsMultiplier);
         }
-        return scaleDish(item, servingsMultiplier);
+
+        if (overrideCal !== undefined && scaled.calories > 0) {
+          const calRatio = overrideCal / scaled.calories;
+          return {
+            ...scaled,
+            calories: overrideCal,
+            protein_g: Math.round(scaled.protein_g * calRatio),
+            carbs_g: Math.round(scaled.carbs_g * calRatio),
+            fat_g: Math.round(scaled.fat_g * calRatio),
+            fiber_g: Math.round(scaled.fiber_g * calRatio),
+            estimated_weight_g: Math.round(scaled.estimated_weight_g * calRatio),
+          };
+        }
+
+        return scaled;
       }),
-    [activeDishes, servingsMultiplier, weightOverrides]
+    [activeDishes, servingsMultiplier, weightOverrides, calorieOverrides]
   );
 
   const scaledTotals = useMemo(() => {
@@ -195,6 +216,23 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
     setWeightOverrides((prev) => {
       const next = new Map(prev);
       next.set(originalIndex, Math.max(1, newWeight));
+      return next;
+    });
+    setCalorieOverrides((prev) => {
+      const next = new Map(prev);
+      next.delete(originalIndex);
+      return next;
+    });
+  }, []);
+
+  const handleCalorieChange = useCallback((originalIndex: number, newCal: number) => {
+    setCalorieOverrides((prev) => {
+      const next = new Map(prev);
+      if (newCal <= 0) {
+        next.delete(originalIndex);
+      } else {
+        next.set(originalIndex, newCal);
+      }
       return next;
     });
   }, []);
@@ -490,8 +528,14 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
                     )}
                     <NutritionCard dish={dishItem} servingsMultiplier={1} />
 
-                    {/* Weight editor + delete row */}
+                    {/* Calorie + weight editors + delete row */}
                     <div className="flex items-center gap-2 px-1">
+                      <CalorieEditor
+                        calories={dishItem.calories}
+                        isOverridden={calorieOverrides.has(originalIndex)}
+                        onChange={(c) => handleCalorieChange(originalIndex, c)}
+                        onReset={() => handleCalorieChange(originalIndex, 0)}
+                      />
                       <WeightEditor
                         weight={currentWeight}
                         onChange={(w) => handleWeightChange(originalIndex, w)}
@@ -652,6 +696,111 @@ function WeightEditor({ weight, onChange }: { weight: number; onChange: (w: numb
       >
         <Check className="h-3 w-3" />
       </button>
+    </div>
+  );
+}
+
+function CalorieEditor({
+  calories,
+  isOverridden,
+  onChange,
+  onReset,
+}: {
+  calories: number;
+  isOverridden: boolean;
+  onChange: (c: number) => void;
+  onReset: () => void;
+}) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [inputVal, setInputVal] = useState(String(calories));
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isEditing) setInputVal(String(calories));
+  }, [calories, isEditing]);
+
+  if (!isEditing) {
+    return (
+      <button
+        onClick={() => {
+          setInputVal(String(calories));
+          setIsEditing(true);
+        }}
+        className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition-colors ${
+          isOverridden
+            ? "border-accent/30 bg-accent-light text-accent-dim"
+            : "border-border bg-background text-muted hover:text-foreground"
+        }`}
+      >
+        <Pencil className="h-2.5 w-2.5" />
+        {calories} kcal
+      </button>
+    );
+  }
+
+  const commitAndClose = () => {
+    const n = parseInt(inputVal, 10);
+    if (n > 0) onChange(n);
+    setIsEditing(false);
+  };
+
+  return (
+    <div ref={containerRef} className="flex items-center gap-1">
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          const next = Math.max(1, calories - 10);
+          onChange(next);
+          setInputVal(String(next));
+        }}
+        className="rounded-full border border-border bg-background p-1 text-muted hover:text-foreground"
+      >
+        <Minus className="h-3 w-3" />
+      </button>
+      <input
+        autoFocus
+        type="number"
+        value={inputVal}
+        onChange={(e) => setInputVal(e.target.value)}
+        onBlur={(e) => {
+          if (containerRef.current?.contains(e.relatedTarget as Node)) return;
+          commitAndClose();
+        }}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") commitAndClose();
+          if (e.key === "Escape") setIsEditing(false);
+        }}
+        className="w-14 rounded-full border border-accent/30 bg-background px-2 py-1 text-center text-[10px] font-semibold text-foreground outline-none"
+      />
+      <span className="text-[10px] text-muted">kcal</span>
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={() => {
+          const next = calories + 10;
+          onChange(next);
+          setInputVal(String(next));
+        }}
+        className="rounded-full border border-border bg-background p-1 text-muted hover:text-foreground"
+      >
+        <Plus className="h-3 w-3" />
+      </button>
+      <button
+        onMouseDown={(e) => e.preventDefault()}
+        onClick={commitAndClose}
+        className="rounded-full border border-border p-1 text-muted hover:text-foreground"
+      >
+        <Check className="h-3 w-3" />
+      </button>
+      {isOverridden && (
+        <button
+          onMouseDown={(e) => e.preventDefault()}
+          onClick={() => { onReset(); setIsEditing(false); }}
+          className="rounded-full border border-border p-1 text-muted hover:text-red-500"
+          title="Reset to AI estimate"
+        >
+          <X className="h-3 w-3" />
+        </button>
+      )}
     </div>
   );
 }

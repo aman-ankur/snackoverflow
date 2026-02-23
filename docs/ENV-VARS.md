@@ -49,6 +49,18 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
 
 ---
 
+## Feature Flags
+
+### `DISABLE_NUTRITION_REF`
+- **Purpose**: Kill switch to disable the IFCT/USDA nutrition reference table injection into AI prompts
+- **Values**: `"true"` to disable, absent or any other value to keep enabled
+- **Default**: Not set (reference table enabled)
+- **Effect**: When `"true"`, `buildReferenceTable()` returns an empty string — AI models estimate calories without reference anchoring (pre-improvement behavior)
+- **Used in**: `src/lib/nutritionReference.ts` → `buildReferenceTable()`
+- **Vercel**: Flip in Dashboard → Settings → Environment Variables → restart. No code redeploy needed.
+
+---
+
 ## Optional
 
 ### `OPENAI_API_KEY`
@@ -80,9 +92,11 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
    ↓ rate limited?
 2. Gemini 2.0 Flash (GEMINI_API_KEY)
    ↓ rate limited?
-3. Groq Llama 4 Scout (GROQ_API_KEY)
+3. OpenAI GPT-4o-mini (OPENAI_API_KEY) — vision-capable fallback
    ↓ rate limited?
-4. Return 429
+4. Groq Llama 4 Scout (GROQ_API_KEY)
+   ↓ rate limited?
+5. Return 429
 ```
 
 ### Describe Meal (`/api/describe-meal`)

@@ -1,7 +1,9 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
+import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import type { ConfidenceLevel, DishAnalysisResult, DishNutrition } from "@/lib/dishTypes";
+import { buildReferenceTable } from "@/lib/nutritionReference";
 
 const CACHE_TTL_MS = 2 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 50;
@@ -43,86 +45,91 @@ function setCachedResult(cacheKey: string, data: DishAnalysisResult) {
 
 function buildDishPrompt(mealType?: string, correction?: string): string {
   const mealHint = mealType
-    ? `Meal context from user: ${mealType}.`
-    : "Meal context from user: unknown.";
+    ? `Meal context: ${mealType}.`
+    : "";
 
   const correctionHint = correction
     ? `\n\nIMPORTANT CORRECTION FROM USER: ${correction}. Override your visual identification with this correction and re-estimate nutrition accordingly.`
     : "";
 
-  return `You are an expert Indian food nutritionist analyzing a camera photo of a meal.
+  const refTable = buildReferenceTable();
 
+  return `You are an expert food nutritionist analyzing a camera photo of a meal.
+DEFAULT ASSUMPTION: Home-cooked with moderate oil/ghee (1-2 tsp per dish) unless the food visibly looks oily, fried, or restaurant-style.
 ${mealHint}${correctionHint}
+
+REFERENCE NUTRITION DATA (per 100g, cooked/prepared):
+${refTable}
 
 Follow these steps IN ORDER before producing JSON:
 
 Step 1 — VISUAL DESCRIPTION:
-Describe what you see in 2-3 sentences: plate/bowl type, colors, textures, visible proteins (egg pieces, meat, paneer cubes, dal), garnishes, sauces, and accompaniments.
+Describe what you see in 2-3 sentences: plate/bowl type, colors, textures, visible proteins, garnishes, and accompaniments.
 
 Step 2 — VEG / NON-VEG CHECK:
-Explicitly check: are there visible eggs, egg-based noodles/batter, meat, chicken, fish, or seafood? If yes, name the dish accordingly (e.g. "Egg Noodles" NOT "Veg Noodles", "Chicken Biryani" NOT "Biryani"). If egg is used in the batter or noodle dough, it is non-veg.
+Are there visible eggs, meat, chicken, fish, or seafood? If yes, name the dish accordingly (e.g. "Egg Noodles" NOT "Veg Noodles", "Chicken Biryani" NOT "Biryani").
 
 Step 3 — DISH IDENTIFICATION:
-Identify each dish. Use specific Indian names where applicable. If multiple items are on the plate (thali), list each separately.
+Identify each dish separately. Use specific names. If multiple items on the plate (thali), list each separately.
 
 Step 4 — WEIGHT ESTIMATION:
 Estimate portion weight in grams using visual anchors:
-- Standard Indian katori (bowl) ≈ 150-200ml ≈ 150-250g depending on density
-- Dinner plate ≈ 25cm diameter
-- 1 roti/chapati ≈ 35-40g, 1 naan ≈ 80-100g
+- 1 roti/chapati ≈ 35-40g, 1 naan ≈ 80-100g, 1 bhatura ≈ 60-70g
+- Standard katori (bowl) ≈ 150-200ml ≈ 150-250g depending on density
 - 1 cup cooked rice ≈ 180-200g
-- 1 dosa ≈ 80-120g
-Compare the food to the plate/bowl size to estimate grams.
+- 1 dosa ≈ 80-120g, 1 idli ≈ 35-45g
+- Dinner plate ≈ 25cm diameter
 
-CRITICAL for small/countable items (chips, nuggets, biscuits, momos, pieces of fruit, etc.):
-- COUNT the individual pieces visible in the image first.
-- State the count explicitly in your reasoning (e.g. "I count approximately 8-10 potato chips").
-- Use per-piece weight: 1 potato chip ≈ 3-5g, 1 chicken nugget ≈ 18-20g, 1 momo ≈ 25-30g, 1 samosa ≈ 50-60g, 1 pakora ≈ 20-25g.
-- Multiply count × per-piece weight. Do NOT default to "1 serving" from a packet.
-- For chips specifically: 8 chips ≈ 25-35g (NOT 110g which would be a full packet).
+For countable items (chips, nuggets, momos, etc.):
+- COUNT pieces first. State count in reasoning.
+- Per-piece: chip ≈ 3-5g, nugget ≈ 18-20g, momo ≈ 25-30g, samosa ≈ 50-60g.
+- Multiply count × per-piece weight.
 
 Step 5 — NUTRITION CALCULATION:
 For each dish:
-a) Recall the approximate per-100g macros for this dish (from standard Indian nutrition data).
-b) Multiply by (estimated_weight_g / 100) to get final values.
-c) Cross-check: calories should roughly equal (protein_g × 4) + (carbs_g × 4) + (fat_g × 9). If off by more than 15%, adjust your numbers.
+a) LOOK UP the per-100g macros from the REFERENCE TABLE above. If the dish matches a reference entry, USE those values.
+b) If the dish is NOT in the table, estimate independently — do NOT anchor to table values.
+c) Multiply per-100g values by (estimated_weight_g / 100).
+d) Cross-check: calories ≈ (protein_g × 4) + (carbs_g × 4) + (fat_g × 9). If off by >15%, adjust.
 
-Step 6 — OUTPUT:
-Respond ONLY as strict JSON (no markdown, no extra text) in this exact shape:
+Step 6 — SANITY CHECK:
+A typical Indian home meal is 400-600 kcal. If your total exceeds 800 for what looks like a normal home plate, your per-100g values are likely too high — recheck against the reference table.
+
+Step 7 — OUTPUT:
+Respond ONLY as strict JSON (no markdown, no extra text):
 {
   "dishes": [
     {
-      "name": "Egg Noodles",
-      "hindi": "एग नूडल्स",
-      "portion": "1 plate (~250g)",
-      "estimated_weight_g": 250,
-      "calories": 350,
-      "protein_g": 12,
-      "carbs_g": 45,
-      "fat_g": 14,
-      "fiber_g": 2,
-      "ingredients": ["Egg noodles", "Egg", "Vegetables", "Soy sauce", "Oil"],
-      "confidence": "medium",
-      "tags": ["high-carb"],
-      "healthTip": "Good protein from eggs. Reduce oil for fewer calories.",
-      "reasoning": "Yellow noodles with visible egg pieces and stir-fried vegetables on a dinner plate. Estimated ~250g based on plate coverage. Per 100g egg noodles: ~140 kcal, 5g protein, 18g carbs, 5.5g fat."
+      "name": "Paneer Bhurji",
+      "hindi": "पनीर भुर्जी",
+      "portion": "1 serving (~180g)",
+      "estimated_weight_g": 180,
+      "calories": 288,
+      "protein_g": 20,
+      "carbs_g": 7,
+      "fat_g": 20,
+      "fiber_g": 1,
+      "ingredients": ["Paneer", "Onion", "Tomato", "Spices", "Oil"],
+      "confidence": "high",
+      "tags": ["high-protein"],
+      "healthTip": "Good protein source. Reduce oil for fewer calories.",
+      "reasoning": "Scrambled paneer on plate. ~180g serving. Ref: paneer bhurji 160 cal/100g. 180g × 1.6 = 288 cal."
     }
   ],
-  "totalCalories": 350,
-  "totalProtein": 12,
-  "totalCarbs": 45,
-  "totalFat": 14,
-  "totalFiber": 2
+  "totalCalories": 288,
+  "totalProtein": 20,
+  "totalCarbs": 7,
+  "totalFat": 20,
+  "totalFiber": 1
 }
 
 Rules:
 - Return ONLY JSON. No markdown fences. No extra keys.
-- "reasoning" must include: what you saw, how you estimated weight, and the per-100g reference values you used.
+- "reasoning" must include: per-100g reference used, weight estimate, and calculation.
 - "estimated_weight_g" must be a number in grams.
 - If unsure about dish identity, still return best estimate and set confidence to "low".
 - If no dish is visible, return empty dishes array and all totals as 0.
-- Keep numeric values as numbers, not strings.
-- Favor realistic Indian home-cooked nutrition estimates (not restaurant portions unless it clearly looks like restaurant food).`;
+- Keep numeric values as numbers, not strings.`;
 }
 
 function parseJsonResponse(text: string) {
@@ -285,6 +292,45 @@ async function tryGemini(base64Data: string, prompt: string): Promise<DishAnalys
   return null;
 }
 
+async function tryOpenAI(base64Data: string, prompt: string): Promise<DishAnalysisResult | null> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) return null;
+
+  const openai = new OpenAI({ apiKey });
+
+  try {
+    console.log("[OpenAI Dish] Trying gpt-4o-mini...");
+    const result = await openai.chat.completions.create({
+      model: "gpt-4o-mini",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: { url: `data:image/jpeg;base64,${base64Data}` },
+            },
+          ],
+        },
+      ],
+      temperature: 0.2,
+      max_tokens: 2048,
+      response_format: { type: "json_object" },
+    });
+
+    const text = result.choices[0]?.message?.content || "";
+    const parsed = parseJsonResponse(text);
+    console.log("[OpenAI Dish] Success with gpt-4o-mini");
+    return normalizeResult(parsed);
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    console.error(`[OpenAI Dish] ${msg}`);
+    if (isRateLimitError(msg)) return null;
+    throw err;
+  }
+}
+
 async function tryGroq(base64Data: string, prompt: string): Promise<DishAnalysisResult | null> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return null;
@@ -358,6 +404,7 @@ export async function POST(request: NextRequest) {
 
     const errors: string[] = [];
 
+    // Tier 1: Gemini (free, fast)
     try {
       const result = await tryGemini(base64Data, prompt);
       if (result) {
@@ -369,6 +416,19 @@ export async function POST(request: NextRequest) {
       errors.push(`Gemini: ${err instanceof Error ? err.message : "failed"}`);
     }
 
+    // Tier 2: OpenAI GPT-4o-mini (cheap, accurate)
+    try {
+      const result = await tryOpenAI(base64Data, prompt);
+      if (result) {
+        setCachedResult(cacheKey, result);
+        return NextResponse.json(result);
+      }
+      errors.push("OpenAI rate limited or no key");
+    } catch (err: unknown) {
+      errors.push(`OpenAI: ${err instanceof Error ? err.message : "failed"}`);
+    }
+
+    // Tier 3: Groq Llama (free, last resort)
     try {
       const result = await tryGroq(base64Data, prompt);
       if (result) {
@@ -380,10 +440,10 @@ export async function POST(request: NextRequest) {
       errors.push(`Groq: ${err instanceof Error ? err.message : "failed"}`);
     }
 
-    const hasAnyKey = process.env.GEMINI_API_KEY || process.env.GROQ_API_KEY;
+    const hasAnyKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
     if (!hasAnyKey) {
       return NextResponse.json(
-        { error: "No API keys configured. Add GEMINI_API_KEY or GROQ_API_KEY to .env.local" },
+        { error: "No API keys configured. Add GEMINI_API_KEY, OPENAI_API_KEY, or GROQ_API_KEY to .env.local" },
         { status: 500 }
       );
     }

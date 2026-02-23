@@ -3,6 +3,7 @@ import Groq from "groq-sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import type { ConfidenceLevel, DescribedDish, DescribeMealResult, PortionOption } from "@/lib/dishTypes";
+import { buildReferenceTable } from "@/lib/nutritionReference";
 
 /* ─── Constants ─── */
 
@@ -46,20 +47,29 @@ function setCache(key: string, data: DescribeMealResult) {
 const PROVIDER_TIMEOUT_MS = 6000;
 
 function buildPrompt(description: string, mealType: string): string {
-  return `Expert Indian food nutritionist. Parse user's meal into individual dishes with nutrition.
+  const refTable = buildReferenceTable();
+
+  return `You are an expert food nutritionist. DEFAULT ASSUMPTION: home-cooked with moderate oil/ghee (1-2 tsp per dish) unless the user says "restaurant" or "outside food".
 
 Meal: "${description}" (${mealType})
+
+REFERENCE NUTRITION DATA (per 100g, cooked/prepared):
+${refTable}
+
+IMPORTANT: Use the reference values above as anchors for matching dishes. Multiply per-100g values by (estimated_weight_g / 100). For dishes NOT in this table, estimate independently — do NOT anchor to table values.
 
 Return JSON: {"dishes":[{"name":"...","hindi":"...","portions":[{"label":"Small katori (~150g)","weight_g":150,"calories":120,"protein_g":5,"carbs_g":18,"fat_g":3,"fiber_g":4},{...regular...},{...large...}],"defaultIndex":1,"ingredients":[...],"confidence":"high|medium|low","tags":[...],"healthTip":"...","reasoning":"..."}]}
 
 Rules:
-- Split multiple items into separate dishes
+- Split ONLY when the user names clearly distinct dishes: "rajma chawal" = rajma + rice, "dosa with sambar and chutney" = dosa + sambar + chutney
+- Keep as ONE dish when items are naturally combined: "coffee with sugar" = 1 dish, "bread with butter" = 1 dish, "fried rice with manchurian" = 2 dishes (fried rice + manchurian), NOT 3
+- CRITICAL: The total number of dish entries must match the number of distinct food items. NEVER create a combined entry AND separate entries for the same food. If you have "fried rice" and "manchurian gravy" as 2 dishes, do NOT also add a third "fried rice with manchurian" dish
 - Exactly 3 portions per dish with food-specific Indian labels (katori/roti count/cup/handful etc)
-- defaultIndex: match user's described quantity (0=small,1=regular,2=large)
-- Home-cooked values, not restaurant. Packaged food: use actual packet info
-- Hindi-English: aloo=potato, dal=lentils, roti=chapati, sabzi=curry, katori=~150ml bowl
-- Cross-check: cal ≈ (P×4)+(C×4)+(F×9)
-- reasoning: explain portion weight estimate and per-100g reference
+- defaultIndex: match user's described quantity (0=small,1=regular,2=large). If user says "2 roti", regular portion = 2 roti
+- Portion weights: 1 roti ~38g, 1 katori ~180g, 1 cup cooked rice ~200g, 1 idli ~45g, 1 dosa ~80-100g, 1 bhatura ~65g, 1 slice bread ~30g, 1 tbsp butter ~14g, 1 boiled egg ~50g
+- Cross-check: cal ≈ (P×4)+(C×4)+(F×9). If off by >15%, adjust
+- Sanity check: a typical Indian home meal is 400-600 kcal. If total exceeds 800 for a normal description, recheck per-100g values
+- reasoning: state the per-100g reference used and weight estimate
 - Return ONLY valid JSON, no markdown`;
 }
 
