@@ -143,7 +143,10 @@ export function useHealthProfile() {
   const clearHealthProfile = useCallback(() => {
     setHealthProfileState(null);
     localStorage.removeItem(STORAGE_KEY);
-  }, []);
+    if (isLoggedIn && user) {
+      pushUserData(user.id, "health_profile", null);
+    }
+  }, [isLoggedIn, user]);
 
   return {
     healthProfile,

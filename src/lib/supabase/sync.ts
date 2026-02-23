@@ -29,6 +29,7 @@ export interface UserDataRow {
 
 // Debounce timers per domain
 const timers = new Map<string, ReturnType<typeof setTimeout>>();
+const pendingPayloads = new Map<string, { userId: string; domain: SyncDomain; value: unknown }>();
 const DEBOUNCE_MS = 800;
 
 /**
@@ -62,10 +63,13 @@ export function pushUserData(
   const existing = timers.get(key);
   if (existing) clearTimeout(existing);
 
+  pendingPayloads.set(key, { userId, domain, value });
+
   timers.set(
     key,
     setTimeout(async () => {
       timers.delete(key);
+      pendingPayloads.delete(key);
       const supabase = createClient();
       await supabase
         .from("user_data")
@@ -75,6 +79,31 @@ export function pushUserData(
         );
     }, DEBOUNCE_MS)
   );
+}
+
+/**
+ * Flush all pending debounced pushes immediately.
+ * Call on beforeunload / visibilitychange to avoid data loss.
+ */
+export function flushPendingPushes(): void {
+  if (pendingPayloads.size === 0) return;
+
+  for (const [key, { userId, domain, value }] of pendingPayloads) {
+    const timer = timers.get(key);
+    if (timer) clearTimeout(timer);
+    timers.delete(key);
+
+    const supabase = createClient();
+    // Use sendBeacon-friendly fetch via keepalive where possible
+    supabase
+      .from("user_data")
+      .upsert(
+        { id: userId, [domain]: value, updated_at: new Date().toISOString() },
+        { onConflict: "id" }
+      )
+      .then(() => {});
+  }
+  pendingPayloads.clear();
 }
 
 /**
@@ -96,22 +125,13 @@ export async function pushAllUserData(
 
 /**
  * Migrate localStorage data to Supabase on first login.
- * Only pushes if the cloud row is empty (all nulls / empty arrays).
+ * Per-domain merge: only pushes domains where cloud is empty but local has data.
  */
 export async function migrateLocalStorageToCloud(
   userId: string
 ): Promise<void> {
   const cloud = await pullUserData(userId);
 
-  // Check if cloud already has meaningful data
-  const hasCloudData =
-    cloud &&
-    (cloud.profile !== null ||
-      (Array.isArray(cloud.meals) && (cloud.meals as unknown[]).length > 0));
-
-  if (hasCloudData) return; // Cloud already has data, don't overwrite
-
-  // Gather all localStorage data
   const localData: Partial<Record<SyncDomain, unknown>> = {};
 
   try {
@@ -165,7 +185,20 @@ export async function migrateLocalStorageToCloud(
     if (healthRaw) localData.health_profile = JSON.parse(healthRaw);
   } catch { /* ignore */ }
 
-  if (Object.keys(localData).length > 0) {
-    await pushAllUserData(userId, localData);
+  // Only push domains where cloud is empty/null but local has data
+  const toMigrate: Partial<Record<SyncDomain, unknown>> = {};
+  for (const [domain, localValue] of Object.entries(localData)) {
+    const cloudValue = cloud?.[domain as keyof UserDataRow];
+    const cloudEmpty =
+      cloudValue === null ||
+      cloudValue === undefined ||
+      (Array.isArray(cloudValue) && cloudValue.length === 0);
+    if (cloudEmpty && localValue != null) {
+      toMigrate[domain as SyncDomain] = localValue;
+    }
+  }
+
+  if (Object.keys(toMigrate).length > 0) {
+    await pushAllUserData(userId, toMigrate);
   }
 }

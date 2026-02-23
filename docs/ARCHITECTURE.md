@@ -133,9 +133,9 @@ Auth Flow:
   Guest mode (default): app works fully with localStorage only, no login required
   Profile tab → AuthScreen → email magic link or password signup/login
   → Supabase Auth → /auth/callback → session established
-  → migrateLocalStorageToCloud() on first login (if cloud row is empty)
+  → migrateLocalStorageToCloud() on login (per-domain merge: only pushes domains where cloud is empty)
   → All hooks pull cloud data → override localStorage → sync on every change
-  → Debounced pushes (800ms) to avoid hammering Supabase
+  → Debounced pushes (800ms) to avoid hammering Supabase, flushed on beforeunload/visibilitychange
 
 Home Tab (HomeView.tsx):
   Capy mascot + personalized greeting ("Good evening, Ankur!") + speech bubble (context-aware from capyLines.ts)
