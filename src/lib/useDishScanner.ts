@@ -169,7 +169,7 @@ export function useDishScanner() {
     const canvas = captureCanvasRef.current;
     if (!video || !canvas || video.readyState < 2) return null;
 
-    const maxWidth = 768;
+    const maxWidth = 1024;
     const scale = Math.min(maxWidth / video.videoWidth, 1);
     canvas.width = Math.round(video.videoWidth * scale);
     canvas.height = Math.round(video.videoHeight * scale);
