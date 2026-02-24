@@ -102,7 +102,7 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-dvh bg-background">
       {/* Main Content */}
       <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
         <AnimatePresence mode="wait">

@@ -120,7 +120,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
       setRemovedIndices(new Set());
       setWeightOverrides(new Map());
       setCalorieOverrides(new Map());
-      setExpandedView(false);
+      setExpandedView(true);
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 200);

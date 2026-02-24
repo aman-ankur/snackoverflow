@@ -263,7 +263,23 @@ function DishEditCard({
 
   const updateField = useCallback(
     (field: MacroKey, value: number) => {
-      const updated = { ...localDish, [field]: Math.max(0, Math.round(value)) };
+      let updated: DishNutrition;
+      const safeValue = Math.max(0, Math.round(value));
+
+      if (field === "calories" && localDish.calories > 0) {
+        const ratio = safeValue / localDish.calories;
+        updated = {
+          ...localDish,
+          calories: safeValue,
+          protein_g: Math.max(0, Math.round(localDish.protein_g * ratio)),
+          carbs_g: Math.max(0, Math.round(localDish.carbs_g * ratio)),
+          fat_g: Math.max(0, Math.round(localDish.fat_g * ratio)),
+          fiber_g: Math.max(0, Math.round(localDish.fiber_g * ratio)),
+        };
+      } else {
+        updated = { ...localDish, [field]: safeValue };
+      }
+
       setLocalDish(updated);
       onUpdateDish(mealId, dishIndex, updated);
       refreshStreak();
