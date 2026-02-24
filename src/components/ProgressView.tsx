@@ -244,7 +244,7 @@ function CalorieTrendCard({ meals, weeklyByDate, goals }: CalorieTrendProps) {
   const linePoints = points.filter((p) => !p.isFuture && p.val > 0).map((p) => `${p.cx},${p.cy}`).join(" ");
 
   return (
-    <div className="rounded-2xl bg-card border border-border p-4">
+    <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-[#DBEAFE] border border-accent/10 p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-2.5">
         <div className="flex items-center gap-1.5">
