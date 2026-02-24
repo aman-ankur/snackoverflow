@@ -15,12 +15,12 @@ import type { CoachMarkId } from "@/lib/useCoachMarks";
 const DEMO_PRESETS: { label: string; icon: string; garden: GardenState }[] = [
   {
     label: "Sapling",
-    icon: "�",
+    icon: "🌱",
     garden: { flowers: 0, treeLevel: 1, pondLevel: 0, butterflies: 0, hasRainbow: false, hasCrown: false, gardenHealth: 70, totalMealsLogged: 3, daysGoalHit: 1, lastComputedDate: "", journal: [], babyCapybaras: 0, homeLevel: 0 },
   },
   {
     label: "First Flower",
-    icon: "�",
+    icon: "🌸",
     garden: { flowers: 3, treeLevel: 1, pondLevel: 0, butterflies: 0, hasRainbow: false, hasCrown: false, gardenHealth: 75, totalMealsLogged: 4, daysGoalHit: 3, lastComputedDate: "", journal: [], babyCapybaras: 0, homeLevel: 0 },
   },
   {

@@ -108,18 +108,21 @@ All components are in `src/components/`. All are `"use client"` components.
 - **`DishVerdictPill`** — inline verdict badge for dish cards
   - Props: `dishName`, `analysis`, `isLoading`
 
-### `EatingAnalysisCard.tsx` (NEW)
-**Trigger card for AI eating habits analysis on Progress tab.**
+### `EatingAnalysisCard.tsx`
+**Subtle, sleek AI eating habits analysis hero card — positioned at top of Progress tab.**
 - Props: `meals`, `goals`, `healthProfile`, `latestAnalysis`, `isGenerating`, `error`, `onGenerate`, `onViewReport`
-- **Time-window segmented control**: Today / 7 Days / 14 Days / 30 Days (pill-style, green active)
-- **State-aware button**:
-  - No cached report → "Analyze My Eating" (green, Brain icon)
-  - Cached report → "View Report" (shows score badge) + "Refresh" secondary button
-  - Generating → spinner + "Analyzing your meals..."
+- **Design**: White card (`bg-card`) with Sparkles icon in light purple (`text-violet-400`) inside gradient icon wrap (`bg-gradient-to-br from-violet-50 to-indigo-50`). Sparkle icon has subtle pulse animation.
+- **Title row**: "Eating Analysis" heading + inline score badge pill (color-coded) + subtitle "AI-powered insights into your eating habits"
+- **Time-window segmented control**: Today / 7 Days / 14 Days / 30 Days (pill-style, active = violet gradient `from-violet-50 via-indigo-50 to-blue-50` with `text-violet-600`)
+- **State-aware CTA button**:
+  - No cached report → shimmer gradient CTA matching HealthCheckButton pattern (`animate-[shimmer_3s]`), gradient text "Analyze My Eating" with Sparkles icon
+  - Cached report (fresh) → solid purple "View Report" + violet refresh button
+  - Cached report (stale) → solid purple "View Report" with "(new meals logged)" hint
+  - Generating → shimmer bg + spinner + gradient text "Analyzing..."
   - Error → red error message with retry
 - **Cache freshness indicator**: "Generated 2h ago" or "New meals logged — refresh recommended"
 - **Score badge**: color-coded (green=great, lime=good, orange=needs_work, red=concerning)
-- Animated with framer-motion (fade in, button spring)
+- Animated with framer-motion (fade in)
 
 ### `EatingAnalysisSheet.tsx` (NEW)
 **Tabbed bottom sheet for displaying AI eating habits report.**
@@ -187,8 +190,8 @@ All components are in `src/components/`. All are `"use client"` components.
   - Calorie goal track (permanent): 🌸 First Flower (3 goals), 🐾 Baby Capy (7 goals), 🏡 Cozy Home (15 goals), 🌻 Full Garden (30 goals)
 - All 4 milestone lists unified: DEMO_PRESETS, ROADMAP_MILESTONES, achievements (removed from UI), NextUnlockCard
 
-### `CalendarProgressView.tsx` (NEW)
-**Calendar-based progress visualization with Apple Fitness-style rings.**
+### `CalendarProgressView.tsx`
+**Calendar-based progress visualization with Apple Fitness-style rings + integrated Top Dishes.**
 - Props: `meals: LoggedMeal[]`, `goals: NutritionGoals`
 - Default view: weekly row (7 days) with concentric rings per day
 - Expandable: full month calendar grid
@@ -196,7 +199,36 @@ All components are in `src/components/`. All are `"use client"` components.
 - Tap a day → bottom sheet with full macro breakdown
 - Days with no data show empty/grey rings
 - Month navigation with left/right arrows (limited to current year)
-- Integrated at top of ProgressView
+- **Top Dishes section** (bottom of card, below legend):
+  - Computes top 4 dishes by frequency from meals within the visible date range
+  - **Week view**: filters by current week's 7 dates → label "Top this week"
+  - **Month view**: filters by `viewYear`/`viewMonth` → label "Top this month"
+  - Reactive: re-computes when toggling week↔month or navigating months
+  - Rendered as compact pills: `{count}x {dish name}` with count color-coded (≥3 = green, <3 = orange)
+
+### `ProgressView.tsx`
+**Main Progress tab — insight-first layout with 5 sections.**
+- Props: `todayTotals`, `goals`, `streak`, `meals`, `weeklyByDate`, `repeatedDishes`, `coachMarks`, `healthProfile`, `hasHealthProfile`, `eatingAnalysis`, `onViewAnalysisReport`
+- **Layout (top → bottom)**:
+  1. **Header**: "Progress" + subtitle "Your nutrition insights" + cat Lottie mascot
+  2. **AI Eating Analysis** (`EatingAnalysisCard`) — hero position at top
+  3. **Activity Calendar** (`CalendarProgressView`) — week/month toggle with integrated Top Dishes
+  4. **Calorie Trend Card** (inline `CalorieTrendCard`):
+     - **7d view**: Mon–Sun bars from `weeklyByDate`, today highlighted, future days hidden
+     - **4w view**: Last 4 ISO weeks grouped from `meals`, bars show avg kcal/day per week
+     - SVG chart with animated bars (`motion.rect`), trend polyline, goal dashed line
+     - **Trend insight badge**: "Up/Down X% vs last/prior week" comparing current vs previous period avg
+     - Green-to-blue gradient background (`from-[#E8F5E0] to-[#DBEAFE]`)
+     - Handles edge cases: no data, single week (4w), zero prior data
+  5. **Stats Row** (3 boxes): kcal to go | kcal today | avg/day (7d)
+     - Gradient card backgrounds (green, green-light, orange-light)
+     - "kcal to go" clamped to ≥0
+  6. **Meal History Accordion**: grouped by date, expandable/collapsible per date
+     - Today's entry expanded by default
+     - Shows meal count + total kcal per date
+     - Expanded: per-meal dish names, meal type, kcal, protein, carbs
+     - "Show older meals" button loads beyond first 5 dates
+- **Removed sections** (from previous version): Total Progress card, Nutrition/Fitness 2-col cards, Today's Macros bars, Streak Card, Weekly Calorie bar chart, Patterns section, old flat Meal History
 
 ### `CapyMascot.tsx`
 **Image-based capybara mascot with mood-reactive variants.**
