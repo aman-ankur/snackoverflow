@@ -60,6 +60,21 @@ export function useDescribeMeal(): UseDescribeMealReturn {
     setSelectedPortions(new Map());
 
     try {
+      // Dev mode: return mock data instantly
+      const { getDevMode } = await import("@/lib/useDevMode");
+      if (getDevMode()) {
+        const { MOCK_DESCRIBE_RESULT, DEV_MOCK_DELAY_MS } = await import("@/lib/mockDevData");
+        await new Promise((r) => setTimeout(r, DEV_MOCK_DELAY_MS));
+        const defaults = new Map<number, number>();
+        MOCK_DESCRIBE_RESULT.dishes.forEach((dish, i) => {
+          defaults.set(i, dish.defaultIndex ?? 1);
+        });
+        setResult(MOCK_DESCRIBE_RESULT);
+        setSelectedPortions(defaults);
+        setIsAnalyzing(false);
+        return;
+      }
+
       const res = await fetch("/api/describe-meal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
