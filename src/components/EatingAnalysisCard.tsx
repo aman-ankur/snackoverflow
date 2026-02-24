@@ -78,7 +78,7 @@ export default function EatingAnalysisCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-card border border-border p-4"
+      className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-[#DBEAFE] border border-accent/10 p-4"
     >
       <div className="flex items-center gap-2 mb-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-gradient-to-br from-violet-50 to-indigo-50">
