@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus, Camera, PenLine, Info, HelpCircle, RefreshCw, Brain } from "lucide-react";
+import { Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus, Camera, PenLine, RefreshCw, Brain } from "lucide-react";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import CapyMascot from "@/components/CapyMascot";
 import DescribeMealView from "@/components/DescribeMealView";
@@ -144,18 +144,15 @@ function MacroStat({ label, value, color }: { label: string; value: number; colo
   );
 }
 
-function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
-  const config = {
-    high: { label: "Confident", Icon: Check, bg: "bg-green-50", border: "border-accent/25", text: "text-accent-dim" },
-    medium: { label: "Likely", Icon: Info, bg: "bg-orange-light", border: "border-orange/25", text: "text-orange" },
-    low: { label: "Unsure", Icon: HelpCircle, bg: "bg-background", border: "border-border", text: "text-muted" },
+function ConfidenceDot({ level }: { level: ConfidenceLevel }) {
+  const color = {
+    high: "bg-accent",
+    medium: "bg-orange",
+    low: "bg-muted/40",
   }[level];
-  const { Icon } = config;
+  const title = { high: "High confidence", medium: "Medium confidence", low: "Low confidence" }[level];
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${config.bg} ${config.border} ${config.text}`}>
-      <Icon className="h-2.5 w-2.5" />
-      {config.label}
-    </span>
+    <span title={title} className={`inline-block h-2 w-2 rounded-full ${color} shrink-0`} />
   );
 }
 
@@ -585,19 +582,22 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
                     </div>
                   )}
 
-                  <div className={`rounded-2xl border border-border overflow-hidden transition-colors ${isExpanded ? "bg-[#fdfcfa]" : "bg-card"}`}>
+                  <div className={`rounded-2xl border border-border overflow-hidden transition-colors relative ${isExpanded ? "bg-[#fdfcfa]" : "bg-card"}`}>
+                    {/* Confidence dot — bottom right of card */}
+                    {!isExpanded && (
+                      <div className="absolute bottom-3 right-3.5">
+                        <ConfidenceDot level={dishItem.confidence} />
+                      </div>
+                    )}
                     {/* Collapsed header — always visible */}
                     <button
                       onClick={() => setExpandedDishIndex(isExpanded ? null : displayIndex)}
                       className="w-full text-left p-4"
                     >
-                      {/* Row 1: name + confidence + calories */}
+                      {/* Row 1: name + calories */}
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2">
-                            <h4 className="text-base font-bold text-foreground truncate">{dishItem.name}</h4>
-                            <ConfidenceBadge level={dishItem.confidence} />
-                          </div>
+                          <h4 className="text-base font-bold text-foreground truncate">{dishItem.name}</h4>
                           <p className="text-xs text-muted mt-0.5">
                             {dishItem.hindi && `${dishItem.hindi} · `}{dishItem.estimated_weight_g}g
                           </p>
@@ -778,8 +778,8 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
               );
             })}
 
-            {/* F. Sticky Log Bar */}
-            <div className="sticky bottom-0 bg-card border-t border-border rounded-t-2xl px-4 py-3 -mx-4 mt-4 flex items-center gap-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] z-10">
+            {/* F. Log Bar */}
+            <div className="rounded-2xl bg-card border border-border px-4 py-3 mt-2 flex items-center gap-2.5">
               <div className="flex-1">
                 <p className="text-lg font-extrabold">{scaledTotals.calories} kcal</p>
                 <p className="text-xs text-muted">{capitalize(logMealType)} · {scaledDishes.length} dish{scaledDishes.length !== 1 ? "es" : ""}</p>

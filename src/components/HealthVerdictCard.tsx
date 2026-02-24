@@ -244,8 +244,8 @@ function buildConditionSubtitle(conditions: HealthCondition[]): string {
     const def = getConditionById(c.id);
     return def?.shortLabel ?? c.label;
   });
-  if (labels.length <= 2) return labels.join(" · ");
-  return `${labels.slice(0, 2).join(" · ")} +${labels.length - 2} more`;
+  if (labels.length <= 2) return `Is this meal right for your ${labels.join(" & ")}?`;
+  return `Is this meal right for your ${labels.slice(0, 2).join(", ")} +${labels.length - 2} more?`;
 }
 
 interface HealthCheckButtonProps {
@@ -272,7 +272,7 @@ export function HealthCheckButton({ conditions, isLoading, onCheck }: HealthChec
   return (
     <button
       onClick={onCheck}
-      className="w-full rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 p-4 flex items-center gap-3.5 text-left transition-all hover:border-violet-300 hover:shadow-[0_0_12px_2px_rgba(139,92,246,0.08)] active:scale-[0.99]"
+      className="w-full rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 p-4 flex items-center gap-3.5 text-left transition-all hover:border-violet-300 hover:shadow-[0_0_12px_2px_rgba(139,92,246,0.08)] active:scale-[0.99] animate-[glow-breathe_3.5s_ease-in-out_infinite]"
     >
       <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 border border-violet-200/60 shrink-0">
         <Sparkles className="h-5 w-5 text-violet-500" />
