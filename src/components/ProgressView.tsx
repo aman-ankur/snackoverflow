@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Clock, ChevronDown, ChevronRight, Target, BarChart3 } from "lucide-react";
+import { TrendingUp, Clock, ChevronDown, ChevronRight } from "lucide-react";
 import CapyLottie from "@/components/CapyLottie";
 import CalendarProgressView from "@/components/CalendarProgressView";
 import CoachMark from "@/components/CoachMark";
@@ -462,33 +462,29 @@ export default function ProgressView({
         />
       )}
 
-      {/* 3. Calorie Trend */}
-      <CalorieTrendCard meals={meals} weeklyByDate={weeklyByDate} goals={goals} />
-
-      {/* 4. Stats Row (3 boxes) */}
-      <div className="grid grid-cols-3 gap-2">
-        <div className="rounded-xl bg-gradient-to-br from-accent-light/30 to-white border border-accent/10 p-3">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/15 mb-1.5">
-            <Target className="h-3 w-3 text-accent-dim" />
-          </div>
-          <p className="text-lg font-extrabold text-foreground leading-tight">{kcalToGo.toLocaleString()}</p>
-          <p className="text-[10px] text-muted">kcal to go</p>
+      {/* 3. Quick Stats */}
+      <div className="rounded-2xl bg-card border border-border p-3 flex items-center">
+        <div className="flex-1 text-center">
+          <p className="text-[10px] font-semibold text-muted uppercase tracking-wide">Remaining</p>
+          <p className="text-xl font-extrabold text-foreground mt-0.5">{kcalToGo.toLocaleString()}</p>
+          <p className="text-[10px] text-accent font-bold">kcal to go</p>
         </div>
-        <div className="rounded-xl bg-gradient-to-br from-accent-light/20 to-white border border-accent/10 p-3">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-accent/10 mb-1.5">
-            <BarChart3 className="h-3 w-3 text-accent" />
-          </div>
-          <p className="text-[15px] font-extrabold text-foreground leading-tight">{Math.round(todayTotals.calories).toLocaleString()}</p>
-          <p className="text-[10px] text-muted">kcal today</p>
+        <div className="w-px h-10 bg-border/60" />
+        <div className="flex-1 text-center">
+          <p className="text-[10px] font-semibold text-muted uppercase tracking-wide">Today</p>
+          <p className="text-xl font-extrabold text-foreground mt-0.5">{Math.round(todayTotals.calories).toLocaleString()}</p>
+          <p className="text-[10px] text-accent font-bold">kcal eaten</p>
         </div>
-        <div className="rounded-xl bg-gradient-to-br from-orange-light/20 to-white border border-orange/10 p-3">
-          <div className="flex h-6 w-6 items-center justify-center rounded-md bg-orange/10 mb-1.5">
-            <TrendingUp className="h-3 w-3 text-orange" />
-          </div>
-          <p className="text-[15px] font-extrabold text-foreground leading-tight">{weeklyAvgCalories.toLocaleString()}</p>
-          <p className="text-[10px] text-muted">avg/day (7d)</p>
+        <div className="w-px h-10 bg-border/60" />
+        <div className="flex-1 text-center">
+          <p className="text-[10px] font-semibold text-muted uppercase tracking-wide">7-Day Avg</p>
+          <p className="text-xl font-extrabold text-foreground mt-0.5">{weeklyAvgCalories.toLocaleString()}</p>
+          <p className="text-[10px] text-orange font-bold">kcal/day</p>
         </div>
       </div>
+
+      {/* 4. Calorie Trend */}
+      <CalorieTrendCard meals={meals} weeklyByDate={weeklyByDate} goals={goals} />
 
       {/* 5. Meal History Accordion */}
       <div>
