@@ -1,0 +1,746 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Design A — Clean Accordion</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #F5F2EB;
+    --fg: #0D0D0D;
+    --accent: #5AAC5A;
+    --accent-light: #e8f5e8;
+    --accent-dim: #3d7a3d;
+    --orange: #F08C42;
+    --orange-light: #fef3e8;
+    --card: #FFFFFF;
+    --border: #DDD8CC;
+    --muted: #4A4540;
+    --muted-light: #8a847c;
+    --violet: #7c3aed;
+    --violet-light: #f3f0ff;
+    --violet-border: #c4b5fd;
+    --red: #ef4444;
+    --green: #22c55e;
+    --amber: #f59e0b;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 16px;
+    line-height: 1.5;
+  }
+
+  .label {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: var(--violet);
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    z-index: 100;
+    max-width: 430px;
+    margin: 0 auto;
+  }
+
+  .spacer { height: 44px; }
+
+  /* ─── Compact Controls Row ─── */
+  .controls-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .control-group {
+    display: flex;
+    gap: 4px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+  }
+  .control-group label {
+    font-size: 10px;
+    color: var(--muted-light);
+    padding: 0 6px;
+    display: flex;
+    align-items: center;
+  }
+  .chip {
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid transparent;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+  }
+  .chip.active {
+    background: var(--accent-light);
+    color: var(--accent-dim);
+    border-color: rgba(90, 172, 90, 0.2);
+  }
+
+  /* ─── Plate Total Hero ─── */
+  .plate-total {
+    background: linear-gradient(135deg, #f0faf0, #e8f5e8);
+    border: 1px solid rgba(90, 172, 90, 0.15);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .plate-total-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .plate-total-header h2 {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .plate-total-header .dish-count {
+    font-size: 12px;
+    color: var(--muted);
+    background: white;
+    border-radius: 20px;
+    padding: 4px 10px;
+    border: 1px solid var(--border);
+  }
+  .calorie-hero {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .calorie-hero .number {
+    font-size: 42px;
+    font-weight: 900;
+    letter-spacing: -2px;
+    color: var(--fg);
+    line-height: 1;
+  }
+  .calorie-hero .unit {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--muted);
+  }
+  .macro-bar {
+    display: flex;
+    gap: 2px;
+    height: 8px;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+  .macro-bar .protein { background: var(--accent); flex: 32; }
+  .macro-bar .carbs { background: var(--orange); flex: 58; }
+  .macro-bar .fat { background: var(--red); flex: 22; }
+  .macro-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 8px;
+  }
+  .macro-item {
+    flex: 1;
+    text-align: center;
+  }
+  .macro-item .value {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .macro-item .label-text {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .macro-item .dot {
+    display: inline-block;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin-right: 4px;
+    vertical-align: middle;
+  }
+
+  /* ─── Dish Items in plate total ─── */
+  .plate-dishes {
+    margin-top: 14px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(90, 172, 90, 0.12);
+  }
+  .plate-dish-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+  }
+  .plate-dish-name {
+    font-size: 13px;
+    font-weight: 600;
+  }
+  .plate-dish-cal {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* ─── AI Health Check ─── */
+  .health-check {
+    background: linear-gradient(135deg, var(--violet-light), #eef2ff);
+    border: 1.5px solid var(--violet-border);
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .health-check:hover {
+    border-color: var(--violet);
+    box-shadow: 0 0 12px rgba(124, 58, 237, 0.1);
+  }
+  .health-check-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .health-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, #7c3aed, #6366f1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+  .health-text h3 {
+    font-size: 14px;
+    font-weight: 700;
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .health-text p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ─── Health Verdict Result ─── */
+  .verdict-card {
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+  }
+  .verdict-good { background: #f0fdf4; border: 1.5px solid #bbf7d0; }
+  .verdict-caution { background: #fffbeb; border: 1.5px solid #fde68a; }
+  .verdict-avoid { background: #fef2f2; border: 1.5px solid #fecaca; }
+  .verdict-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .verdict-badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .verdict-good .verdict-badge { background: #dcfce7; color: #166534; }
+  .verdict-caution .verdict-badge { background: #fef3c7; color: #92400e; }
+  .verdict-summary {
+    font-size: 13px;
+    color: var(--fg);
+    line-height: 1.5;
+  }
+
+  /* ─── Accordion Dish Cards ─── */
+  .section-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--muted);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .dish-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    transition: all 0.2s;
+  }
+
+  .dish-collapsed {
+    display: flex;
+    align-items: center;
+    padding: 14px 16px;
+    cursor: pointer;
+    gap: 12px;
+  }
+  .dish-collapsed:hover {
+    background: #fafaf7;
+  }
+
+  .dish-info {
+    flex: 1;
+    min-width: 0;
+  }
+  .dish-name {
+    font-size: 15px;
+    font-weight: 700;
+    margin-bottom: 2px;
+  }
+  .dish-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .dish-cal-badge {
+    text-align: right;
+    flex-shrink: 0;
+  }
+  .dish-cal-badge .cal {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--fg);
+  }
+  .dish-cal-badge .cal-unit {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  .verdict-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 4px;
+  }
+  .verdict-pill.good { background: #dcfce7; color: #166534; }
+  .verdict-pill.caution { background: #fef3c7; color: #92400e; }
+  .verdict-pill.avoid { background: #fee2e2; color: #991b1b; }
+
+  .chevron {
+    color: var(--muted-light);
+    font-size: 16px;
+    flex-shrink: 0;
+    transition: transform 0.2s;
+  }
+
+  /* Expanded area */
+  .dish-expanded {
+    border-top: 1px solid var(--border);
+    padding: 16px;
+    background: #fafaf7;
+  }
+
+  .macro-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 14px;
+  }
+  .macro-cell {
+    text-align: center;
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 10px 4px;
+  }
+  .macro-cell .mc-icon {
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+  .macro-cell .mc-value {
+    font-size: 14px;
+    font-weight: 800;
+    display: block;
+  }
+  .macro-cell .mc-label {
+    font-size: 10px;
+    color: var(--muted);
+    display: block;
+    margin-top: 2px;
+  }
+
+  .detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 13px;
+  }
+  .detail-row .dr-label {
+    color: var(--muted);
+  }
+  .detail-row .dr-value {
+    font-weight: 600;
+  }
+
+  .ingredients-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin: 10px 0;
+  }
+  .ingredient-pill {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 4px 10px;
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  .health-tip {
+    background: var(--orange-light);
+    border: 1px solid rgba(240, 140, 66, 0.2);
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: var(--fg);
+    margin: 10px 0;
+    line-height: 1.5;
+  }
+
+  .edit-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+  .edit-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .edit-btn:hover { background: var(--bg); }
+  .edit-btn.danger {
+    border-color: #fecaca;
+    color: var(--red);
+    background: #fef2f2;
+  }
+
+  /* ─── Log Meal Bar ─── */
+  .log-bar {
+    position: sticky;
+    bottom: 0;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 12px;
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.06);
+  }
+  .log-bar select {
+    flex: 1;
+    padding: 10px 14px;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 13px;
+    font-weight: 600;
+    background: var(--bg);
+    color: var(--fg);
+    font-family: inherit;
+  }
+  .log-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 12px;
+    background: var(--accent);
+    color: white;
+    font-size: 14px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+    font-family: inherit;
+  }
+  .log-btn:hover { background: #4a9a4a; }
+
+  /* ─── Capy inline ─── */
+  .capy-inline {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    background: var(--accent-light);
+    border: 1px solid rgba(90, 172, 90, 0.1);
+    border-radius: 12px;
+    margin-bottom: 12px;
+  }
+  .capy-inline .capy-avatar {
+    font-size: 28px;
+    flex-shrink: 0;
+  }
+  .capy-inline p {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+</style>
+</head>
+<body>
+  <div class="label">Design A — Clean Accordion</div>
+  <div class="spacer"></div>
+
+  <!-- Compact Controls -->
+  <div class="controls-row">
+    <div class="control-group">
+      <label>Meal</label>
+      <button class="chip">🌅 B</button>
+      <button class="chip active">🍛 L</button>
+      <button class="chip">🍪 S</button>
+      <button class="chip">🌙 D</button>
+    </div>
+    <div class="control-group">
+      <label>Portion</label>
+      <button class="chip">0.5×</button>
+      <button class="chip active">1×</button>
+      <button class="chip">1.5×</button>
+      <button class="chip">2×</button>
+    </div>
+  </div>
+
+  <!-- Plate Total Hero -->
+  <div class="plate-total">
+    <div class="plate-total-header">
+      <h2>🍽 Plate Total</h2>
+      <span class="dish-count">3 dishes</span>
+    </div>
+
+    <div class="calorie-hero">
+      <span class="number">687</span>
+      <span class="unit">kcal</span>
+    </div>
+
+    <div class="macro-bar">
+      <div class="protein"></div>
+      <div class="carbs"></div>
+      <div class="fat"></div>
+    </div>
+
+    <div class="macro-row">
+      <div class="macro-item">
+        <div class="value"><span class="dot" style="background: var(--accent)"></span>32g</div>
+        <div class="label-text">Protein</div>
+      </div>
+      <div class="macro-item">
+        <div class="value"><span class="dot" style="background: var(--orange)"></span>58g</div>
+        <div class="label-text">Carbs</div>
+      </div>
+      <div class="macro-item">
+        <div class="value"><span class="dot" style="background: var(--red)"></span>22g</div>
+        <div class="label-text">Fat</div>
+      </div>
+      <div class="macro-item">
+        <div class="value"><span class="dot" style="background: #22c55e"></span>9g</div>
+        <div class="label-text">Fiber</div>
+      </div>
+    </div>
+
+    <div class="plate-dishes">
+      <div class="plate-dish-row">
+        <span class="plate-dish-name">Dal Makhani</span>
+        <span class="plate-dish-cal">285 kcal · 180g</span>
+      </div>
+      <div class="plate-dish-row">
+        <span class="plate-dish-name">Butter Naan (2)</span>
+        <span class="plate-dish-cal">262 kcal · 120g</span>
+      </div>
+      <div class="plate-dish-row">
+        <span class="plate-dish-name">Raita</span>
+        <span class="plate-dish-cal">140 kcal · 100g</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Health Check (always visible) -->
+  <div class="health-check">
+    <div class="health-check-row">
+      <div class="health-icon">🩺</div>
+      <div class="health-text">
+        <h3>✨ AI Health Check</h3>
+        <p>Tap to check how this meal fits your health goals</p>
+      </div>
+      <span style="color: var(--violet); font-size: 18px;">→</span>
+    </div>
+  </div>
+
+  <!-- Health Verdict (shown after check) -->
+  <div class="verdict-card verdict-caution">
+    <div class="verdict-header">
+      <span class="verdict-badge">⚠️ Caution</span>
+      <span style="font-size: 12px; color: var(--muted);">Dr. Capy's Verdict</span>
+    </div>
+    <p class="verdict-summary">
+      High in refined carbs from naan. Dal makhani has good protein but is calorie-dense due to butter/cream. Consider reducing naan to 1 and adding a salad.
+    </p>
+  </div>
+
+  <!-- Capy inline -->
+  <div class="capy-inline">
+    <span class="capy-avatar">🦫</span>
+    <p>Solid meal! Good protein from dal. Maybe swap one naan for roti? 💪</p>
+  </div>
+
+  <!-- Individual Dishes -->
+  <div class="section-label">📋 Individual Dishes</div>
+
+  <!-- Dish 1 — Collapsed -->
+  <div class="dish-card">
+    <div class="dish-collapsed">
+      <div class="dish-info">
+        <div class="dish-name">Dal Makhani</div>
+        <div class="dish-subtitle">दाल मखनी · 180g · High Protein</div>
+        <span class="verdict-pill caution">⚠️ Caution</span>
+      </div>
+      <div class="dish-cal-badge">
+        <span class="cal">285</span>
+        <span class="cal-unit"> kcal</span>
+      </div>
+      <span class="chevron">▼</span>
+    </div>
+  </div>
+
+  <!-- Dish 2 — Expanded -->
+  <div class="dish-card">
+    <div class="dish-collapsed" style="background: #fafaf7;">
+      <div class="dish-info">
+        <div class="dish-name">Butter Naan (2)</div>
+        <div class="dish-subtitle">बटर नान · 120g</div>
+        <span class="verdict-pill caution">⚠️ Caution</span>
+      </div>
+      <div class="dish-cal-badge">
+        <span class="cal">262</span>
+        <span class="cal-unit"> kcal</span>
+      </div>
+      <span class="chevron" style="transform: rotate(180deg);">▼</span>
+    </div>
+    <div class="dish-expanded">
+      <div class="macro-grid">
+        <div class="macro-cell">
+          <span class="mc-icon">🔥</span>
+          <span class="mc-value">262</span>
+          <span class="mc-label">kcal</span>
+        </div>
+        <div class="macro-cell">
+          <span class="mc-icon">💪</span>
+          <span class="mc-value">7g</span>
+          <span class="mc-label">Protein</span>
+        </div>
+        <div class="macro-cell">
+          <span class="mc-icon">🍞</span>
+          <span class="mc-value">38g</span>
+          <span class="mc-label">Carbs</span>
+        </div>
+        <div class="macro-cell">
+          <span class="mc-icon">🧈</span>
+          <span class="mc-value">9g</span>
+          <span class="mc-label">Fat</span>
+        </div>
+        <div class="macro-cell">
+          <span class="mc-icon">🌿</span>
+          <span class="mc-value">2g</span>
+          <span class="mc-label">Fiber</span>
+        </div>
+      </div>
+
+      <div class="detail-row">
+        <span class="dr-label">Portion</span>
+        <span class="dr-value">2 pieces, medium</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Weight</span>
+        <span class="dr-value">120g</span>
+      </div>
+      <div class="detail-row">
+        <span class="dr-label">Confidence</span>
+        <span class="dr-value" style="color: var(--accent);">✓ Confident</span>
+      </div>
+
+      <div class="ingredients-row">
+        <span class="ingredient-pill">Maida</span>
+        <span class="ingredient-pill">Butter</span>
+        <span class="ingredient-pill">Yeast</span>
+        <span class="ingredient-pill">Yogurt</span>
+      </div>
+
+      <div class="health-tip">
+        💡 Naan is made with refined flour (maida). Switch to tandoori roti for more fiber and fewer calories.
+      </div>
+
+      <div class="edit-actions">
+        <button class="edit-btn">✏️ 262 kcal</button>
+        <button class="edit-btn">⚖️ 120g</button>
+        <button class="edit-btn">🔄 Wrong dish?</button>
+        <button class="edit-btn danger">🗑 Remove</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dish 3 — Collapsed -->
+  <div class="dish-card">
+    <div class="dish-collapsed">
+      <div class="dish-info">
+        <div class="dish-name">Raita</div>
+        <div class="dish-subtitle">रायता · 100g · Low Calorie</div>
+        <span class="verdict-pill good">✅ Good</span>
+      </div>
+      <div class="dish-cal-badge">
+        <span class="cal">140</span>
+        <span class="cal-unit"> kcal</span>
+      </div>
+      <span class="chevron">▼</span>
+    </div>
+  </div>
+
+  <!-- Log Meal Bar -->
+  <div class="log-bar">
+    <select>
+      <option>🌅 Breakfast</option>
+      <option selected>🍛 Lunch</option>
+      <option>🍪 Snack</option>
+      <option>🌙 Dinner</option>
+    </select>
+    <button class="log-btn">✓ Log Meal</button>
+  </div>
+
+  <div style="height: 40px;"></div>
+</body>
+</html>

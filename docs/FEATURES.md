@@ -30,15 +30,21 @@
 - Manual scan only (no auto-scan) for low API cost
 - Reuses camera UI with dish-specific labels
 - Supports single dish or multi-dish plate/thali response
-- Per-dish nutrition card: calories, protein, carbs, fat, fiber
-- Portion adjuster: `0.5x`, `1x`, `1.5x`, `2x` (client-side scaling)
+- **Controls Strip**: horizontal scrollable row combining meal type pills (auto-selected by time of day with green dot indicator) + portion multiplier pills (`½×`, `1×`, `1.5×`, `2×`)
+- **Plate Total**: large centered calorie number with macro breakdown (protein, carbs, fat, fiber) + dish count and meal type
+- **Accordion dish cards**: per-dish collapsible cards with:
+  - Collapsed: dish name, Hindi name, weight, confidence badge (Confident/Likely/Unsure), inline macro pills, contextual note (tag-based positive/warning), "Tap for details" hint
+  - Expanded: editable 5-col macro grid (cal/protein/carbs/fat/fiber), calorie editor, weight editor, portion display, key ingredients, health tip, tags, reasoning toggle, action buttons (Wrong dish?, Describe, Remove)
+  - Single-dish results auto-expand; multi-dish uses independent accordion (tapping one collapses others)
+- **Proportional editing**: changing calories scales all macros proportionally; changing weight scales everything proportionally
 - Health tags: high-protein, high-carb, high-fat, low/high-calorie, fiber-rich
-- "Log This Meal" flow with meal type picker (Breakfast/Lunch/Snack/Dinner)
+- **Sticky log bar**: fixed at bottom with total calories + meal type + "Log Meal" button
+- "Clear analysis & re-scan" link below log bar
 - **Frozen frame**: on Analyze Dish, the camera freezes to a thumbnail with status badges:
   - "Analyzing your meal..." (spinner) while API call is in progress
   - "Analysis complete" (checkmark) once results are ready
   - "Scan Again" button to restart camera and clear results
-- **Provider tracking**: AI provider name displayed alongside dish count in Plate Total header
+- **Provider tracking**: AI provider name displayed alongside dish count
 - **Mock scan mode** (`?mock=scan`): full UI testing without camera or API — auto-switches to Scan tab, simulates 3 Indian dishes (Dal Tadka, Jeera Rice, Aloo Gobi) after 1.5s delay. See `docs/TESTING.md` for details.
 - Daily summary cards with progress rings for calories/protein/carbs/fat
 - Meal history with:
@@ -237,11 +243,11 @@
 
 ### On-Demand AI Health Check
 - **Not auto-triggered** — user taps "AI Health Check" button after viewing scan/describe results
-- Animated violet gradient pill with Sparkles icon and shimmer animation
-- Contextual subtitle: "Is this right for your Diabetes, Cholesterol?" (shows first 2 conditions, "+N more" if overflow)
-- Loading state: spinner + "Analyzing..."
-- Result: expandable `MealHealthBanner` with overall verdict (Good/Caution/Avoid) + per-dish verdicts with swap suggestions
-- If no health profile: muted "Get AI health advice — set up your profile" link opens wizard
+- **With profile**: full-width card with gradient icon, "AI Health Check" gradient title, condition subtitle, purple arrow button
+- **Without profile**: full-width dashed-border card with "How healthy is this meal?" title, stethoscope icon, "Set up your health profile" subtitle
+- Contextual subtitle: shows first 2 condition short labels separated by " · ", "+N more" if overflow
+- Loading state: gradient card with spinner + "Analyzing..."
+- Result: expandable `MealHealthBanner` with "Dr. Capy's Verdict" label, overall verdict (Looks Good/Needs Attention/Not Recommended) + per-dish verdicts with swap suggestions
 - **Provider chain**: Gemini 2.5 Flash → Claude 3.5 Haiku → GPT-4.1-mini (tiered fallback)
 - Medical disclaimer: "For informational purposes only. Consult your doctor."
 
