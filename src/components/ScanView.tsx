@@ -325,6 +325,9 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
         readyLabel="Ready — tap Analyze Dish"
         placeholderTitle="Point your camera at your plate"
         placeholderSubtitle="AI will estimate calories and macros"
+        capturedFrame={dish.capturedFrame}
+        hasResults={scaledDishes.length > 0}
+        onScanAgain={() => { dish.clearAnalysis(); dish.startCamera(); }}
       />
 
       {/* Meal context */}

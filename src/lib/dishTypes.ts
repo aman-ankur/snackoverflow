@@ -26,6 +26,7 @@ export interface DishAnalysisResult {
   totalCarbs: number;
   totalFat: number;
   totalFiber: number;
+  provider?: string;
 }
 
 export interface MealTotals {

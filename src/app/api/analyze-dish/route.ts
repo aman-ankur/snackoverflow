@@ -254,7 +254,7 @@ function normalizeResult(raw: unknown): DishAnalysisResult {
   };
 }
 
-async function tryGemini(base64Data: string, prompt: string): Promise<DishAnalysisResult | null> {
+async function tryGemini25Flash(base64Data: string, prompt: string): Promise<{ result: DishAnalysisResult; provider: string } | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
@@ -263,36 +263,59 @@ async function tryGemini(base64Data: string, prompt: string): Promise<DishAnalys
     inlineData: { mimeType: "image/jpeg" as const, data: base64Data },
   };
 
-  const models = ["gemini-2.5-flash", "gemini-2.0-flash"];
-
-  for (const modelName of models) {
-    try {
-      console.log(`[Gemini Dish] Trying ${modelName}...`);
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 2048,
-          ...(modelName === "gemini-2.5-flash" ? { thinkingConfig: { thinkingBudget: 1024 } } : {}),
-        } as Record<string, unknown>,
-      });
-      const result = await model.generateContent([prompt, imageContent]);
-      const parsed = parseJsonResponse(result.response.text());
-      console.log(`[Gemini Dish] Success with ${modelName}`);
-      return normalizeResult(parsed);
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : "";
-      console.error(`[Gemini Dish/${modelName}] ${msg}`);
-      if (isRateLimitError(msg)) continue;
-      throw err;
-    }
+  try {
+    console.log("[Gemini Dish] Trying gemini-2.5-flash...");
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.5-flash",
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 2048,
+        thinkingConfig: { thinkingBudget: 1024 },
+      } as Record<string, unknown>,
+    });
+    const result = await model.generateContent([prompt, imageContent]);
+    const parsed = parseJsonResponse(result.response.text());
+    console.log("[Gemini Dish] Success with gemini-2.5-flash");
+    return { result: normalizeResult(parsed), provider: "G25F" };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    console.error(`[Gemini Dish/gemini-2.5-flash] ${msg}`);
+    if (isRateLimitError(msg)) return null;
+    throw err;
   }
-
-  console.log("[Gemini Dish] All models rate limited, falling back...");
-  return null;
 }
 
-async function tryOpenAI(base64Data: string, prompt: string): Promise<DishAnalysisResult | null> {
+async function tryGemini20Flash(base64Data: string, prompt: string): Promise<{ result: DishAnalysisResult; provider: string } | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
+
+  const genAI = new GoogleGenerativeAI(apiKey);
+  const imageContent = {
+    inlineData: { mimeType: "image/jpeg" as const, data: base64Data },
+  };
+
+  try {
+    console.log("[Gemini Dish] Trying gemini-2.0-flash...");
+    const model = genAI.getGenerativeModel({
+      model: "gemini-2.0-flash",
+      generationConfig: {
+        temperature: 0.2,
+        maxOutputTokens: 2048,
+      } as Record<string, unknown>,
+    });
+    const result = await model.generateContent([prompt, imageContent]);
+    const parsed = parseJsonResponse(result.response.text());
+    console.log("[Gemini Dish] Success with gemini-2.0-flash");
+    return { result: normalizeResult(parsed), provider: "G20F" };
+  } catch (err: unknown) {
+    const msg = err instanceof Error ? err.message : "";
+    console.error(`[Gemini Dish/gemini-2.0-flash] ${msg}`);
+    if (isRateLimitError(msg)) return null;
+    throw err;
+  }
+}
+
+async function tryOpenAI(base64Data: string, prompt: string): Promise<{ result: DishAnalysisResult; provider: string } | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
@@ -322,7 +345,7 @@ async function tryOpenAI(base64Data: string, prompt: string): Promise<DishAnalys
     const text = result.choices[0]?.message?.content || "";
     const parsed = parseJsonResponse(text);
     console.log("[OpenAI Dish] Success with gpt-4o-mini");
-    return normalizeResult(parsed);
+    return { result: normalizeResult(parsed), provider: "OAI4m" };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "";
     console.error(`[OpenAI Dish] ${msg}`);
@@ -331,18 +354,18 @@ async function tryOpenAI(base64Data: string, prompt: string): Promise<DishAnalys
   }
 }
 
-async function tryGroq(base64Data: string, prompt: string): Promise<DishAnalysisResult | null> {
+async function tryGroq(base64Data: string, prompt: string): Promise<{ result: DishAnalysisResult; provider: string } | null> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return null;
 
   const groq = new Groq({ apiKey });
 
-  const groqModels = [
-    "meta-llama/llama-4-maverick-17b-128e-instruct",
-    "meta-llama/llama-4-scout-17b-16e-instruct",
+  const groqModels: Array<{ model: string; tag: string }> = [
+    { model: "meta-llama/llama-4-maverick-17b-128e-instruct", tag: "GRQM" },
+    { model: "meta-llama/llama-4-scout-17b-16e-instruct", tag: "GRQS" },
   ];
 
-  for (const groqModel of groqModels) {
+  for (const { model: groqModel, tag } of groqModels) {
     try {
       console.log(`[Groq Dish] Trying ${groqModel}...`);
       const result = await groq.chat.completions.create({
@@ -366,7 +389,7 @@ async function tryGroq(base64Data: string, prompt: string): Promise<DishAnalysis
       const text = result.choices[0]?.message?.content || "";
       const parsed = parseJsonResponse(text);
       console.log(`[Groq Dish] Success with ${groqModel}`);
-      return normalizeResult(parsed);
+      return { result: normalizeResult(parsed), provider: tag };
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : "";
       console.error(`[Groq Dish/${groqModel}] ${msg}`);
@@ -404,36 +427,52 @@ export async function POST(request: NextRequest) {
 
     const errors: string[] = [];
 
-    // Tier 1: Gemini (free, fast)
+    // Tier 1: Gemini 2.5 Flash (free, best quality)
     try {
-      const result = await tryGemini(base64Data, prompt);
-      if (result) {
-        setCachedResult(cacheKey, result);
-        return NextResponse.json(result);
+      const hit = await tryGemini25Flash(base64Data, prompt);
+      if (hit) {
+        const data = { ...hit.result, provider: hit.provider };
+        setCachedResult(cacheKey, data);
+        return NextResponse.json(data);
       }
-      errors.push("Gemini rate limited");
+      errors.push("Gemini 2.5 Flash rate limited");
     } catch (err: unknown) {
-      errors.push(`Gemini: ${err instanceof Error ? err.message : "failed"}`);
+      errors.push(`Gemini 2.5 Flash: ${err instanceof Error ? err.message : "failed"}`);
     }
 
     // Tier 2: OpenAI GPT-4o-mini (cheap, accurate)
     try {
-      const result = await tryOpenAI(base64Data, prompt);
-      if (result) {
-        setCachedResult(cacheKey, result);
-        return NextResponse.json(result);
+      const hit = await tryOpenAI(base64Data, prompt);
+      if (hit) {
+        const data = { ...hit.result, provider: hit.provider };
+        setCachedResult(cacheKey, data);
+        return NextResponse.json(data);
       }
       errors.push("OpenAI rate limited or no key");
     } catch (err: unknown) {
       errors.push(`OpenAI: ${err instanceof Error ? err.message : "failed"}`);
     }
 
-    // Tier 3: Groq Llama (free, last resort)
+    // Tier 3: Gemini 2.0 Flash (free fallback)
     try {
-      const result = await tryGroq(base64Data, prompt);
-      if (result) {
-        setCachedResult(cacheKey, result);
-        return NextResponse.json(result);
+      const hit = await tryGemini20Flash(base64Data, prompt);
+      if (hit) {
+        const data = { ...hit.result, provider: hit.provider };
+        setCachedResult(cacheKey, data);
+        return NextResponse.json(data);
+      }
+      errors.push("Gemini 2.0 Flash rate limited");
+    } catch (err: unknown) {
+      errors.push(`Gemini 2.0 Flash: ${err instanceof Error ? err.message : "failed"}`);
+    }
+
+    // Tier 4: Groq Llama (free, last resort)
+    try {
+      const hit = await tryGroq(base64Data, prompt);
+      if (hit) {
+        const data = { ...hit.result, provider: hit.provider };
+        setCachedResult(cacheKey, data);
+        return NextResponse.json(data);
       }
       errors.push("Groq rate limited or no key");
     } catch (err: unknown) {

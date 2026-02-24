@@ -66,6 +66,44 @@ BENCHMARK_URL=https://your-deployment.vercel.app npx tsx scripts/benchmark-calor
 
 ## 2. UI Feature Tests (Playwright MCP)
 
+### Mock Scan Mode (`?mock=scan`)
+
+A built-in mock mode that simulates the entire dish scan flow without a real camera or API calls. Activated by URL query parameter.
+
+**How it works:**
+- `useDishScanner` detects `?mock=scan` in the URL on mount
+- `startCamera()` → sets `isStreaming=true` without calling `getUserMedia`
+- `analyzeFrame()` → dynamic-imports mock data, sets a fake captured frame, waits 1.5s, returns a `DishAnalysisResult` with 3 Indian dishes and `provider: "MOCK"`
+- `stopCamera()` → sets `isStreaming=false` without touching MediaStream
+- `page.tsx` auto-switches to the Scan tab and skips onboarding
+
+**Mock data** (`src/lib/mockScanData.ts`):
+| Dish | Calories | Protein | Carbs | Fat | Fiber |
+|------|:--------:|:-------:|:-----:|:---:|:-----:|
+| Dal Tadka | 180 | 9g | 22g | 6g | 4g |
+| Jeera Rice | 210 | 4g | 42g | 3g | 1g |
+| Aloo Gobi | 160 | 4g | 18g | 8g | 3g |
+| **Plate Total** | **550** | **17g** | **82g** | **17g** | **8g** |
+
+**Manual testing:**
+```bash
+npm run dev
+# Visit http://localhost:3000/?mock=scan
+# Click Start Camera → Analyze Dish → see frozen frame + results → Scan Again
+```
+
+**Playwright E2E tests** (`e2e/dish-scan-mock.spec.ts`):
+```bash
+npm run dev                                        # Start dev server first
+npx playwright test e2e/dish-scan-mock.spec.ts     # Run mock scan tests
+```
+
+Tests cover:
+1. Full flow: Start Camera → Analyze Dish → frozen frame + "Analyzing your meal..." → results (3 dishes, 550 kcal) → "Analysis complete" badge → Scan Again
+2. Log flow: scan → Log This Meal → "Logged" confirmation
+
+**Production safety:** Without `?mock=scan`, the mock data module is never imported (dynamic import). No camera permissions, API calls, or env vars needed for mock mode.
+
 ### Approach: Mock API Responses
 
 We intercept `fetch` calls in the browser to return deterministic mock data. This avoids AI API calls during testing, making tests fast, free, and repeatable.

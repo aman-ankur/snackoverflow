@@ -34,6 +34,12 @@
 - Portion adjuster: `0.5x`, `1x`, `1.5x`, `2x` (client-side scaling)
 - Health tags: high-protein, high-carb, high-fat, low/high-calorie, fiber-rich
 - "Log This Meal" flow with meal type picker (Breakfast/Lunch/Snack/Dinner)
+- **Frozen frame**: on Analyze Dish, the camera freezes to a thumbnail with status badges:
+  - "Analyzing your meal..." (spinner) while API call is in progress
+  - "Analysis complete" (checkmark) once results are ready
+  - "Scan Again" button to restart camera and clear results
+- **Provider tracking**: AI provider name displayed alongside dish count in Plate Total header
+- **Mock scan mode** (`?mock=scan`): full UI testing without camera or API — auto-switches to Scan tab, simulates 3 Indian dishes (Dal Tadka, Jeera Rice, Aloo Gobi) after 1.5s delay. See `docs/TESTING.md` for details.
 - Daily summary cards with progress rings for calories/protein/carbs/fat
 - Meal history with:
   - "You had this X days ago" badge

@@ -148,16 +148,21 @@ Common Indian kitchen items with default days:
 | `setMealType` | function | Update meal context |
 | `scanCount` | number | Successful manual scans count |
 | `lastAnalyzedAt` | Date \| null | Last successful analysis time |
-| `startCamera()` | function | Start camera |
-| `stopCamera()` | function | Stop camera |
+| `capturedFrame` | string \| null | Base64 JPEG of the last captured frame (frozen thumbnail) |
+| `mockMode` | boolean | Whether mock scan mode is active (`?mock=scan` in URL) |
+| `startCamera()` | function | Start camera (no-op in mock mode) |
+| `stopCamera()` | function | Stop camera (no-op in mock mode) |
 | `flipCamera()` | function | Toggle front/rear camera |
-| `analyzeFrame()` | function | Capture frame and call `/api/analyze-dish` |
-| `clearAnalysis()` | function | Reset analysis state |
+| `analyzeFrame()` | function | Capture frame and call `/api/analyze-dish` (uses mock data in mock mode) |
+| `correctDish()` | function | Re-analyze with dish name correction |
+| `clearAnalysis()` | function | Reset analysis state and captured frame |
 
 ### Key Behaviors
 - Frame capture downscales to max 512px wide with JPEG 0.6 compression
 - Manual-scan-only pattern (no auto-scan interval)
 - Defensive normalization for malformed AI responses
+- **Frozen frame**: `capturedFrame` is set on analyze, displayed as thumbnail while analyzing/after results
+- **Mock mode** (`?mock=scan`): dynamic-imports `mockScanData.ts`, bypasses camera and API, returns fake results after 1.5s delay. Mock data module is never bundled in production.
 
 ---
 
