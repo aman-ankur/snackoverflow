@@ -1,8 +1,9 @@
 "use client";
 
-import { Settings2, Target, Flame, User, Scale, Ruler, Activity, LogOut, Cloud, CloudOff, Play, Stethoscope, ShieldCheck, ChevronRight, AlertTriangle } from "lucide-react";
+import { Settings2, Target, Flame, User, Scale, Ruler, Activity, LogOut, Cloud, CloudOff, Play, Stethoscope, ShieldCheck, ChevronRight, AlertTriangle, Code2 } from "lucide-react";
 import CapyMascot from "@/components/CapyMascot";
 import AuthScreen from "@/components/AuthScreen";
+import { useDevMode } from "@/lib/useDevMode";
 import type { UserProfile, NutritionGoals, StreakData, HealthProfile } from "@/lib/dishTypes";
 import { getConditionById } from "@/lib/healthConditions";
 import { getHealthSummaryDisplay, getStaleLabs } from "@/lib/healthContextBuilder";
@@ -61,6 +62,8 @@ export default function ProfileView({
   onSignOut,
   onReplayTour,
 }: ProfileViewProps) {
+  const [devMode, setDevMode] = useDevMode();
+
   return (
     <div className="space-y-4">
       {/* Header */}
@@ -295,6 +298,27 @@ export default function ProfileView({
 
       {/* Actions */}
       <div className="rounded-2xl bg-card border border-border overflow-hidden">
+        {/* Dev Mode Toggle */}
+        <div className="flex items-center gap-3 px-4 py-3.5">
+          <Code2 className="h-4 w-4 text-violet-500" />
+          <div className="flex-1">
+            <span className="text-sm font-bold text-foreground">Dev Mode</span>
+            <p className="text-[10px] text-muted">Mock all AI calls for demos</p>
+          </div>
+          <button
+            onClick={() => setDevMode(!devMode)}
+            className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+              devMode ? "bg-violet-500" : "bg-border"
+            }`}
+          >
+            <span
+              className={`inline-block h-4 w-4 rounded-full bg-white shadow-sm transition-transform ${
+                devMode ? "translate-x-6" : "translate-x-1"
+              }`}
+            />
+          </button>
+        </div>
+        <div className="border-t border-border" />
         <button
           onClick={onEditGoals}
           className="w-full flex items-center gap-3 px-4 py-3.5 text-left hover:bg-card-hover transition-colors"

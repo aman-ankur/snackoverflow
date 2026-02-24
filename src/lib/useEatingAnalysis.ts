@@ -109,6 +109,17 @@ export function useEatingAnalysis() {
       setError(null);
 
       try {
+        // Dev mode: return mock analysis instantly
+        const { getDevMode } = await import("@/lib/useDevMode");
+        if (getDevMode()) {
+          const { MOCK_EATING_ANALYSIS, DEV_MOCK_DELAY_MS } = await import("@/lib/mockDevData");
+          await new Promise((r) => setTimeout(r, DEV_MOCK_DELAY_MS));
+          const mockAnalysis = { ...MOCK_EATING_ANALYSIS, windowDays, generatedAt: new Date().toISOString() };
+          setAnalyses((prev) => [mockAnalysis, ...prev].slice(0, MAX_STORED));
+          setIsGenerating(false);
+          return mockAnalysis;
+        }
+
         const aggregate = aggregateMeals(meals, windowDays, goals);
 
         if (aggregate.totalMeals === 0) {

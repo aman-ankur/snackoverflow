@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from "react";
 import type { MealHealthAnalysis } from "@/lib/dishTypes";
+import { getDevMode } from "@/lib/useDevMode";
 
 interface DishInput {
   name: string;
@@ -42,6 +43,17 @@ export function useHealthVerdict(): UseHealthVerdictReturn {
       setStatus("loading");
       setError(null);
       setVerdict(null);
+
+      // Dev mode: return mock verdict instantly
+      if (getDevMode()) {
+        import("@/lib/mockDevData").then(({ MOCK_HEALTH_VERDICT, DEV_MOCK_DELAY_MS }) => {
+          setTimeout(() => {
+            setVerdict(MOCK_HEALTH_VERDICT);
+            setStatus("success");
+          }, DEV_MOCK_DELAY_MS);
+        });
+        return;
+      }
 
       fetch("/api/health-verdict", {
         method: "POST",

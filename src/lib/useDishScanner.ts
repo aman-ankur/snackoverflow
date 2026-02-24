@@ -2,6 +2,7 @@
 
 import { useRef, useState, useCallback, useEffect } from "react";
 import type { DishAnalysisResult, DishNutrition, MealType } from "@/lib/dishTypes";
+import { getDevMode } from "@/lib/useDevMode";
 
 function toNumber(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
@@ -100,9 +101,10 @@ export function useDishScanner() {
   const streamRef = useRef<MediaStream | null>(null);
   const lastFrameRef = useRef<string | null>(null);
 
-  const [mockMode] = useState(
-    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mock") === "scan"
-  );
+  const [mockMode] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return new URLSearchParams(window.location.search).get("mock") === "scan" || getDevMode();
+  });
   const [isStreaming, setIsStreaming] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -209,7 +211,7 @@ export function useDishScanner() {
         );
         setCapturedFrame(MOCK_FOOD_IMAGE);
         lastFrameRef.current = MOCK_FOOD_IMAGE;
-        await new Promise((resolve) => setTimeout(resolve, MOCK_ANALYSIS_DELAY_MS));
+        await new Promise((resolve) => setTimeout(resolve, getDevMode() ? 400 : MOCK_ANALYSIS_DELAY_MS));
         setAnalysis(MOCK_SCAN_RESULT);
         setLastAnalyzedAt(new Date());
         setScanCount((count) => count + 1);
