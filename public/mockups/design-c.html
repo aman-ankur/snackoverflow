@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Design C — Minimal Dense</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800;900&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --bg: #F5F2EB;
+    --fg: #0D0D0D;
+    --accent: #5AAC5A;
+    --accent-light: #e8f5e8;
+    --accent-dim: #3d7a3d;
+    --orange: #F08C42;
+    --orange-light: #fef3e8;
+    --card: #FFFFFF;
+    --border: #DDD8CC;
+    --muted: #4A4540;
+    --muted-light: #8a847c;
+    --violet: #7c3aed;
+    --violet-light: #f3f0ff;
+    --red: #ef4444;
+  }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--fg);
+    max-width: 430px;
+    margin: 0 auto;
+    padding: 16px;
+    line-height: 1.5;
+  }
+
+  .label {
+    position: fixed; top: 0; left: 0; right: 0;
+    background: #059669;
+    color: white;
+    text-align: center;
+    padding: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    z-index: 100;
+    max-width: 430px;
+    margin: 0 auto;
+  }
+  .spacer { height: 44px; }
+
+  /* ─── Controls as a single strip ─── */
+  .strip {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 12px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .strip::-webkit-scrollbar { display: none; }
+  .strip-item {
+    padding: 7px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: var(--card);
+    color: var(--muted);
+    white-space: nowrap;
+    cursor: pointer;
+    flex-shrink: 0;
+    font-family: inherit;
+  }
+  .strip-item.active {
+    background: var(--accent-light);
+    color: var(--accent-dim);
+    border-color: rgba(90,172,90,0.3);
+  }
+  .strip-divider {
+    width: 1px;
+    background: var(--border);
+    flex-shrink: 0;
+    margin: 4px 2px;
+  }
+
+  /* ─── Full-width Calorie Banner ─── */
+  .cal-banner {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 20px;
+    margin-bottom: 12px;
+    text-align: center;
+  }
+  .cb-label {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+  .cb-calories {
+    font-size: 48px;
+    font-weight: 900;
+    letter-spacing: -2px;
+    line-height: 1;
+  }
+  .cb-unit {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--muted);
+    margin-left: 4px;
+  }
+  .cb-macros {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 16px;
+  }
+  .cb-macro {
+    text-align: center;
+  }
+  .cb-macro .cmv {
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .cb-macro .cml {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+
+  /* ─── Health Check Card ─── */
+  .hc-card {
+    border-radius: 16px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .hc-card.with-profile {
+    background: linear-gradient(135deg, #f5f3ff, #eef2ff);
+    border: 2px solid #c4b5fd;
+  }
+  .hc-card.without-profile {
+    background: var(--card);
+    border: 2px dashed var(--border);
+  }
+  .hc-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+  .hc-card.with-profile .hc-icon {
+    background: linear-gradient(135deg, #7c3aed, #6366f1);
+  }
+  .hc-card.without-profile .hc-icon {
+    background: var(--bg);
+  }
+  .hc-text { flex: 1; }
+  .hc-text h3 {
+    font-size: 14px;
+    font-weight: 800;
+  }
+  .hc-card.with-profile .hc-text h3 {
+    background: linear-gradient(135deg, #7c3aed, #4f46e5);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .hc-card.without-profile .hc-text h3 {
+    color: var(--muted);
+  }
+  .hc-text p {
+    font-size: 12px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+  .hc-go {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    flex-shrink: 0;
+    border: none;
+    cursor: pointer;
+  }
+  .hc-card.with-profile .hc-go {
+    background: var(--violet);
+    color: white;
+  }
+  .hc-card.without-profile .hc-go {
+    background: var(--border);
+    color: var(--muted);
+  }
+
+  /* ─── Verdict shown ─── */
+  .verdict-shown {
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .verdict-shown.good { background: #f0fdf4; border: 2px solid #86efac; }
+  .verdict-shown.caution { background: #fffbeb; border: 2px solid #fcd34d; }
+  .vs-top {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+  }
+  .vs-badge {
+    font-size: 14px;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .vs-badge.caution { color: #92400e; }
+  .vs-label {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .vs-text {
+    font-size: 13px;
+    line-height: 1.6;
+  }
+
+  /* ─── Dish List ─── */
+  .dish-list {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 12px;
+  }
+
+  .dl-item {
+    cursor: pointer;
+    transition: background 0.15s;
+  }
+  .dl-item:hover {
+    background: #fafaf7;
+  }
+  .dl-item + .dl-item {
+    border-top: 1px solid var(--border);
+  }
+
+  .dl-collapsed {
+    padding: 14px 16px;
+  }
+
+  .dl-row1 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+  .dl-name {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .dl-cal {
+    font-size: 16px;
+    font-weight: 800;
+  }
+  .dl-cal small {
+    font-size: 11px;
+    font-weight: 500;
+    color: var(--muted);
+  }
+
+  .dl-row2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .dl-meta {
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .dl-macros-inline {
+    display: flex;
+    gap: 10px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .dl-macros-inline .p { color: var(--accent-dim); }
+  .dl-macros-inline .c { color: var(--orange); }
+  .dl-macros-inline .f { color: #dc2626; }
+
+  .dl-verdict-row {
+    margin-top: 6px;
+  }
+  .dl-vpill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .dl-vpill.good { background: #dcfce7; color: #166534; }
+  .dl-vpill.caution { background: #fef3c7; color: #92400e; }
+
+  /* Expanded inside list */
+  .dl-expanded {
+    padding: 0 16px 16px;
+  }
+  .dl-exp-content {
+    background: #fafaf7;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 14px;
+  }
+
+  .dle-macros-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+  .dle-mc {
+    text-align: center;
+    padding: 8px 2px;
+    background: white;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+  }
+  .dle-mc .em-icon { font-size: 14px; }
+  .dle-mc .em-val {
+    font-size: 14px;
+    font-weight: 800;
+    display: block;
+    margin-top: 2px;
+  }
+  .dle-mc .em-lbl {
+    font-size: 10px;
+    color: var(--muted);
+    display: block;
+  }
+
+  .dle-details {
+    font-size: 13px;
+    margin-bottom: 10px;
+  }
+  .dle-details div {
+    display: flex;
+    justify-content: space-between;
+    padding: 3px 0;
+  }
+  .dle-details .el { color: var(--muted); }
+  .dle-details .ev { font-weight: 600; }
+
+  .dle-ingredients {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+    margin-bottom: 10px;
+  }
+  .dle-ing {
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: 20px;
+    background: white;
+    border: 1px solid var(--border);
+    color: var(--muted);
+  }
+
+  .dle-tip {
+    background: var(--orange-light);
+    border: 1px solid rgba(240,140,66,0.2);
+    border-radius: 10px;
+    padding: 8px 12px;
+    font-size: 12px;
+    line-height: 1.5;
+    margin-bottom: 10px;
+  }
+
+  .dle-actions {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .dle-btn {
+    padding: 6px 12px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    border: 1px solid var(--border);
+    background: white;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .dle-btn.danger { border-color: #fecaca; color: var(--red); }
+
+  /* ─── Bottom log ─── */
+  .log-bottom {
+    background: var(--accent);
+    border-radius: 16px;
+    padding: 14px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    margin-bottom: 8px;
+  }
+  .lb-left {
+    color: white;
+  }
+  .lb-left .lb-title {
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .lb-left .lb-sub {
+    font-size: 12px;
+    opacity: 0.85;
+  }
+  .lb-right {
+    color: white;
+    font-size: 24px;
+  }
+
+  .clear-link {
+    text-align: center;
+    font-size: 12px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+  .clear-link:hover { color: var(--fg); }
+</style>
+</head>
+<body>
+  <div class="label">Design C — Minimal Dense List</div>
+  <div class="spacer"></div>
+
+  <!-- Controls Strip -->
+  <div class="strip">
+    <button class="strip-item">🌅 Breakfast</button>
+    <button class="strip-item active">🍛 Lunch</button>
+    <button class="strip-item">🍪 Snack</button>
+    <button class="strip-item">🌙 Dinner</button>
+    <div class="strip-divider"></div>
+    <button class="strip-item">½×</button>
+    <button class="strip-item active">1×</button>
+    <button class="strip-item">1.5×</button>
+    <button class="strip-item">2×</button>
+  </div>
+
+  <!-- Calorie Banner -->
+  <div class="cal-banner">
+    <div class="cb-label">Plate Total</div>
+    <div>
+      <span class="cb-calories">687</span>
+      <span class="cb-unit">kcal</span>
+    </div>
+    <div class="cb-macros">
+      <div class="cb-macro">
+        <div class="cmv" style="color: var(--accent-dim);">32g</div>
+        <div class="cml">Protein</div>
+      </div>
+      <div class="cb-macro">
+        <div class="cmv" style="color: var(--orange);">58g</div>
+        <div class="cml">Carbs</div>
+      </div>
+      <div class="cb-macro">
+        <div class="cmv" style="color: #dc2626;">22g</div>
+        <div class="cml">Fat</div>
+      </div>
+      <div class="cb-macro">
+        <div class="cmv" style="color: #22c55e;">9g</div>
+        <div class="cml">Fiber</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- AI Health Check — with profile -->
+  <div class="hc-card with-profile">
+    <div class="hc-icon">🩺</div>
+    <div class="hc-text">
+      <h3>✨ AI Health Check</h3>
+      <p>Check against your Diabetes & High BP profile</p>
+    </div>
+    <button class="hc-go">→</button>
+  </div>
+
+  <!-- Verdict shown -->
+  <div class="verdict-shown caution">
+    <div class="vs-top">
+      <span class="vs-badge caution">⚠️ Caution</span>
+      <span class="vs-label">Dr. Capy's Verdict</span>
+    </div>
+    <p class="vs-text">
+      High in refined carbs from naan. Dal makhani adds good protein but is calorie-dense from butter/cream. Consider reducing naan to 1 piece and adding a side salad.
+    </p>
+  </div>
+
+  <!-- AI Health Check — without profile -->
+  <div class="hc-card without-profile" style="margin-bottom: 16px;">
+    <div class="hc-icon">🩺</div>
+    <div class="hc-text">
+      <h3>How healthy is this meal?</h3>
+      <p>Get a general nutrition assessment</p>
+    </div>
+    <button class="hc-go">→</button>
+  </div>
+
+  <!-- Dish List -->
+  <div class="dish-list">
+    <!-- Dish 1 — Collapsed -->
+    <div class="dl-item">
+      <div class="dl-collapsed">
+        <div class="dl-row1">
+          <span class="dl-name">Dal Makhani</span>
+          <span class="dl-cal">285 <small>kcal</small></span>
+        </div>
+        <div class="dl-row2">
+          <span class="dl-meta">दाल मखनी · 180g</span>
+          <span class="dl-macros-inline">
+            <span class="p">P 18g</span>
+            <span class="c">C 20g</span>
+            <span class="f">F 14g</span>
+          </span>
+        </div>
+        <div class="dl-verdict-row">
+          <span class="dl-vpill caution">⚠️ Caution</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dish 2 — Expanded -->
+    <div class="dl-item" style="background: #fafaf7;">
+      <div class="dl-collapsed">
+        <div class="dl-row1">
+          <span class="dl-name">Butter Naan (2)</span>
+          <span class="dl-cal">262 <small>kcal</small></span>
+        </div>
+        <div class="dl-row2">
+          <span class="dl-meta">बटर नान · 120g</span>
+          <span class="dl-macros-inline">
+            <span class="p">P 7g</span>
+            <span class="c">C 38g</span>
+            <span class="f">F 9g</span>
+          </span>
+        </div>
+        <div class="dl-verdict-row">
+          <span class="dl-vpill caution">⚠️ Caution</span>
+        </div>
+      </div>
+      <div class="dl-expanded">
+        <div class="dl-exp-content">
+          <div class="dle-macros-grid">
+            <div class="dle-mc">
+              <span class="em-icon">🔥</span>
+              <span class="em-val">262</span>
+              <span class="em-lbl">kcal</span>
+            </div>
+            <div class="dle-mc">
+              <span class="em-icon">💪</span>
+              <span class="em-val">7g</span>
+              <span class="em-lbl">Protein</span>
+            </div>
+            <div class="dle-mc">
+              <span class="em-icon">🍞</span>
+              <span class="em-val">38g</span>
+              <span class="em-lbl">Carbs</span>
+            </div>
+            <div class="dle-mc">
+              <span class="em-icon">🧈</span>
+              <span class="em-val">9g</span>
+              <span class="em-lbl">Fat</span>
+            </div>
+            <div class="dle-mc">
+              <span class="em-icon">🌿</span>
+              <span class="em-val">2g</span>
+              <span class="em-lbl">Fiber</span>
+            </div>
+          </div>
+
+          <div class="dle-details">
+            <div>
+              <span class="el">Portion</span>
+              <span class="ev">2 pieces, medium</span>
+            </div>
+            <div>
+              <span class="el">Confidence</span>
+              <span class="ev" style="color: var(--accent);">✓ Confident</span>
+            </div>
+          </div>
+
+          <div class="dle-ingredients">
+            <span class="dle-ing">Maida</span>
+            <span class="dle-ing">Butter</span>
+            <span class="dle-ing">Yeast</span>
+            <span class="dle-ing">Yogurt</span>
+          </div>
+
+          <div class="dle-tip">
+            💡 Naan uses refined flour. Switch to tandoori roti for more fiber and fewer calories.
+          </div>
+
+          <div class="dle-actions">
+            <button class="dle-btn">✏️ Edit Calories</button>
+            <button class="dle-btn">⚖️ Edit Weight</button>
+            <button class="dle-btn">🔄 Wrong dish?</button>
+            <button class="dle-btn danger">🗑 Remove</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Dish 3 — Collapsed -->
+    <div class="dl-item">
+      <div class="dl-collapsed">
+        <div class="dl-row1">
+          <span class="dl-name">Raita</span>
+          <span class="dl-cal">140 <small>kcal</small></span>
+        </div>
+        <div class="dl-row2">
+          <span class="dl-meta">रायता · 100g</span>
+          <span class="dl-macros-inline">
+            <span class="p">P 7g</span>
+            <span class="c">C 8g</span>
+            <span class="f">F 5g</span>
+          </span>
+        </div>
+        <div class="dl-verdict-row">
+          <span class="dl-vpill good">✅ Good</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Log Button -->
+  <div class="log-bottom">
+    <div class="lb-left">
+      <div class="lb-title">✓ Log as Lunch</div>
+      <div class="lb-sub">687 kcal · 3 dishes</div>
+    </div>
+    <div class="lb-right">→</div>
+  </div>
+
+  <div class="clear-link">Clear analysis & re-scan</div>
+
+  <div style="height: 40px;"></div>
+</body>
+</html>
