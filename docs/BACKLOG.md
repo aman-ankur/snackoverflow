@@ -99,6 +99,18 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - New files: `mealAggregator.ts`, `useEatingAnalysis.ts`, `analyze-habits/route.ts`, `EatingAnalysisSheet.tsx`, `EatingAnalysisCard.tsx`
 - New types: `EatingAnalysis`, `EatingReport`, `ReportInsight`, `ActionItem`, `PeriodComparison` in `dishTypes.ts`
 
+### Progress Page Revamp ✅ SHIPPED
+- Complete redesign from information-heavy to insight-first layout
+- **Removed**: Total Progress card, Nutrition/Fitness 2-col cards, Today's Macros bars, Streak Card, Weekly Calorie bar chart, Patterns section, flat Meal History
+- **New layout**: AI Eating Analysis (hero) → Activity Calendar + Top Dishes → Calorie Trend (7d/4w SVG chart) → 3-box Stats Row → Meal History Accordion
+- EatingAnalysisCard restyled: subtle white card, Sparkles icon in light purple, shimmer gradient CTA
+- CalendarProgressView: integrated Top Dishes section reactive to week/month toggle + month navigation
+- CalorieTrendCard: animated SVG bar chart + trend polyline, "Up/Down X% vs last week" insight badge
+- Green-to-blue gradient background on Calorie Trend card
+- Meal History: collapsible accordion by date, today expanded by default
+- New CSS keyframe: `pulse-subtle`
+- Modified files: `ProgressView.tsx`, `EatingAnalysisCard.tsx`, `CalendarProgressView.tsx`, `globals.css`
+
 ---
 
 ## Priority: Medium

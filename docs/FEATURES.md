@@ -3,7 +3,7 @@
 ## 1. Bottom Navigation (4-Tab + Fridge Overlay)
 - Fixed bottom tab bar with four tabs + center FAB:
   - 🏠 **Home** — dashboard with Capy mascot, daily intake ring, meal slots, fridge scan CTA
-  - 📊 **Progress** — nutrition tracking, macro bars, weekly calories, meal history
+  - 📊 **Progress** — insight-first layout: AI eating analysis, activity calendar + top dishes, calorie trend chart, stats row, meal history accordion
   - 📷 **Scan** (center FAB) — dish scanner with camera, meal context, portion adjuster
   - 👤 **Profile** — body stats, daily targets, goal setup, reset
 - 🧊 **Fridge Scanner** — full-screen overlay triggered from Home CTA (not a tab)
@@ -159,7 +159,7 @@
 - Three.js visuals map directly to milestone state (treeLevel, flowers, butterflies, hasRainbow, hasCrown, babyCapybaras, homeLevel)
 - Garden health: composite 0–100% score based on streak + goal day bonuses; wilts when streak = 0
 
-## 15. Calendar Progress View (NEW)
+## 15. Calendar Progress View
 - Apple Fitness-style concentric rings per day showing macro progress
 - Rings: outer green (calories %), middle orange (protein %), inner blue (carbs %)
 - Default: weekly row view (7 days)
@@ -167,7 +167,12 @@
 - Tap a day → bottom sheet with full macro breakdown for that day
 - Days with no data show empty/grey rings
 - Month navigation (left/right arrows, limited to current year)
-- Integrated at top of Progress tab
+- **Top Dishes** section at bottom of calendar card:
+  - Shows top 4 most-eaten dishes as compact pills (`3x Dal`, `2x Roti`)
+  - Dynamically filters by visible date range (week dates or month)
+  - Label changes: "Top this week" ↔ "Top this month" based on current view
+  - Re-computes when toggling week/month or navigating to different months
+- Integrated as slot #2 in Progress tab (after AI Eating Analysis)
 
 ## 16. Meal Type Sheet & Detail Editing (NEW)
 - **Meal Type Sheet** (bottom sheet) — tap a meal slot on Home to open:
@@ -336,3 +341,30 @@ Report displayed in a bottom sheet (consistent with MealTypeSheet pattern) with 
 - `EatingAnalysisSheet.tsx` — tabbed bottom sheet (Summary / Patterns / Health / Actions)
 - `EatingAnalysisCard.tsx` — trigger card with time-window picker for Progress tab
 - Types in `dishTypes.ts`: `EatingAnalysis`, `EatingReport`, `ReportInsight`, `ActionItem`, `PeriodComparison`, `MacroTrends`
+
+## 20. Progress Page Revamp (NEW)
+Complete redesign of the Progress tab from information-heavy to insight-first layout.
+
+### What Changed
+- **Removed**: Total Progress card, Nutrition/Fitness 2-col cards, Today's Macros (3 progress bars), Streak Card, Weekly Calorie bar chart, Patterns section, flat Meal History list
+- **Repositioned**: AI Eating Analysis moved from bottom to hero slot #1
+- **Added**: Calorie Trend chart, 3-box stats row, meal history accordion, Top Dishes in calendar
+
+### New Layout (top → bottom)
+1. **AI Eating Analysis** — hero card with subtle white design, Sparkles icon in light purple, shimmer gradient CTA button matching HealthCheckButton pattern
+2. **Activity Calendar + Top Dishes** — existing calendar with new "Top this week/month" dish pills at bottom, reactive to week/month toggle and month navigation
+3. **Calorie Trend Card** — SVG bar chart + trend polyline with 7d/4w toggle:
+   - 7d: Mon–Sun daily calorie bars, today highlighted green, future days hidden, goal dashed line
+   - 4w: Last 4 ISO weeks, bars show avg kcal/day per week
+   - Trend insight badge: "Up/Down X% vs last/prior week" with avg comparison
+   - Green-to-blue gradient card background
+4. **Stats Row** (3 compact boxes): "kcal to go" (clamped ≥0) | "kcal today" | "avg/day (7d)"
+5. **Meal History Accordion** — collapsible date groups (today expanded by default), per-meal dish names + meal type + macros, "Show older meals" for dates beyond first 5
+
+### Design Tokens
+- AI card icon: `Sparkles` from Lucide, `text-violet-400`, wrapped in `bg-gradient-to-br from-violet-50 to-indigo-50`
+- AI CTA shimmer: `animate-[shimmer_3s_ease-in-out_infinite]` with `from-violet-50 via-indigo-50 to-blue-50`
+- Window pills active: violet gradient with `text-violet-600`
+- Calorie Trend bg: `bg-gradient-to-br from-[#E8F5E0] to-[#DBEAFE]`
+- Stats row: gradient card backgrounds (accent-light, orange-light)
+- New CSS keyframe: `pulse-subtle` in `globals.css`
