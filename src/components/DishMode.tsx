@@ -169,6 +169,12 @@ export default function DishMode() {
         readyLabel="Ready — tap Analyze Dish"
         placeholderTitle="Point your camera at your plate"
         placeholderSubtitle="AI will estimate calories and macros"
+        capturedFrame={dish.capturedFrame}
+        hasResults={scaledDishes.length > 0}
+        onScanAgain={() => {
+          dish.clearAnalysis();
+          dish.startCamera();
+        }}
       />
 
       <div className="rounded-2xl border border-border bg-card p-3">
@@ -241,8 +247,13 @@ export default function DishMode() {
             <div className="rounded-2xl border border-accent/20 bg-accent-light p-4">
               <div className="flex items-center justify-between gap-3">
                 <h3 className="text-sm font-semibold">Plate Total</h3>
-                <span className="text-[10px] text-muted">
-                  {scaledDishes.length} dish{scaledDishes.length === 1 ? "" : "es"}
+                <span className="flex items-center gap-1.5">
+                  {dish.analysis?.provider && (
+                    <span className="text-[8px] text-muted/40 font-mono">{dish.analysis.provider}</span>
+                  )}
+                  <span className="text-[10px] text-muted">
+                    {scaledDishes.length} dish{scaledDishes.length === 1 ? "" : "es"}
+                  </span>
                 </span>
               </div>
               <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">

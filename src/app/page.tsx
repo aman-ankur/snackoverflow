@@ -62,6 +62,16 @@ export default function Home() {
     }
   }, [userGoals.hasLoaded, userGoals.hasProfile]);
 
+  // Auto-switch to scan tab and skip onboarding when ?mock=scan
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("mock") === "scan") {
+      setActiveTab("scan");
+      setShowOnboarding(false);
+    }
+  }, []);
+
   const handleOnboardingComplete = (profile: UserProfile, goals: NutritionGoals) => {
     userGoals.saveProfile(profile);
     if (goals.isCustom) {
@@ -102,9 +112,9 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="h-dvh flex flex-col bg-background overflow-hidden">
       {/* Main Content */}
-      <main className="mx-auto max-w-lg px-4 pt-4 pb-24">
+      <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-none mx-auto w-full max-w-lg px-4 pt-4 pb-24">
         <AnimatePresence mode="wait">
           {activeTab === "home" && (
             <motion.div
