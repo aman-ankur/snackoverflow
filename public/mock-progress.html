@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Progress Page — Design Options</title>
+<style>
+  :root {
+    --bg: #F5F2EB;
+    --fg: #0D0D0D;
+    --card: #FFFFFF;
+    --border: #DDD8CC;
+    --accent: #5AAC5A;
+    --accent-dim: #489848;
+    --accent-light: #D4EDCF;
+    --orange: #F08C42;
+    --orange-light: #FDE8D4;
+    --muted: #4A4540;
+    --muted-light: #7A756F;
+    --purple: #7C3AED;
+    --purple-light: #F0E8FF;
+    --purple-border: rgba(124,58,237,0.15);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    background: #E8E4DD;
+    color: var(--fg);
+    padding: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1 { font-size: 20px; font-weight: 800; text-align: center; margin-bottom: 8px; }
+  .subtitle { text-align: center; font-size: 12px; color: var(--muted-light); margin-bottom: 20px; }
+  .options-grid {
+    display: flex;
+    gap: 16px;
+    overflow-x: auto;
+    padding-bottom: 20px;
+    scroll-snap-type: x mandatory;
+  }
+
+  .phone-frame {
+    flex-shrink: 0;
+    width: 390px;
+    height: 844px;
+    background: var(--bg);
+    border-radius: 40px;
+    border: 3px solid #C5C0B8;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+    scroll-snap-align: start;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+    position: relative;
+  }
+
+  .option-label {
+    background: var(--purple);
+    color: white;
+    text-align: center;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+
+  .scroll-area {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    padding-bottom: 90px;
+  }
+  .scroll-area::-webkit-scrollbar { display: none; }
+
+  .bottom-bar {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: var(--card);
+    border-top: 1px solid var(--border);
+    padding: 8px 16px 20px;
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    align-items: end;
+  }
+  .tab-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted-light);
+    border: none;
+    background: none;
+  }
+  .tab-btn.active { color: var(--accent); }
+  .tab-btn svg { width: 20px; height: 20px; }
+  .scan-fab {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: var(--accent);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: -24px;
+    box-shadow: 0 4px 16px rgba(90,172,90,0.35);
+    border: none;
+  }
+  .scan-fab svg { width: 24px; height: 24px; color: white; }
+
+  /* Shared card styles */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-purple {
+    background: linear-gradient(135deg, var(--purple-light), white);
+    border: 1px solid var(--purple-border);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .card-green {
+    background: linear-gradient(135deg, #E8F5E0, white);
+    border: 1px solid rgba(90,172,90,0.1);
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .section-title {
+    font-size: 13px;
+    font-weight: 800;
+    color: var(--fg);
+    margin-bottom: 8px;
+  }
+  .section-subtitle {
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+  }
+  .header-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+  }
+  .header-row h2 {
+    font-size: 18px;
+    font-weight: 800;
+  }
+  .header-row .sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .mascot {
+    width: 44px;
+    height: 44px;
+    background: var(--accent-light);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+  }
+
+  /* Pill styles */
+  .pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+  }
+  .pill-green { background: var(--accent-light); color: var(--accent-dim); border: 1px solid rgba(90,172,90,0.2); }
+  .pill-purple { background: #EDE5FF; color: var(--purple); border: 1px solid var(--purple-border); }
+  .pill-orange { background: var(--orange-light); color: #D87A30; border: 1px solid rgba(240,140,66,0.2); }
+  .pill-muted { background: #F0EDE8; color: var(--muted); border: 1px solid var(--border); }
+
+  /* Button */
+  .btn-purple {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--purple);
+    color: white;
+    font-size: 12px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+  }
+  .btn-outline {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px;
+    border-radius: 12px;
+    background: var(--card);
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    cursor: pointer;
+  }
+
+  /* Window picker */
+  .window-picker {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 10px;
+  }
+  .window-btn {
+    flex: 1;
+    padding: 6px;
+    border-radius: 8px;
+    font-size: 10px;
+    font-weight: 700;
+    border: 1px solid var(--border);
+    background: var(--bg);
+    color: var(--muted);
+    cursor: pointer;
+    text-align: center;
+  }
+  .window-btn.active {
+    background: var(--purple);
+    color: white;
+    border-color: var(--purple);
+  }
+
+  /* Progress bar */
+  .progress-track {
+    height: 6px;
+    border-radius: 3px;
+    background: var(--border);
+    overflow: hidden;
+    margin-top: 4px;
+  }
+  .progress-fill {
+    height: 100%;
+    border-radius: 3px;
+  }
+
+  /* Macro row compact */
+  .macro-row {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .macro-cell {
+    flex: 1;
+    text-align: center;
+    padding: 8px 4px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .macro-cell .label { font-size: 9px; color: var(--muted); font-weight: 600; margin-bottom: 2px; }
+  .macro-cell .value { font-size: 13px; font-weight: 800; color: var(--fg); }
+  .macro-cell .max { font-size: 10px; color: var(--muted-light); font-weight: 500; }
+
+  /* Calendar placeholder */
+  .calendar-placeholder {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-top: 8px;
+  }
+  .cal-day {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 0;
+    border-radius: 10px;
+  }
+  .cal-day.today { background: rgba(90,172,90,0.1); border: 1px solid rgba(90,172,90,0.2); }
+  .cal-day .day-label { font-size: 9px; color: var(--muted-light); font-weight: 500; }
+  .cal-day .day-num { font-size: 10px; font-weight: 700; color: var(--fg); }
+  .cal-day.future { opacity: 0.3; }
+  .ring-placeholder {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 3px solid rgba(90,172,90,0.15);
+    position: relative;
+  }
+  .ring-placeholder::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    border: 2.5px solid rgba(240,140,66,0.15);
+  }
+  .ring-filled {
+    border-color: var(--accent);
+  }
+  .ring-filled::after {
+    border-color: var(--orange);
+  }
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 8px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 9px;
+    color: var(--muted);
+  }
+  .legend-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+
+  /* Accordion */
+  .accordion-item {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 8px;
+    overflow: hidden;
+    background: var(--card);
+  }
+  .accordion-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    cursor: pointer;
+    user-select: none;
+  }
+  .accordion-header .date { font-size: 11px; font-weight: 700; color: var(--fg); }
+  .accordion-header .summary { font-size: 10px; color: var(--muted); }
+  .accordion-header .chevron { font-size: 14px; color: var(--muted-light); transition: transform 0.2s; }
+  .accordion-body { padding: 0 14px 12px; }
+  .meal-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 0;
+    border-top: 1px solid var(--border);
+  }
+  .meal-row:first-child { border-top: none; }
+  .meal-name { font-size: 11px; font-weight: 600; color: var(--fg); }
+  .meal-meta { font-size: 10px; color: var(--muted); }
+  .meal-kcal { font-size: 11px; font-weight: 700; color: var(--fg); }
+
+  /* Mini ring (Option B) */
+  .mini-rings-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+  }
+  .mini-ring-cell {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px 4px;
+    border-radius: 12px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+  }
+  .mini-ring-svg { width: 48px; height: 48px; }
+  .mini-ring-label { font-size: 9px; color: var(--muted); font-weight: 600; }
+  .mini-ring-value { font-size: 11px; font-weight: 800; color: var(--fg); }
+  .mini-ring-max { font-size: 9px; color: var(--muted-light); }
+
+  /* Stat row (Option B) */
+  .stat-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+  .stat-card {
+    padding: 12px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+  }
+  .stat-card .stat-value { font-size: 22px; font-weight: 800; color: var(--fg); }
+  .stat-card .stat-label { font-size: 10px; color: var(--muted); margin-top: 2px; }
+  .stat-card.green { background: linear-gradient(135deg, rgba(212,237,207,0.4), white); border-color: rgba(90,172,90,0.1); }
+  .stat-card.orange { background: linear-gradient(135deg, rgba(253,232,212,0.4), white); border-color: rgba(240,140,66,0.1); }
+
+  /* Hero bar (Option B slim) */
+  .hero-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--purple-light), white);
+    border: 1px solid var(--purple-border);
+    margin-bottom: 12px;
+  }
+  .hero-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: #EDE5FF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+  .hero-bar .hero-title { font-size: 12px; font-weight: 800; color: var(--fg); }
+  .hero-bar .hero-sub { font-size: 10px; color: var(--muted); }
+  .hero-bar .hero-action {
+    margin-left: auto;
+    padding: 6px 14px;
+    border-radius: 8px;
+    background: var(--purple);
+    color: white;
+    font-size: 10px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  /* Tab switcher (Option C) */
+  .tab-switcher {
+    display: flex;
+    gap: 4px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 4px;
+    margin-bottom: 12px;
+  }
+  .tab-sw-btn {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    border: none;
+    cursor: pointer;
+    background: transparent;
+    color: var(--muted);
+    text-align: center;
+  }
+  .tab-sw-btn.active {
+    background: var(--accent);
+    color: white;
+  }
+
+  /* Big ring (Option C) */
+  .big-ring-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px 0 10px;
+  }
+  .big-ring-outer {
+    position: relative;
+    width: 140px;
+    height: 140px;
+  }
+  .big-ring-center {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+  }
+  .big-ring-kcal { font-size: 28px; font-weight: 800; color: var(--fg); }
+  .big-ring-goal { font-size: 10px; color: var(--muted); }
+
+  /* Patterns pills */
+  .patterns-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-top: 6px;
+  }
+
+  /* Show more btn */
+  .show-more {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    width: 100%;
+    padding: 10px;
+    border-radius: 10px;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  /* Inline calorie display */
+  .cal-display {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+  }
+  .cal-big { font-size: 28px; font-weight: 800; color: var(--fg); line-height: 1; }
+  .cal-goal { font-size: 12px; color: var(--muted); }
+  .cal-pct {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 6px;
+  }
+
+  /* Score dot */
+  .score-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+  }
+
+  /* Today tab content for Option C */
+  .today-meals-compact {
+    margin-top: 12px;
+  }
+  .today-meal-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    margin-bottom: 6px;
+  }
+  .today-meal-item .type-badge {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-right: 8px;
+  }
+  .type-breakfast { background: #FFF3E0; color: #E65100; }
+  .type-lunch { background: #E8F5E9; color: #2E7D32; }
+  .type-snack { background: #FFF8E1; color: #F57F17; }
+  .type-dinner { background: #E3F2FD; color: #1565C0; }
+
+  @media (max-width: 1280px) {
+    .options-grid { flex-direction: column; align-items: center; }
+  }
+</style>
+</head>
+<body>
+
+<h1>Progress Page — Design Options</h1>
+<p class="subtitle">Scroll each phone mockup to see the full page. Compare layouts side by side.</p>
+
+<div class="options-grid">
+
+<!-- ============================== OPTION A ============================== -->
+<div class="phone-frame">
+  <div class="option-label">Option A — Insight-First (Recommended)</div>
+  <div class="scroll-area">
+
+    <!-- Header -->
+    <div class="header-row">
+      <div>
+        <h2>Progress</h2>
+        <div class="sub">Track your nutrition journey</div>
+      </div>
+      <div class="mascot">
+        <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/></svg>
+      </div>
+    </div>
+
+    <!-- HERO: AI Eating Analysis -->
+    <div class="card-purple">
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+        <div style="width:28px;height:28px;border-radius:50%;background:#EDE5FF;display:flex;align-items:center;justify-content:center;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.5"><path d="M12 2a7 7 0 0 1 7 7c0 3-2 6-4 8l-3 3-3-3c-2-2-4-5-4-8a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2"/></svg>
+        </div>
+        <span class="section-title" style="margin-bottom:0;">Eating Habits Analysis</span>
+        <div style="margin-left:auto;display:flex;align-items:center;gap:4px;">
+          <span class="score-dot" style="background:var(--accent-dim);"></span>
+          <span style="font-size:10px;font-weight:700;color:var(--muted);">Good</span>
+        </div>
+      </div>
+      <div class="window-picker">
+        <div class="window-btn">Today</div>
+        <div class="window-btn active">7 Days</div>
+        <div class="window-btn">14 Days</div>
+        <div class="window-btn">30 Days</div>
+      </div>
+      <button class="btn-purple">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M12 2a7 7 0 0 1 7 7c0 3-2 6-4 8l-3 3-3-3c-2-2-4-5-4-8a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2"/></svg>
+        Analyze My Eating
+      </button>
+      <p style="font-size:9px;color:var(--muted-light);text-align:center;margin-top:6px;">Last analyzed Feb 22 · 5 meals · gemini-2.5-flash</p>
+    </div>
+
+    <!-- Today's Snapshot (COMPACT) -->
+    <div class="card-green">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="section-title" style="margin-bottom:0;">Today's Nutrition</span>
+        <span class="cal-pct" style="background:var(--accent-light);color:var(--accent-dim);">49%</span>
+      </div>
+
+      <!-- Calorie bar -->
+      <div class="cal-display">
+        <span class="cal-big">1,240</span>
+        <span class="cal-goal">/ 2,546 kcal</span>
+      </div>
+      <div class="progress-track" style="margin-top:6px;">
+        <div class="progress-fill" style="width:49%;background:var(--accent);"></div>
+      </div>
+
+      <!-- Inline macro pills -->
+      <div class="macro-row">
+        <div class="macro-cell">
+          <div class="label">Protein</div>
+          <div class="value" style="color:var(--accent-dim);">45<span class="max">/112g</span></div>
+          <div class="progress-track" style="height:4px;margin-top:4px;">
+            <div class="progress-fill" style="width:40%;background:var(--accent);"></div>
+          </div>
+        </div>
+        <div class="macro-cell">
+          <div class="label">Carbs</div>
+          <div class="value" style="color:var(--orange);">120<span class="max">/365g</span></div>
+          <div class="progress-track" style="height:4px;margin-top:4px;">
+            <div class="progress-fill" style="width:33%;background:var(--orange);"></div>
+          </div>
+        </div>
+        <div class="macro-cell">
+          <div class="label">Fat</div>
+          <div class="value" style="color:#D87A30;">30<span class="max">/71g</span></div>
+          <div class="progress-track" style="height:4px;margin-top:4px;">
+            <div class="progress-fill" style="width:42%;background:#D07A3E;"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 7d avg inline -->
+      <div style="display:flex;align-items:center;gap:6px;margin-top:10px;padding-top:8px;border-top:1px solid var(--border);">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        <span style="font-size:11px;font-weight:700;color:var(--fg);">735</span>
+        <span style="font-size:10px;color:var(--muted);">kcal avg / day (7d)</span>
+      </div>
+    </div>
+
+    <!-- Activity Calendar -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="section-title" style="margin-bottom:0;">Activity Calendar</span>
+        <span class="pill pill-green" style="font-size:9px;">Month &#9660;</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">This Week</div>
+      <div class="calendar-placeholder">
+        <div class="cal-day">
+          <span class="day-label">Mon</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num">17</span>
+        </div>
+        <div class="cal-day">
+          <span class="day-label">Tue</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num">18</span>
+        </div>
+        <div class="cal-day">
+          <span class="day-label">Wed</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num">19</span>
+        </div>
+        <div class="cal-day">
+          <span class="day-label">Thu</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num">20</span>
+        </div>
+        <div class="cal-day today">
+          <span class="day-label" style="color:var(--accent);">Fri</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num" style="color:var(--accent);">21</span>
+        </div>
+        <div class="cal-day future">
+          <span class="day-label">Sat</span>
+          <div class="ring-placeholder"></div>
+          <span class="day-num">22</span>
+        </div>
+        <div class="cal-day future">
+          <span class="day-label">Sun</span>
+          <div class="ring-placeholder"></div>
+          <span class="day-num">23</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--accent);"></span>Calories</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--orange);"></span>Protein</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#E8B931;"></span>Carbs</div>
+      </div>
+    </div>
+
+    <!-- Meal History Accordion -->
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="section-title" style="margin-bottom:0;">Meal History</span>
+      </div>
+
+      <!-- Today - expanded -->
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <div>
+            <span class="date">Today</span>
+            <span class="summary"> · 2 meals · 1,240 kcal</span>
+          </div>
+          <span class="chevron">&#9660;</span>
+        </div>
+        <div class="accordion-body">
+          <div class="meal-row">
+            <div>
+              <div class="meal-name">Chicken Biryani</div>
+              <div class="meal-meta">Lunch · 540 kcal · P 28g · C 65g</div>
+            </div>
+          </div>
+          <div class="meal-row">
+            <div>
+              <div class="meal-name">Masala Dosa + Chutney</div>
+              <div class="meal-meta">Breakfast · 700 kcal · P 17g · C 55g</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Yesterday - collapsed -->
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <div>
+            <span class="date">Yesterday</span>
+            <span class="summary"> · 3 meals · 1,890 kcal</span>
+          </div>
+          <span class="chevron">&#9654;</span>
+        </div>
+      </div>
+
+      <!-- Older - collapsed -->
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <div>
+            <span class="date">Feb 20</span>
+            <span class="summary"> · 2 meals · 1,450 kcal</span>
+          </div>
+          <span class="chevron">&#9654;</span>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <div>
+            <span class="date">Feb 19</span>
+            <span class="summary"> · 1 meal · 735 kcal</span>
+          </div>
+          <span class="chevron">&#9654;</span>
+        </div>
+      </div>
+
+      <button class="show-more">Show older meals &#8250;</button>
+    </div>
+
+    <!-- Patterns (compact pills) -->
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3"/></svg>
+        <span style="font-size:12px;font-weight:800;color:var(--fg);">Top Dishes</span>
+      </div>
+      <div class="patterns-row">
+        <span class="pill pill-muted">3&times; Roti</span>
+        <span class="pill pill-muted">2&times; Rice</span>
+        <span class="pill pill-muted">2&times; Dal</span>
+        <span class="pill pill-muted">1&times; Biryani</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Tab Bar -->
+  <div class="bottom-bar">
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></div>
+    <div class="tab-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Progress</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;"><button class="scan-fab"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button><span style="font-size:10px;font-weight:700;color:var(--accent);margin-top:2px;">Scan</span></div>
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><span>Capy</span></div>
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+  </div>
+</div>
+
+<!-- ============================== OPTION B ============================== -->
+<div class="phone-frame">
+  <div class="option-label">Option B — Dashboard Grid</div>
+  <div class="scroll-area">
+
+    <!-- Header -->
+    <div class="header-row">
+      <div>
+        <h2>Progress</h2>
+        <div class="sub">Track your nutrition journey</div>
+      </div>
+      <div class="mascot">
+        <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/></svg>
+      </div>
+    </div>
+
+    <!-- HERO: Slim AI Analysis Bar -->
+    <div class="hero-bar">
+      <div class="hero-icon">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--purple)" stroke-width="2.5"><path d="M12 2a7 7 0 0 1 7 7c0 3-2 6-4 8l-3 3-3-3c-2-2-4-5-4-8a7 7 0 0 1 7-7z"/><circle cx="12" cy="9" r="2"/></svg>
+      </div>
+      <div style="flex:1;min-width:0;">
+        <div class="hero-title">AI Eating Analysis</div>
+        <div class="hero-sub" style="display:flex;align-items:center;gap:4px;">
+          <span class="score-dot" style="background:var(--accent-dim);"></span>
+          Score: Good · 7 day window
+        </div>
+      </div>
+      <button class="hero-action">View</button>
+    </div>
+
+    <!-- 2-col stat cards -->
+    <div class="stat-row" style="margin-bottom:12px;">
+      <div class="stat-card green">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M12 20V10M18 20V4M6 20v-4"/></svg>
+          <span style="font-size:10px;font-weight:700;color:var(--fg);">Today</span>
+        </div>
+        <div class="stat-value">1,240</div>
+        <div class="stat-label">kcal · 49% of goal</div>
+      </div>
+      <div class="stat-card orange">
+        <div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg>
+          <span style="font-size:10px;font-weight:700;color:var(--fg);">7d Avg</span>
+        </div>
+        <div class="stat-value">735</div>
+        <div class="stat-label">kcal / day</div>
+      </div>
+    </div>
+
+    <!-- 3-col mini macro rings -->
+    <div class="mini-rings-row" style="margin-bottom:12px;">
+      <div class="mini-ring-cell">
+        <svg class="mini-ring-svg" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(90,172,90,0.15)" stroke-width="5"/>
+          <circle cx="24" cy="24" r="18" fill="none" stroke="var(--accent)" stroke-width="5" stroke-linecap="round" stroke-dasharray="113" stroke-dashoffset="68" transform="rotate(-90 24 24)"/>
+        </svg>
+        <div class="mini-ring-label">Protein</div>
+        <div class="mini-ring-value">45<span class="mini-ring-max">/112g</span></div>
+      </div>
+      <div class="mini-ring-cell">
+        <svg class="mini-ring-svg" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(240,140,66,0.15)" stroke-width="5"/>
+          <circle cx="24" cy="24" r="18" fill="none" stroke="var(--orange)" stroke-width="5" stroke-linecap="round" stroke-dasharray="113" stroke-dashoffset="76" transform="rotate(-90 24 24)"/>
+        </svg>
+        <div class="mini-ring-label">Carbs</div>
+        <div class="mini-ring-value">120<span class="mini-ring-max">/365g</span></div>
+      </div>
+      <div class="mini-ring-cell">
+        <svg class="mini-ring-svg" viewBox="0 0 48 48">
+          <circle cx="24" cy="24" r="18" fill="none" stroke="rgba(208,122,62,0.15)" stroke-width="5"/>
+          <circle cx="24" cy="24" r="18" fill="none" stroke="#D07A3E" stroke-width="5" stroke-linecap="round" stroke-dasharray="113" stroke-dashoffset="65" transform="rotate(-90 24 24)"/>
+        </svg>
+        <div class="mini-ring-label">Fat</div>
+        <div class="mini-ring-value">30<span class="mini-ring-max">/71g</span></div>
+      </div>
+    </div>
+
+    <!-- Activity Calendar -->
+    <div class="card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="section-title" style="margin-bottom:0;">Activity Calendar</span>
+        <span class="pill pill-green" style="font-size:9px;">Month &#9660;</span>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:6px;">This Week</div>
+      <div class="calendar-placeholder">
+        <div class="cal-day">
+          <span class="day-label">Mon</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num">17</span>
+        </div>
+        <div class="cal-day">
+          <span class="day-label">Tue</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num">18</span>
+        </div>
+        <div class="cal-day">
+          <span class="day-label">Wed</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num">19</span>
+        </div>
+        <div class="cal-day">
+          <span class="day-label">Thu</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num">20</span>
+        </div>
+        <div class="cal-day today">
+          <span class="day-label" style="color:var(--accent);">Fri</span>
+          <div class="ring-placeholder ring-filled"></div>
+          <span class="day-num" style="color:var(--accent);">21</span>
+        </div>
+        <div class="cal-day future">
+          <span class="day-label">Sat</span>
+          <div class="ring-placeholder"></div>
+          <span class="day-num">22</span>
+        </div>
+        <div class="cal-day future">
+          <span class="day-label">Sun</span>
+          <div class="ring-placeholder"></div>
+          <span class="day-num">23</span>
+        </div>
+      </div>
+      <div class="legend">
+        <div class="legend-item"><span class="legend-dot" style="background:var(--accent);"></span>Calories</div>
+        <div class="legend-item"><span class="legend-dot" style="background:var(--orange);"></span>Protein</div>
+        <div class="legend-item"><span class="legend-dot" style="background:#E8B931;"></span>Carbs</div>
+      </div>
+    </div>
+
+    <!-- Meal History Accordion -->
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:8px;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span class="section-title" style="margin-bottom:0;">Meal History</span>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <div>
+            <span class="date">Today</span>
+            <span class="summary"> · 2 meals · 1,240 kcal</span>
+          </div>
+          <span class="chevron">&#9660;</span>
+        </div>
+        <div class="accordion-body">
+          <div class="meal-row">
+            <div>
+              <div class="meal-name">Chicken Biryani</div>
+              <div class="meal-meta">Lunch · 540 kcal · P 28g · C 65g</div>
+            </div>
+          </div>
+          <div class="meal-row">
+            <div>
+              <div class="meal-name">Masala Dosa + Chutney</div>
+              <div class="meal-meta">Breakfast · 700 kcal · P 17g · C 55g</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <div>
+            <span class="date">Yesterday</span>
+            <span class="summary"> · 3 meals · 1,890 kcal</span>
+          </div>
+          <span class="chevron">&#9654;</span>
+        </div>
+      </div>
+
+      <div class="accordion-item">
+        <div class="accordion-header">
+          <div>
+            <span class="date">Feb 20</span>
+            <span class="summary"> · 2 meals · 1,450 kcal</span>
+          </div>
+          <span class="chevron">&#9654;</span>
+        </div>
+      </div>
+
+      <button class="show-more">Show older meals &#8250;</button>
+    </div>
+
+    <!-- Top Dishes pills -->
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2"><path d="M3 2v7c0 1.1.9 2 2 2h4a2 2 0 0 0 2-2V2"/><path d="M7 2v20"/><path d="M21 15V2v0a5 5 0 0 0-5 5v6c0 1.1.9 2 2 2h3"/></svg>
+        <span style="font-size:12px;font-weight:800;color:var(--fg);">Top Dishes</span>
+      </div>
+      <div class="patterns-row">
+        <span class="pill pill-muted">3&times; Roti</span>
+        <span class="pill pill-muted">2&times; Rice</span>
+        <span class="pill pill-muted">2&times; Dal</span>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Bottom Tab Bar -->
+  <div class="bottom-bar">
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></div>
+    <div class="tab-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Progress</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;"><button class="scan-fab"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button><span style="font-size:10px;font-weight:700;color:var(--accent);margin-top:2px;">Scan</span></div>
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><span>Capy</span></div>
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+  </div>
+</div>
+
+<!-- ============================== OPTION C ============================== -->
+<div class="phone-frame">
+  <div class="option-label">Option C — Minimal Tabs</div>
+  <div class="scroll-area">
+
+    <!-- Header -->
+    <div class="header-row">
+      <div>
+        <h2>Progress</h2>
+        <div class="sub">Track your nutrition journey</div>
+      </div>
+      <div class="mascot">
+        <svg width="24" height="24" fill="none" stroke="var(--accent)" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2a7 7 0 0 0-7 7c0 5 7 13 7 13s7-8 7-13a7 7 0 0 0-7-7z"/></svg>
+      </div>
+    </div>
+
+    <!-- Tab Switcher -->
+    <div class="tab-switcher">
+      <div class="tab-sw-btn active">Today</div>
+      <div class="tab-sw-btn">This Week</div>
+      <div class="tab-sw-btn">Insights</div>
+    </div>
+
+    <!-- ======= "Today" tab content ======= -->
+
+    <!-- Big Calorie Ring -->
+    <div class="card" style="padding:16px 16px 12px;">
+      <div class="big-ring-container">
+        <div class="big-ring-outer">
+          <svg width="140" height="140" viewBox="0 0 140 140" style="transform:rotate(-90deg);">
+            <circle cx="70" cy="70" r="54" fill="none" stroke="var(--border)" stroke-width="10"/>
+            <circle cx="70" cy="70" r="54" fill="none" stroke="var(--accent)" stroke-width="10" stroke-linecap="round" stroke-dasharray="339" stroke-dashoffset="173"/>
+          </svg>
+          <div class="big-ring-center">
+            <span class="big-ring-kcal">1,240</span>
+            <span class="big-ring-goal">/ 2,546 kcal</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Macro pills under ring -->
+      <div class="macro-row" style="margin-top:8px;">
+        <div class="macro-cell">
+          <div class="label">Protein</div>
+          <div class="value" style="color:var(--accent-dim);">45<span class="max">/112g</span></div>
+          <div class="progress-track" style="height:4px;margin-top:4px;">
+            <div class="progress-fill" style="width:40%;background:var(--accent);"></div>
+          </div>
+        </div>
+        <div class="macro-cell">
+          <div class="label">Carbs</div>
+          <div class="value" style="color:var(--orange);">120<span class="max">/365g</span></div>
+          <div class="progress-track" style="height:4px;margin-top:4px;">
+            <div class="progress-fill" style="width:33%;background:var(--orange);"></div>
+          </div>
+        </div>
+        <div class="macro-cell">
+          <div class="label">Fat</div>
+          <div class="value" style="color:#D87A30;">30<span class="max">/71g</span></div>
+          <div class="progress-track" style="height:4px;margin-top:4px;">
+            <div class="progress-fill" style="width:42%;background:#D07A3E;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Meals (compact list) -->
+    <div style="margin-bottom:12px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <span class="section-title" style="margin-bottom:0;">Today's Meals</span>
+        <span style="font-size:10px;color:var(--muted);">2 meals</span>
+      </div>
+      <div class="today-meal-item">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="type-badge type-breakfast">BF</span>
+          <div>
+            <div class="meal-name">Masala Dosa + Chutney</div>
+            <div class="meal-meta">700 kcal · P 17g · C 55g</div>
+          </div>
+        </div>
+        <span style="font-size:10px;color:var(--muted);">9:30 AM</span>
+      </div>
+      <div class="today-meal-item">
+        <div style="display:flex;align-items:center;gap:8px;">
+          <span class="type-badge type-lunch">LN</span>
+          <div>
+            <div class="meal-name">Chicken Biryani</div>
+            <div class="meal-meta">540 kcal · P 28g · C 65g</div>
+          </div>
+        </div>
+        <span style="font-size:10px;color:var(--muted);">1:15 PM</span>
+      </div>
+    </div>
+
+    <!-- Dimmed preview of other tabs -->
+    <div style="border:1px dashed var(--border);border-radius:12px;padding:16px;text-align:center;margin-bottom:12px;">
+      <p style="font-size:11px;color:var(--muted-light);font-weight:600;">&#8592; Swipe to "This Week" tab</p>
+      <p style="font-size:10px;color:var(--muted-light);margin-top:4px;">Activity Calendar + 7d Average + History</p>
+    </div>
+
+    <div style="border:1px dashed var(--border);border-radius:12px;padding:16px;text-align:center;margin-bottom:12px;">
+      <p style="font-size:11px;color:var(--muted-light);font-weight:600;">&#8592; Swipe to "Insights" tab</p>
+      <p style="font-size:10px;color:var(--muted-light);margin-top:4px;">AI Eating Analysis + Top Dishes + Patterns</p>
+    </div>
+
+    <!-- Small helper text -->
+    <div style="text-align:center;padding:8px 0;">
+      <p style="font-size:10px;color:var(--muted-light);">Swipe or tap tabs above to switch views</p>
+    </div>
+
+  </div>
+
+  <!-- Bottom Tab Bar -->
+  <div class="bottom-bar">
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><span>Home</span></div>
+    <div class="tab-btn active"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M18 20V10"/><path d="M12 20V4"/><path d="M6 20v-6"/></svg><span>Progress</span></div>
+    <div style="display:flex;flex-direction:column;align-items:center;"><button class="scan-fab"><svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/></svg></button><span style="font-size:10px;font-weight:700;color:var(--accent);margin-top:2px;">Scan</span></div>
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M8 14s1.5 2 4 2 4-2 4-2"/><line x1="9" y1="9" x2="9.01" y2="9"/><line x1="15" y1="9" x2="15.01" y2="9"/></svg><span>Capy</span></div>
+    <div class="tab-btn"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><span>Profile</span></div>
+  </div>
+</div>
+
+</div><!-- end options-grid -->
+
+</body>
+</html>

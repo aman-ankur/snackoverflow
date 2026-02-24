@@ -449,6 +449,39 @@ export default function CalendarProgressView({ meals, goals }: CalendarProgressV
     return dailyTotals.get(selectedDate) || { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 };
   }, [selectedDate, dailyTotals]);
 
+  // Top dishes for visible date range
+  const topDishes = useMemo(() => {
+    const nameCount = new Map<string, number>();
+    const visibleDates = new Set<string>();
+
+    if (!expanded) {
+      // Week view: use weekDays
+      weekDays.forEach((wd) => visibleDates.add(wd.dateStr));
+    } else {
+      // Month view: all dates in viewYear/viewMonth
+      const daysInMonth = getDaysInMonth(viewYear, viewMonth);
+      for (let d = 1; d <= daysInMonth; d++) {
+        visibleDates.add(
+          `${viewYear}-${String(viewMonth + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`
+        );
+      }
+    }
+
+    meals.forEach((meal) => {
+      const key = getDateKey(meal.loggedAt);
+      if (!visibleDates.has(key)) return;
+      meal.dishes.forEach((dish) => {
+        const name = dish.name.toLowerCase();
+        nameCount.set(name, (nameCount.get(name) || 0) + 1);
+      });
+    });
+
+    return Array.from(nameCount.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 4)
+      .map(([name, count]) => ({ name, count }));
+  }, [meals, expanded, weekDays, viewYear, viewMonth]);
+
   // Legend component
   const Legend = () => (
     <div className="flex items-center justify-center gap-4 mt-2">
@@ -606,6 +639,28 @@ export default function CalendarProgressView({ meals, goals }: CalendarProgressV
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Top Dishes */}
+        {topDishes.length > 0 && (
+          <div className="px-4 pb-3 pt-1 border-t border-border">
+            <p className="text-[10px] font-bold text-muted uppercase tracking-wide mb-1.5">
+              Top {expanded ? "this month" : "this week"}
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {topDishes.map((item) => (
+                <span
+                  key={item.name}
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold bg-background border border-border text-foreground"
+                >
+                  <span className={`font-extrabold ${item.count >= 3 ? "text-accent-dim" : "text-orange-dim"}`}>
+                    {item.count}x
+                  </span>
+                  <span className="capitalize">{item.name}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Bottom Sheet */}
