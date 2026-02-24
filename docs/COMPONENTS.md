@@ -37,22 +37,24 @@ All components are in `src/components/`. All are `"use client"` components.
 
 ### `ScanView.tsx`
 **Scan tab — Camera/Describe toggle, camera analysis, dish editing, and meal logging.**
-- Props: `logMeal`, `meals`, `refreshStreak`, `onMealLogged?`, `initialMode?: "camera" | "describe"`
+- Props: `logMeal`, `meals`, `refreshStreak`, `onMealLogged?`, `initialMode?: "camera" | "describe"`, `healthContextString?`, `hasHealthProfile?`, `healthConditions?`, `onSetupHealthProfile?`
 - **Camera/Describe toggle** at top — pill-style switcher between camera scan and text describe modes
 - `initialMode` prop allows MealTypeSheet to open directly in Describe mode
 - Syncs mode when `initialMode` prop changes (e.g. navigating from MealTypeSheet)
 - Uses page-level `mealLog` and `userGoals` (passed as props, not internal hooks) so Home tab sees fresh data instantly
 - **Camera mode**:
   - Auto-scrolls to results when analysis completes
-  - Plate Total card lists individual dishes with calories and weight
-  - Collapsed/expanded view: multi-dish plates show summary + "Show N dishes · Edit quantities" toggle
-  - Per-dish controls:
-    - **WeightEditor**: tap grams → inline +/- stepper or direct input → macros recalculate proportionally
-    - **CorrectionChip**: "Wrong dish?" → re-analyze with user correction
-    - **"Describe instead"**: switches to Describe mode with scanned dish name as correction context
-    - **Remove button**: red pill to delete a dish from the plate
+  - **Controls Strip**: horizontal scrollable row of meal type pills (auto-selected by time of day via `getAutoMealType()`, green dot on auto-selected) + divider + portion multiplier pills (½×, 1×, 1.5×, 2×)
+  - **Plate Total**: centered large calorie number, dish count + meal type subtitle, 4-macro row (Protein/Carbs/Fat/Fiber via `MacroStat`)
+  - **AI Health Check**: prominent card (with-profile) or dashed upsell (without-profile), from `HealthVerdictCard.tsx`
+  - **Capy mascot**: compact 36px avatar + speech bubble with contextual message
+  - **Accordion dish cards**: per-dish collapsible cards (independent state via `expandedDishIndex`)
+    - Collapsed: name + `ConfidenceBadge` + calories, Hindi name + weight, inline macro pills, contextual note via `generateDishNote()`, "Tap for details" hint
+    - Expanded: editable 5-col macro grid, CalorieEditor + WeightEditor + portion display, key ingredients, health tip, tags, `ReasoningToggle`, action buttons (CorrectionChip / Describe / Remove)
+    - Single-dish auto-expands; tapping one collapses others
+  - **Sticky log bar**: fixed bottom bar with total calories + meal type + "Log Meal" button
+  - "Clear analysis & re-scan" link
   - After logging: 1.2s "Logged ✓" animation → clears analysis → calls `onMealLogged` (navigates to Home)
-  - Health tags derived per dish (High Protein, High Carb, High Fat, Low Calorie, Fiber Rich)
 - **Describe mode**: renders `DescribeMealView` component (see below)
 
 ### `DescribeMealView.tsx` (NEW)
@@ -93,18 +95,17 @@ All components are in `src/components/`. All are `"use client"` components.
 
 ### `HealthVerdictCard.tsx`
 **AI health verdict display components.**
-- **`MealHealthBanner`** — expandable verdict card (Good/Caution/Avoid) with per-dish breakdown
+- **`MealHealthBanner`** — expandable verdict card with "Dr. Capy's Verdict" label
   - Props: `analysis`, `isLoading`, `error`, `hasHealthProfile`
+  - Verdict labels: "Looks Good" / "Needs Attention" / "Not Recommended" with colored icons (40px)
   - Summary bar with verdict icon + overall summary (wraps, not truncated)
   - Expandable: per-dish `DishVerdictRow` with swap suggestions + medical disclaimer
-- **`HealthCheckButton`** — on-demand AI health check trigger (animated gradient pill)
+- **`HealthCheckButton`** — full-width card with gradient icon (48px), "AI Health Check" gradient title, condition subtitle, purple arrow button
   - Props: `conditions`, `isLoading`, `onCheck`
-  - Violet gradient shimmer animation with Sparkles icon
-  - Contextual subtitle: "Is this right for your Diabetes, Cholesterol?" (truncates at 2 + "+N more")
-  - Loading state: spinner + "Analyzing..."
-- **`HealthProfilePrompt`** — muted upsell when no health profile
+  - Loading state: gradient card with spinner + "Analyzing..."
+- **`HealthProfilePrompt`** — full-width dashed-border card for no-profile upsell
   - Props: `onSetup`
-  - "Get AI health advice — set up your profile" link
+  - "How healthy is this meal?" title + stethoscope icon + arrow button
 - **`DishVerdictPill`** — inline verdict badge for dish cards
   - Props: `dishName`, `analysis`, `isLoading`
 
@@ -137,7 +138,7 @@ All components are in `src/components/`. All are `"use client"` components.
 - Max height 85vh, scrollable content per tab
 
 ### `NutritionCard.tsx`
-**Per-dish nutrition presentation card.**
+**Per-dish nutrition presentation card.** *(No longer used by ScanView — replaced by inline accordion cards. Still used by DishMode.)*
 - Props: `dish`, `servingsMultiplier`
 - Displays calories, protein, carbs, fat, fiber with icons
 - Shows portion, confidence badge ("Confident" / "Likely" / "Unsure" with tooltip), ingredients, and health tip

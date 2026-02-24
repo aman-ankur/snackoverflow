@@ -2,9 +2,8 @@
 
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calculator, PlusCircle, Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus, Camera, PenLine } from "lucide-react";
+import { Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus, Camera, PenLine, Info, HelpCircle, RefreshCw, Brain } from "lucide-react";
 import GeminiCameraView from "@/components/GeminiCameraView";
-import NutritionCard from "@/components/NutritionCard";
 import CapyMascot from "@/components/CapyMascot";
 import DescribeMealView from "@/components/DescribeMealView";
 import CoachMark from "@/components/CoachMark";
@@ -12,7 +11,7 @@ import { MealHealthBanner, HealthCheckButton, HealthProfilePrompt } from "@/comp
 import type { HealthCondition } from "@/lib/dishTypes";
 import { useDishScanner } from "@/lib/useDishScanner";
 import { useHealthVerdict } from "@/lib/useHealthVerdict";
-import type { DishNutrition, MealType, MealTotals, LoggedMeal } from "@/lib/dishTypes";
+import type { DishNutrition, MealType, MealTotals, LoggedMeal, ConfidenceLevel } from "@/lib/dishTypes";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
 
 interface ScanViewProps {
@@ -30,6 +29,16 @@ interface ScanViewProps {
 
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2] as const;
 const MEAL_TYPE_OPTIONS: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
+
+/* ─── Helpers ─── */
+
+function getAutoMealType(): MealType {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 11) return "breakfast";
+  if (hour >= 11 && hour < 15) return "lunch";
+  if (hour >= 15 && hour < 18) return "snack";
+  return "dinner";
+}
 
 function getHealthTagColor(tag: string): string {
   if (tag.includes("protein") || tag.includes("fiber") || tag.includes("low")) {
@@ -82,6 +91,74 @@ function deriveTags(dish: DishNutrition): string[] {
   return Array.from(tags);
 }
 
+function generateDishNote(dish: DishNutrition): { text: string; type: "positive" | "warning" } | null {
+  const tags = deriveTags(dish);
+  const ingredients = dish.ingredients.map((i) => i.toLowerCase());
+
+  // Warning notes
+  if (ingredients.includes("maida") || ingredients.includes("refined flour")) {
+    return { text: "Made with refined flour (maida)", type: "warning" };
+  }
+  if (tags.includes("high-fat") && (ingredients.includes("butter") || ingredients.includes("cream") || ingredients.includes("ghee"))) {
+    return { text: "High cream & butter content — calorie dense", type: "warning" };
+  }
+  if (tags.includes("high-carb") && dish.fiber_g < 3) {
+    return { text: "High in refined carbs, low fiber", type: "warning" };
+  }
+  if (tags.includes("high-calorie")) {
+    return { text: `Calorie dense at ${dish.calories} kcal`, type: "warning" };
+  }
+
+  // Positive notes
+  if (tags.includes("high-protein") && tags.includes("low-calorie")) {
+    return { text: "High protein, low calorie — great choice", type: "positive" };
+  }
+  if (tags.includes("fiber-rich")) {
+    return { text: "Good fiber source — aids digestion", type: "positive" };
+  }
+  if (tags.includes("high-protein")) {
+    return { text: "Good protein source", type: "positive" };
+  }
+  if (ingredients.includes("yogurt") || ingredients.includes("curd") || ingredients.includes("dahi")) {
+    return { text: "Good probiotic source — aids digestion", type: "positive" };
+  }
+  if (tags.includes("low-calorie")) {
+    return { text: "Light and low calorie", type: "positive" };
+  }
+
+  return null;
+}
+
+function capitalize(s: string): string {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+/* ─── Tiny inline components ─── */
+
+function MacroStat({ label, value, color }: { label: string; value: number; color: string }) {
+  return (
+    <div className="text-center">
+      <p className={`text-lg font-extrabold ${color}`}>{value}g</p>
+      <p className="text-[11px] text-muted mt-0.5">{label}</p>
+    </div>
+  );
+}
+
+function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
+  const config = {
+    high: { label: "Confident", Icon: Check, bg: "bg-green-50", border: "border-accent/25", text: "text-accent-dim" },
+    medium: { label: "Likely", Icon: Info, bg: "bg-orange-light", border: "border-orange/25", text: "text-orange" },
+    low: { label: "Unsure", Icon: HelpCircle, bg: "bg-background", border: "border-border", text: "text-muted" },
+  }[level];
+  const { Icon } = config;
+  return (
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold border ${config.bg} ${config.border} ${config.text}`}>
+      <Icon className="h-2.5 w-2.5" />
+      {config.label}
+    </span>
+  );
+}
+
 type ScanMode = "camera" | "describe";
 
 export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode, coachMarks, healthContextString, hasHealthProfile, healthConditions, onSetupHealthProfile }: ScanViewProps) {
@@ -91,12 +168,13 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
   const [correctionContext, setCorrectionContext] = useState<{ scannedAs: string; mealType: MealType } | undefined>(undefined);
 
   const [servingsMultiplier, setServingsMultiplier] = useState<number>(1);
-  const [logMealType, setLogMealType] = useState<MealType>("lunch");
+  const [autoMealType] = useState<MealType>(getAutoMealType);
+  const [logMealType, setLogMealType] = useState<MealType>(getAutoMealType);
   const [logSuccess, setLogSuccess] = useState(false);
   const [removedIndices, setRemovedIndices] = useState<Set<number>>(new Set());
   const [weightOverrides, setWeightOverrides] = useState<Map<number, number>>(new Map());
   const [calorieOverrides, setCalorieOverrides] = useState<Map<number, number>>(new Map());
-  const [expandedView, setExpandedView] = useState(false);
+  const [expandedDishIndex, setExpandedDishIndex] = useState<number | null>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
   const prevAnalysisRef = useRef<typeof dish.analysis>(null);
 
@@ -120,7 +198,8 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
       setRemovedIndices(new Set());
       setWeightOverrides(new Map());
       setCalorieOverrides(new Map());
-      setExpandedView(true);
+      // Auto-expand if single dish
+      setExpandedDishIndex(dish.analysis.dishes.length === 1 ? 0 : null);
       setTimeout(() => {
         resultsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
       }, 200);
@@ -210,6 +289,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
 
   const handleRemoveDish = useCallback((originalIndex: number) => {
     setRemovedIndices((prev) => new Set(prev).add(originalIndex));
+    setExpandedDishIndex(null);
   }, []);
 
   const handleWeightChange = useCallback((originalIndex: number, newWeight: number) => {
@@ -237,6 +317,11 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
     });
   }, []);
 
+  const handleMealTypeChange = useCallback((mt: MealType) => {
+    dish.setMealType(mt);
+    setLogMealType(mt);
+  }, [dish]);
+
   const handleLogMeal = () => {
     if (scaledDishes.length === 0) return;
     logMeal({
@@ -253,6 +338,13 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
       onMealLogged?.();
     }, 1200);
   };
+
+  const capyMood = scaledTotals.calories < 400 ? "happy" : scaledTotals.calories > 700 ? "concerned" : "motivated";
+  const capyMessage = scaledTotals.calories < 400
+    ? "Light and healthy! Great choice!"
+    : scaledTotals.calories > 700
+    ? "That's a big meal! Maybe balance it out later?"
+    : "Solid meal! Good balance of nutrients!";
 
   return (
     <div className="space-y-4">
@@ -330,52 +422,6 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
         onScanAgain={() => { dish.clearAnalysis(); dish.startCamera(); }}
       />
 
-      {/* Meal context */}
-      <div className="rounded-2xl bg-card border border-border p-3">
-        <p className="text-[10px] text-muted mb-2 px-1">Meal context</p>
-        <div className="grid grid-cols-4 gap-1.5">
-          {MEAL_TYPE_OPTIONS.map((option) => (
-            <button
-              key={option}
-              onClick={() => {
-                dish.setMealType(option);
-                setLogMealType(option);
-              }}
-              className={`rounded-full border px-2 py-1.5 text-[10px] font-semibold capitalize transition-colors ${
-                dish.mealType === option
-                  ? "border-accent/30 bg-accent-light text-accent-dim"
-                  : "border-border bg-background text-muted hover:bg-card-hover"
-              }`}
-            >
-              {option}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Portion adjuster */}
-      <div className="rounded-2xl bg-card border border-border p-3">
-        <div className="flex items-center gap-2 mb-2">
-          <Calculator className="h-4 w-4 text-accent" />
-          <h3 className="text-sm font-extrabold text-foreground">Portion Adjuster</h3>
-        </div>
-        <div className="grid grid-cols-4 gap-1.5">
-          {SERVING_OPTIONS.map((value) => (
-            <button
-              key={value}
-              onClick={() => setServingsMultiplier(value)}
-              className={`rounded-full border px-2 py-1.5 text-[10px] font-semibold transition-colors ${
-                servingsMultiplier === value
-                  ? "border-accent/30 bg-accent-light text-accent-dim"
-                  : "border-border bg-background text-muted hover:bg-card-hover"
-              }`}
-            >
-              {value}x
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Results */}
       <div ref={resultsRef} />
       <AnimatePresence mode="popLayout">
@@ -418,32 +464,61 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
             exit={{ opacity: 0, y: 8 }}
             className="space-y-3"
           >
-            {/* Plate total with items list */}
-            <div className="rounded-2xl bg-accent-light border border-accent/15 p-4">
-              <div className="flex items-center justify-between gap-3">
-                <h3 className="text-sm font-extrabold text-foreground">Plate Total</h3>
-                <span className="text-[10px] text-muted">
-                  {scaledDishes.length} dish{scaledDishes.length === 1 ? "" : "es"}
-                </span>
+            {/* A. Controls Strip — meal type + portion selector */}
+            <div className="flex gap-1.5 overflow-x-auto pb-0.5 mb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+              {MEAL_TYPE_OPTIONS.map((option) => (
+                <button
+                  key={option}
+                  onClick={() => handleMealTypeChange(option)}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors flex items-center gap-1.5 ${
+                    logMealType === option
+                      ? "border-accent/30 bg-accent-light text-accent-dim"
+                      : "border-border bg-background text-muted hover:bg-card-hover"
+                  }`}
+                >
+                  {capitalize(option)}
+                  {logMealType === option && option === autoMealType && (
+                    <span className="h-1.5 w-1.5 rounded-full bg-accent inline-block" />
+                  )}
+                </button>
+              ))}
+              {/* Divider */}
+              <div className="w-px bg-border shrink-0 my-1 mx-0.5" />
+              {/* Portion multiplier buttons */}
+              {SERVING_OPTIONS.map((value) => (
+                <button
+                  key={value}
+                  onClick={() => setServingsMultiplier(value)}
+                  className={`shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    servingsMultiplier === value
+                      ? "border-accent/30 bg-accent-light text-accent-dim"
+                      : "border-border bg-background text-muted hover:bg-card-hover"
+                  }`}
+                >
+                  {value === 0.5 ? "½×" : value === 1.5 ? "1.5×" : `${value}×`}
+                </button>
+              ))}
+            </div>
+
+            {/* B. Plate Total — centered, large */}
+            <div className="rounded-2xl bg-card border border-border p-5 text-center">
+              <p className="text-xs text-muted font-semibold uppercase tracking-wider mb-1">Plate Total</p>
+              <div>
+                <span className="text-5xl font-black tracking-tighter leading-none">{scaledTotals.calories}</span>
+                <span className="text-base font-medium text-muted ml-1">kcal</span>
               </div>
-              <div className="mt-2 grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <p className="text-xs font-bold text-foreground">🔥 {scaledTotals.calories} kcal</p>
-                <p className="text-xs font-bold text-foreground">💪 {scaledTotals.protein}g protein</p>
-                <p className="text-xs font-bold text-foreground">🍞 {scaledTotals.carbs}g carbs</p>
-                <p className="text-xs font-bold text-foreground">🧈 {scaledTotals.fat}g fat</p>
-              </div>
-              {/* Items list */}
-              <div className="mt-3 pt-3 border-t border-accent/10 space-y-1.5">
-                {scaledDishes.map((d, i) => (
-                  <div key={`plate-item-${i}`} className="flex items-center justify-between text-xs">
-                    <span className="text-foreground">{d.name}</span>
-                    <span className="text-muted">{d.calories} kcal · {d.estimated_weight_g}g</span>
-                  </div>
-                ))}
+              <p className="text-xs text-muted mt-1">
+                {scaledDishes.length} dish{scaledDishes.length !== 1 ? "es" : ""} · {capitalize(logMealType)}
+              </p>
+              <div className="flex justify-center gap-5 mt-4">
+                <MacroStat label="Protein" value={scaledTotals.protein} color="text-accent-dim" />
+                <MacroStat label="Carbs" value={scaledTotals.carbs} color="text-orange" />
+                <MacroStat label="Fat" value={scaledTotals.fat} color="text-red-500" />
+                <MacroStat label="Fiber" value={scaledTotals.fiber} color="text-emerald-600" />
               </div>
             </div>
 
-            {/* Health verdict: on-demand button or result */}
+            {/* C. AI Health Check */}
             {hasHealthProfile && healthVerdict.verdict ? (
               <MealHealthBanner
                 analysis={healthVerdict.verdict}
@@ -461,8 +536,8 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
               <HealthProfilePrompt onSetup={onSetupHealthProfile} />
             ) : null}
 
-            {/* Capy reaction */}
-            <div className="flex items-center gap-3 px-1">
+            {/* D. Capy Mascot — compact inline */}
+            <div className="flex items-start gap-2.5">
               <motion.div
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -470,158 +545,303 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
                 className="shrink-0"
               >
                 <CapyMascot
-                  mood={scaledTotals.calories < 400 ? "happy" : scaledTotals.calories > 700 ? "concerned" : "motivated"}
-                  size={48}
+                  mood={capyMood}
+                  size={36}
+                  animate={false}
+                  className="rounded-full bg-accent-light border border-accent/20 p-0.5"
                 />
               </motion.div>
-              <motion.p
+              <motion.div
                 initial={{ x: 8, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
                 transition={{ delay: 0.4 }}
-                className="text-xs text-muted leading-relaxed rounded-xl bg-accent-light border border-accent/10 px-3 py-2"
+                className="flex-1 bg-card border border-border rounded-xl rounded-bl-sm px-3 py-2"
               >
-                {scaledTotals.calories < 400
-                  ? "Light and healthy! Great choice! 🌿"
-                  : scaledTotals.calories > 700
-                  ? "That's a big meal! Maybe balance it out later? 😊"
-                  : "Solid meal! Good balance of nutrients! 💪"}
-              </motion.p>
+                <p className="text-[13px] text-muted leading-relaxed">{capyMessage}</p>
+              </motion.div>
             </div>
 
-            {/* Expand/Collapse toggle for individual dishes */}
-            {scaledDishes.length > 1 && (
-              <button
-                onClick={() => setExpandedView(!expandedView)}
-                className="w-full flex items-center justify-center gap-1.5 rounded-2xl border border-border bg-card py-2.5 text-xs font-bold text-muted hover:text-foreground transition-colors"
-              >
-                {expandedView ? (
-                  <>
-                    <ChevronUp className="h-3.5 w-3.5" />
-                    Hide individual dishes
-                  </>
-                ) : (
-                  <>
-                    <ChevronDown className="h-3.5 w-3.5" />
-                    Show {scaledDishes.length} dishes · Edit quantities
-                  </>
-                )}
-              </button>
-            )}
+            {/* E. Individual Dishes — Accordion Cards */}
+            {activeDishes.map(({ item: rawDish, originalIndex }, displayIndex) => {
+              const dishItem = scaledDishes[displayIndex];
+              if (!dishItem) return null;
+              const isExpanded = expandedDishIndex === displayIndex;
+              const note = generateDishNote(dishItem);
+              const seenAgo = dishLastSeenDays.get(dishItem.name.toLowerCase());
+              const currentWeight = weightOverrides.get(originalIndex) ?? rawDish.estimated_weight_g;
+              const tags = deriveTags(dishItem);
 
-            {/* Individual dishes — expanded view or single dish always shown */}
-            {(expandedView || scaledDishes.length === 1) &&
-              activeDishes.map(({ item: rawDish, originalIndex }, displayIndex) => {
-                const dishItem = scaledDishes[displayIndex];
-                if (!dishItem) return null;
-                const tags = deriveTags(dishItem);
-                const seenAgo = dishLastSeenDays.get(dishItem.name.toLowerCase());
-                const currentWeight = weightOverrides.get(originalIndex) ?? rawDish.estimated_weight_g;
-                return (
-                  <motion.div
-                    key={`${dishItem.name}-${originalIndex}`}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="space-y-2"
-                  >
-                    {typeof seenAgo === "number" && seenAgo > 0 && (
-                      <div className="inline-flex items-center rounded-full border border-accent/20 bg-accent-light px-2.5 py-1 text-[10px] text-accent-dim">
-                        You had this {seenAgo} day{seenAgo === 1 ? "" : "s"} ago
-                      </div>
-                    )}
-                    <NutritionCard dish={dishItem} servingsMultiplier={1} />
-
-                    {/* Calorie + weight editors + delete row */}
-                    <div className="flex items-center gap-2 px-1">
-                      <CalorieEditor
-                        calories={dishItem.calories}
-                        isOverridden={calorieOverrides.has(originalIndex)}
-                        onChange={(c) => handleCalorieChange(originalIndex, c)}
-                        onReset={() => handleCalorieChange(originalIndex, 0)}
-                      />
-                      <WeightEditor
-                        weight={currentWeight}
-                        onChange={(w) => handleWeightChange(originalIndex, w)}
-                      />
-                      <CorrectionChip
-                        dishIndex={originalIndex}
-                        currentName={dishItem.name}
-                        isAnalyzing={dish.isAnalyzing}
-                        onCorrect={dish.correctDish}
-                      />
-                      <button
-                        onClick={() => switchToDescribe(dishItem.name)}
-                        className="flex items-center gap-1 px-1 text-[10px] text-muted-light hover:text-accent transition-colors"
-                      >
-                        <PenLine className="h-3 w-3" />
-                        Describe instead
-                      </button>
-                      <button
-                        onClick={() => handleRemoveDish(originalIndex)}
-                        className="ml-auto flex items-center gap-1 rounded-full border border-red-200 bg-red-50 px-2 py-1 text-[10px] text-red-500 hover:bg-red-100 transition-colors"
-                      >
-                        <Trash2 className="h-3 w-3" />
-                        Remove
-                      </button>
+              return (
+                <motion.div
+                  key={`${dishItem.name}-${originalIndex}`}
+                  initial={{ opacity: 0, y: 8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: displayIndex * 0.08 }}
+                >
+                  {/* Seen before tag */}
+                  {typeof seenAgo === "number" && seenAgo > 0 && (
+                    <div className="inline-flex items-center rounded-full border border-accent/20 bg-accent-light px-2.5 py-1 text-[10px] text-accent-dim mb-1.5">
+                      You had this {seenAgo} day{seenAgo === 1 ? "" : "s"} ago
                     </div>
+                  )}
 
-                    {tags.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5 px-1">
-                        {tags.map((tag) => (
-                          <span
-                            key={`${dishItem.name}-${tag}`}
-                            className={`rounded-full border px-2 py-0.5 text-[10px] ${getHealthTagColor(tag)}`}
-                          >
-                            {titleCaseTag(tag)}
-                          </span>
-                        ))}
+                  <div className={`rounded-2xl border border-border overflow-hidden transition-colors ${isExpanded ? "bg-[#fdfcfa]" : "bg-card"}`}>
+                    {/* Collapsed header — always visible */}
+                    <button
+                      onClick={() => setExpandedDishIndex(isExpanded ? null : displayIndex)}
+                      className="w-full text-left p-4"
+                    >
+                      {/* Row 1: name + confidence + calories */}
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <h4 className="text-base font-bold text-foreground truncate">{dishItem.name}</h4>
+                            <ConfidenceBadge level={dishItem.confidence} />
+                          </div>
+                          <p className="text-xs text-muted mt-0.5">
+                            {dishItem.hindi && `${dishItem.hindi} · `}{dishItem.estimated_weight_g}g
+                          </p>
+                        </div>
+                        <span className="text-base font-extrabold text-foreground shrink-0">{dishItem.calories} kcal</span>
                       </div>
-                    )}
-                  </motion.div>
-                );
-              })}
 
-            {/* Log meal */}
-            <div className="rounded-2xl bg-card border border-border p-3">
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <p className="text-xs text-muted">Log this scan as a meal</p>
-                <button
-                  onClick={dish.clearAnalysis}
-                  className="text-[10px] text-muted hover:text-foreground transition-colors"
-                >
-                  Clear analysis
-                </button>
+                      {/* Row 2: inline macro pills */}
+                      <div className="flex flex-wrap gap-1.5 mt-2.5">
+                        <span className="inline-flex items-center gap-1 rounded-full bg-accent-light/60 border border-accent/15 px-2 py-0.5 text-[11px] font-semibold text-accent-dim">
+                          <span className="h-1.5 w-1.5 rounded-full bg-accent inline-block" />
+                          Protein {dishItem.protein_g}g
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-orange-light/60 border border-orange/15 px-2 py-0.5 text-[11px] font-semibold text-orange">
+                          <span className="h-1.5 w-1.5 rounded-full bg-orange inline-block" />
+                          Carbs {dishItem.carbs_g}g
+                        </span>
+                        <span className="inline-flex items-center gap-1 rounded-full bg-red-50/60 border border-red-200/30 px-2 py-0.5 text-[11px] font-semibold text-red-500">
+                          <span className="h-1.5 w-1.5 rounded-full bg-red-400 inline-block" />
+                          Fat {dishItem.fat_g}g
+                        </span>
+                      </div>
+
+                      {/* Row 3: contextual note */}
+                      {note && (
+                        <p className={`mt-2.5 text-xs leading-relaxed ${
+                          note.type === "warning" ? "text-amber-600" : "text-accent-dim"
+                        }`}>
+                          {note.type === "warning" ? "⚠ " : "✓ "}{note.text}
+                        </p>
+                      )}
+
+                      {/* Row 4: expand hint */}
+                      {!isExpanded && (
+                        <div className="flex items-center justify-center gap-1 mt-3 text-[11px] text-muted">
+                          <ChevronDown className="h-3 w-3" />
+                          Tap for details & editing
+                        </div>
+                      )}
+                    </button>
+
+                    {/* Expanded section */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.2 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
+                            {/* Editable macro grid */}
+                            <div>
+                              <div className="grid grid-cols-5 gap-1.5">
+                                {[
+                                  { label: "Cal", value: dishItem.calories, unit: "", color: "text-foreground" },
+                                  { label: "Protein", value: dishItem.protein_g, unit: "g", color: "text-accent-dim" },
+                                  { label: "Carbs", value: dishItem.carbs_g, unit: "g", color: "text-orange" },
+                                  { label: "Fat", value: dishItem.fat_g, unit: "g", color: "text-red-500" },
+                                  { label: "Fiber", value: dishItem.fiber_g, unit: "g", color: "text-emerald-600" },
+                                ].map((m) => (
+                                  <div key={m.label} className="rounded-xl border border-border bg-card p-2 text-center">
+                                    <p className={`text-sm font-bold ${m.color}`}>{m.value}{m.unit}</p>
+                                    <p className="text-[10px] text-muted mt-0.5">{m.label}</p>
+                                  </div>
+                                ))}
+                              </div>
+                              <p className="text-[10px] text-muted text-center mt-1.5">Edit calories or weight below — macros adjust proportionally</p>
+                            </div>
+
+                            {/* Calorie + weight editors */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted font-medium">Calories</span>
+                                <CalorieEditor
+                                  calories={dishItem.calories}
+                                  isOverridden={calorieOverrides.has(originalIndex)}
+                                  onChange={(c) => handleCalorieChange(originalIndex, c)}
+                                  onReset={() => handleCalorieChange(originalIndex, 0)}
+                                />
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted font-medium">Portion</span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-foreground">{dishItem.portion}</span>
+                                </div>
+                              </div>
+                              <div className="flex items-center justify-between">
+                                <span className="text-xs text-muted font-medium">Weight</span>
+                                <WeightEditor
+                                  weight={currentWeight}
+                                  onChange={(w) => handleWeightChange(originalIndex, w)}
+                                />
+                              </div>
+                            </div>
+
+                            {/* Key Ingredients */}
+                            {dishItem.ingredients.length > 0 && (
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wider text-muted font-semibold mb-1.5">Key Ingredients</p>
+                                <div className="flex flex-wrap gap-1.5">
+                                  {dishItem.ingredients.map((ingredient) => (
+                                    <span
+                                      key={ingredient}
+                                      className="rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted"
+                                    >
+                                      {ingredient}
+                                    </span>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+
+                            {/* Health Tip */}
+                            {dishItem.healthTip && (
+                              <div className="rounded-xl border border-orange/20 bg-orange-light/50 px-3.5 py-2.5">
+                                <p className="text-[10px] uppercase tracking-wider text-orange font-semibold mb-1">Health Tip</p>
+                                <p className="text-xs text-foreground leading-relaxed">{dishItem.healthTip}</p>
+                              </div>
+                            )}
+
+                            {/* Tags */}
+                            {tags.length > 0 && (
+                              <div className="flex flex-wrap gap-1.5">
+                                {tags.map((tag) => (
+                                  <span
+                                    key={`${dishItem.name}-${tag}`}
+                                    className={`rounded-full border px-2 py-0.5 text-[10px] ${getHealthTagColor(tag)}`}
+                                  >
+                                    {titleCaseTag(tag)}
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+
+                            {/* Reasoning */}
+                            {dishItem.reasoning && <ReasoningToggle reasoning={dishItem.reasoning} />}
+
+                            {/* Action buttons */}
+                            <div className="flex items-center gap-2 pt-1">
+                              <CorrectionChip
+                                dishIndex={originalIndex}
+                                currentName={dishItem.name}
+                                isAnalyzing={dish.isAnalyzing}
+                                onCorrect={dish.correctDish}
+                              />
+                              <button
+                                onClick={(e) => { e.stopPropagation(); switchToDescribe(dishItem.name); }}
+                                className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted hover:text-foreground transition-colors"
+                              >
+                                <PenLine className="h-3 w-3" />
+                                Describe
+                              </button>
+                              <button
+                                onClick={(e) => { e.stopPropagation(); handleRemoveDish(originalIndex); }}
+                                className="ml-auto flex items-center gap-1.5 rounded-full border border-red-200 bg-red-50 px-3 py-1.5 text-xs text-red-500 hover:bg-red-100 transition-colors"
+                              >
+                                <Trash2 className="h-3 w-3" />
+                                Remove
+                              </button>
+                            </div>
+
+                            {/* Collapse hint */}
+                            <button
+                              onClick={() => setExpandedDishIndex(null)}
+                              className="w-full flex items-center justify-center gap-1 text-[11px] text-muted pt-1"
+                            >
+                              <ChevronUp className="h-3 w-3" />
+                              Collapse
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+                </motion.div>
+              );
+            })}
+
+            {/* F. Sticky Log Bar */}
+            <div className="sticky bottom-0 bg-card border-t border-border rounded-t-2xl px-4 py-3 -mx-4 mt-4 flex items-center gap-2.5 shadow-[0_-4px_16px_rgba(0,0,0,0.05)] z-10">
+              <div className="flex-1">
+                <p className="text-lg font-extrabold">{scaledTotals.calories} kcal</p>
+                <p className="text-xs text-muted">{capitalize(logMealType)} · {scaledDishes.length} dish{scaledDishes.length !== 1 ? "es" : ""}</p>
               </div>
-              <div className="flex items-center gap-2">
-                <select
-                  value={logMealType}
-                  onChange={(event) => setLogMealType(event.target.value as MealType)}
-                  className="flex-1 rounded-full border border-border bg-background px-3 py-2 text-xs text-foreground"
-                >
-                  {MEAL_TYPE_OPTIONS.map((option) => (
-                    <option key={option} value={option}>
-                      {option.charAt(0).toUpperCase() + option.slice(1)}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleLogMeal}
-                  className={`inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition-all active:scale-95 ${
-                    logSuccess
-                      ? "bg-accent text-white"
-                      : "bg-accent-light border border-accent/20 text-accent-dim hover:bg-accent/15"
-                  }`}
-                >
-                  <PlusCircle className="h-3.5 w-3.5" />
-                  {logSuccess ? "Logged ✓" : "Log This Meal"}
-                </button>
-              </div>
+              <button
+                onClick={handleLogMeal}
+                className={`rounded-xl px-6 py-3 text-sm font-bold transition-all active:scale-95 ${
+                  logSuccess
+                    ? "bg-accent text-white"
+                    : "bg-accent text-white hover:bg-accent/90"
+                }`}
+              >
+                {logSuccess ? "Logged ✓" : "Log Meal"}
+              </button>
             </div>
+
+            {/* G. Clear link */}
+            <button
+              onClick={dish.clearAnalysis}
+              className="w-full text-center py-2 text-xs text-muted hover:text-foreground transition-colors"
+            >
+              Clear analysis & re-scan
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
     </>
     )}
+    </div>
+  );
+}
+
+/* ─── Sub-components ─── */
+
+function ReasoningToggle({ reasoning }: { reasoning: string }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div>
+      <button
+        onClick={(e) => { e.stopPropagation(); setIsOpen(!isOpen); }}
+        className="flex items-center gap-1.5 text-xs text-muted hover:text-foreground transition-colors"
+      >
+        <Brain className="h-3.5 w-3.5" />
+        Why this estimate?
+        {isOpen ? <ChevronUp className="h-3 w-3" /> : <ChevronDown className="h-3 w-3" />}
+      </button>
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="overflow-hidden"
+          >
+            <p className="mt-1.5 rounded-xl border border-border bg-background px-3.5 py-2.5 text-xs text-muted leading-relaxed">
+              {reasoning}
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -634,13 +854,14 @@ function WeightEditor({ weight, onChange }: { weight: number; onChange: (w: numb
   if (!isEditing) {
     return (
       <button
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setInputVal(String(weight));
           setIsEditing(true);
         }}
-        className="flex items-center gap-1 rounded-full border border-border bg-background px-2 py-1 text-[10px] text-muted hover:text-foreground transition-colors"
+        className="flex items-center gap-1 rounded-full border border-border bg-background px-2.5 py-1 text-xs text-muted hover:text-foreground transition-colors"
       >
-        <Pencil className="h-2.5 w-2.5" />
+        <Pencil className="h-3 w-3" />
         {weight}g
       </button>
     );
@@ -653,7 +874,7 @@ function WeightEditor({ weight, onChange }: { weight: number; onChange: (w: numb
   };
 
   return (
-    <div ref={containerRef} className="flex items-center gap-1">
+    <div ref={containerRef} className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <button
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
@@ -678,9 +899,9 @@ function WeightEditor({ weight, onChange }: { weight: number; onChange: (w: numb
           if (e.key === "Enter") commitAndClose();
           if (e.key === "Escape") setIsEditing(false);
         }}
-        className="w-14 rounded-full border border-accent/30 bg-background px-2 py-1 text-center text-[10px] font-semibold text-foreground outline-none"
+        className="w-14 rounded-full border border-accent/30 bg-background px-2 py-1 text-center text-xs font-semibold text-foreground outline-none"
       />
-      <span className="text-[10px] text-muted">g</span>
+      <span className="text-xs text-muted">g</span>
       <button
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
@@ -725,17 +946,18 @@ function CalorieEditor({
   if (!isEditing) {
     return (
       <button
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setInputVal(String(calories));
           setIsEditing(true);
         }}
-        className={`flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] transition-colors ${
+        className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition-colors ${
           isOverridden
             ? "border-accent/30 bg-accent-light text-accent-dim"
             : "border-border bg-background text-muted hover:text-foreground"
         }`}
       >
-        <Pencil className="h-2.5 w-2.5" />
+        <Pencil className="h-3 w-3" />
         {calories} kcal
       </button>
     );
@@ -748,7 +970,7 @@ function CalorieEditor({
   };
 
   return (
-    <div ref={containerRef} className="flex items-center gap-1">
+    <div ref={containerRef} className="flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
       <button
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
@@ -773,9 +995,9 @@ function CalorieEditor({
           if (e.key === "Enter") commitAndClose();
           if (e.key === "Escape") setIsEditing(false);
         }}
-        className="w-14 rounded-full border border-accent/30 bg-background px-2 py-1 text-center text-[10px] font-semibold text-foreground outline-none"
+        className="w-14 rounded-full border border-accent/30 bg-background px-2 py-1 text-center text-xs font-semibold text-foreground outline-none"
       />
-      <span className="text-[10px] text-muted">kcal</span>
+      <span className="text-xs text-muted">kcal</span>
       <button
         onMouseDown={(e) => e.preventDefault()}
         onClick={() => {
@@ -836,8 +1058,8 @@ function CorrectionChip({
 
   if (isAnalyzing) {
     return (
-      <div className="flex items-center gap-1.5 px-1 text-[10px] text-muted">
-        <Loader2 className="h-3 w-3 animate-spin" />
+      <div className="flex items-center gap-1.5 text-xs text-muted">
+        <Loader2 className="h-3.5 w-3.5 animate-spin" />
         Re-analyzing…
       </div>
     );
@@ -846,20 +1068,21 @@ function CorrectionChip({
   if (!isEditing) {
     return (
       <button
-        onClick={() => {
+        onClick={(e) => {
+          e.stopPropagation();
           setValue(currentName);
           setIsEditing(true);
         }}
-        className="flex items-center gap-1 px-1 text-[10px] text-muted hover:text-foreground transition-colors"
+        className="flex items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1.5 text-xs text-muted hover:text-foreground transition-colors"
       >
-        <Pencil className="h-3 w-3" />
+        <RefreshCw className="h-3 w-3" />
         Wrong dish?
       </button>
     );
   }
 
   return (
-    <div className="flex items-center gap-1.5 px-1">
+    <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
       <input
         autoFocus
         type="text"

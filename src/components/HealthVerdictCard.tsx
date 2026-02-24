@@ -12,6 +12,7 @@ import {
   Stethoscope,
   Loader2,
   Sparkles,
+  ArrowRight,
 } from "lucide-react";
 import type { MealHealthAnalysis, DishHealthVerdict, HealthVerdict, HealthCondition } from "@/lib/dishTypes";
 import { getConditionById } from "@/lib/healthConditions";
@@ -31,7 +32,7 @@ const VERDICT_CONFIG: Record<
 > = {
   good: {
     icon: ShieldCheck,
-    label: "Good",
+    label: "Looks Good",
     pillBg: "bg-green-50",
     pillBorder: "border-green-200/60",
     pillText: "text-green-700",
@@ -39,7 +40,7 @@ const VERDICT_CONFIG: Record<
   },
   caution: {
     icon: AlertTriangle,
-    label: "Caution",
+    label: "Needs Attention",
     pillBg: "bg-amber-50",
     pillBorder: "border-amber-200/60",
     pillText: "text-amber-700",
@@ -47,7 +48,7 @@ const VERDICT_CONFIG: Record<
   },
   avoid: {
     icon: XOctagon,
-    label: "Avoid",
+    label: "Not Recommended",
     pillBg: "bg-red-50",
     pillBorder: "border-red-200/60",
     pillText: "text-red-700",
@@ -68,19 +69,16 @@ export function MealHealthBanner({
   analysis,
   isLoading,
   error,
-  hasHealthProfile,
 }: MealHealthBannerProps) {
   const [expanded, setExpanded] = useState(false);
 
-  if (!hasHealthProfile) return null;
-
   if (isLoading) {
     return (
-      <div className="rounded-xl border border-accent/20 bg-accent-light/30 px-4 py-3 flex items-center gap-3">
-        <Loader2 className="h-4 w-4 text-accent animate-spin shrink-0" />
+      <div className="rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 px-4 py-4 flex items-center gap-3">
+        <Loader2 className="h-5 w-5 text-violet-500 animate-spin shrink-0" />
         <div>
-          <p className="text-xs font-semibold text-accent-dim">Dr. Capy is analyzing...</p>
-          <p className="text-[10px] text-muted">Checking this meal against your health profile</p>
+          <p className="text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Dr. Capy is analyzing...</p>
+          <p className="text-xs text-muted mt-0.5">Checking this meal against your health profile</p>
         </div>
       </div>
     );
@@ -88,9 +86,9 @@ export function MealHealthBanner({
 
   if (error) {
     return (
-      <div className="rounded-xl border border-border bg-card px-4 py-2.5">
-        <p className="text-[10px] text-muted-light">
-          <Stethoscope className="h-3 w-3 inline mr-1 -mt-0.5" />
+      <div className="rounded-2xl border border-border bg-card px-4 py-3">
+        <p className="text-xs text-muted">
+          <Stethoscope className="h-3.5 w-3.5 inline mr-1.5 -mt-0.5" />
           Health analysis unavailable right now
         </p>
       </div>
@@ -103,22 +101,27 @@ export function MealHealthBanner({
   const VerdictIcon = config.icon;
 
   return (
-    <div className={`rounded-xl border ${config.pillBorder} ${config.pillBg} overflow-hidden`}>
+    <div className={`rounded-2xl border ${config.pillBorder} ${config.pillBg} overflow-hidden`}>
+      {/* Dr. Capy label */}
+      <div className="px-4 pt-3 pb-0">
+        <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-violet-500">
+          <Stethoscope className="h-3 w-3" />
+          Dr. Capy&apos;s Verdict
+        </span>
+      </div>
       {/* Summary bar */}
       <button
         onClick={() => setExpanded((e) => !e)}
         className="w-full flex items-center gap-3 px-4 py-3 text-left"
       >
-        <div className={`flex h-8 w-8 items-center justify-center rounded-full ${config.pillBg} border ${config.pillBorder} shrink-0`}>
-          <VerdictIcon className={`h-4 w-4 ${config.iconColor}`} />
+        <div className={`flex h-10 w-10 items-center justify-center rounded-full ${config.pillBg} border ${config.pillBorder} shrink-0`}>
+          <VerdictIcon className={`h-5 w-5 ${config.iconColor}`} />
         </div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <span className={`text-xs font-bold ${config.pillText}`}>
-              Dr. Capy&apos;s Verdict: {config.label}
-            </span>
-          </div>
-          <p className="text-[10px] text-muted mt-0.5 leading-relaxed">
+          <span className={`text-sm font-bold ${config.pillText}`}>
+            {config.label}
+          </span>
+          <p className="text-xs text-muted mt-0.5 leading-relaxed">
             {analysis.overallSummary}
           </p>
         </div>
@@ -143,7 +146,7 @@ export function MealHealthBanner({
               {analysis.dishVerdicts.map((dv, i) => (
                 <DishVerdictRow key={i} verdict={dv} />
               ))}
-              <p className="text-[9px] text-muted-light text-center pt-1">
+              <p className="text-[10px] text-muted-light text-center pt-1">
                 <ShieldCheck className="h-2.5 w-2.5 inline mr-0.5 -mt-0.5" />
                 For informational purposes only. Consult your doctor.
               </p>
@@ -174,11 +177,11 @@ function DishVerdictRow({ verdict }: { verdict: DishHealthVerdict }) {
               {config.label}
             </span>
           </div>
-          <p className="text-[10px] text-muted mt-0.5 leading-relaxed">{verdict.note}</p>
+          <p className="text-xs text-muted mt-0.5 leading-relaxed">{verdict.note}</p>
           {verdict.swapSuggestion && (
             <div className="flex items-center gap-1.5 mt-1.5 rounded-md bg-accent-light/40 border border-accent/10 px-2 py-1">
               <ArrowRightLeft className="h-3 w-3 text-accent shrink-0" />
-              <p className="text-[10px] text-accent-dim font-medium">
+              <p className="text-xs text-accent-dim font-medium">
                 Try: {verdict.swapSuggestion}
               </p>
             </div>
@@ -233,7 +236,7 @@ export function DishVerdictPill({ dishName, analysis, isLoading }: DishVerdictPi
   );
 }
 
-/* ─── AI Health Check Button (on-demand) ─── */
+/* ─── AI Health Check Button (on-demand, prominent card) ─── */
 
 function buildConditionSubtitle(conditions: HealthCondition[]): string {
   if (conditions.length === 0) return "";
@@ -241,8 +244,8 @@ function buildConditionSubtitle(conditions: HealthCondition[]): string {
     const def = getConditionById(c.id);
     return def?.shortLabel ?? c.label;
   });
-  if (labels.length <= 2) return `Is this right for your ${labels.join(", ")}?`;
-  return `Is this right for your ${labels.slice(0, 2).join(", ")} +${labels.length - 2} more?`;
+  if (labels.length <= 2) return labels.join(" · ");
+  return `${labels.slice(0, 2).join(" · ")} +${labels.length - 2} more`;
 }
 
 interface HealthCheckButtonProps {
@@ -254,12 +257,11 @@ interface HealthCheckButtonProps {
 export function HealthCheckButton({ conditions, isLoading, onCheck }: HealthCheckButtonProps) {
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center gap-1 py-2">
-        <div className="inline-flex items-center gap-2 rounded-full border border-violet-300 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 px-4 py-2">
-          <Loader2 className="h-3.5 w-3.5 text-violet-500 animate-spin" />
-          <span className="text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
-            Analyzing...
-          </span>
+      <div className="rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 px-4 py-4 flex items-center gap-3">
+        <Loader2 className="h-5 w-5 text-violet-500 animate-spin shrink-0" />
+        <div>
+          <p className="text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">Analyzing...</p>
+          <p className="text-xs text-muted mt-0.5">Checking against your health profile</p>
         </div>
       </div>
     );
@@ -270,17 +272,22 @@ export function HealthCheckButton({ conditions, isLoading, onCheck }: HealthChec
   return (
     <button
       onClick={onCheck}
-      className="flex flex-col items-center gap-1 py-1.5 w-full group"
+      className="w-full rounded-2xl border border-violet-200 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 p-4 flex items-center gap-3.5 text-left transition-all hover:border-violet-300 hover:shadow-[0_0_12px_2px_rgba(139,92,246,0.08)] active:scale-[0.99]"
     >
-      <div className="inline-flex items-center gap-1.5 rounded-full border border-violet-300 bg-gradient-to-r from-violet-50 via-indigo-50 to-blue-50 bg-[length:200%_100%] animate-[shimmer_3s_ease-in-out_infinite] px-4 py-2 transition-all group-hover:border-violet-400 group-hover:shadow-[0_0_8px_2px_rgba(139,92,246,0.12)] group-active:scale-[0.97]">
-        <Sparkles className="h-3.5 w-3.5 text-violet-500 shrink-0" />
-        <span className="text-xs font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
-          AI Health Check
-        </span>
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-100 to-indigo-100 border border-violet-200/60 shrink-0">
+        <Sparkles className="h-5 w-5 text-violet-500" />
       </div>
-      {subtitle && (
-        <span className="text-[9px] text-muted">{subtitle}</span>
-      )}
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold bg-gradient-to-r from-violet-600 to-indigo-600 bg-clip-text text-transparent">
+          AI Health Check
+        </p>
+        {subtitle && (
+          <p className="text-xs text-muted mt-0.5">{subtitle}</p>
+        )}
+      </div>
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-violet-100 border border-violet-200/60 shrink-0">
+        <ArrowRight className="h-4 w-4 text-violet-500" />
+      </div>
     </button>
   );
 }
@@ -295,12 +302,22 @@ export function HealthProfilePrompt({ onSetup }: HealthProfilePromptProps) {
   return (
     <button
       onClick={onSetup}
-      className="flex items-center justify-center gap-1.5 py-2 w-full opacity-50 hover:opacity-70 transition-opacity"
+      className="w-full rounded-2xl border border-dashed border-border bg-card p-4 flex items-center gap-3.5 text-left transition-all hover:border-muted hover:bg-card-hover active:scale-[0.99]"
     >
-      <Sparkles className="h-3 w-3 text-muted-light shrink-0" />
-      <span className="text-[10px] text-muted font-medium">
-        Get AI health advice &mdash; set up your profile
-      </span>
+      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-background border border-border shrink-0">
+        <Stethoscope className="h-5 w-5 text-muted" />
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-foreground">
+          How healthy is this meal?
+        </p>
+        <p className="text-xs text-muted mt-0.5">
+          Set up your health profile for a personalized assessment
+        </p>
+      </div>
+      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-background border border-border shrink-0">
+        <ArrowRight className="h-4 w-4 text-muted" />
+      </div>
     </button>
   );
 }

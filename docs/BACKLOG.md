@@ -31,6 +31,18 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - ~~Auto-navigate to Home tab after meal is logged (1.2s "Logged ✓" → Home with fresh data)~~
 - ~~Analysis cleared after logging so Scan tab is ready for next scan~~
 
+### ~~Scan Results Redesign~~ ✅ SHIPPED
+- ~~Controls Strip: horizontal scrollable row combining meal type (auto-selected by time of day) + portion multiplier pills~~
+- ~~Plate Total: large centered calorie number with macro breakdown~~
+- ~~AI Health Check: prominent full-width card (with-profile: gradient + conditions, without-profile: dashed card + "How healthy?")~~
+- ~~Verdict labels updated: "Looks Good" / "Needs Attention" / "Not Recommended" with "Dr. Capy's Verdict" tag~~
+- ~~Accordion dish cards: per-dish collapsible cards with collapsed view (name, confidence badge, calories, macro pills, contextual note) and expanded view (editable macro grid, editors, ingredients, health tip, reasoning, actions)~~
+- ~~Contextual dish notes: tag-based positive/warning one-liners (e.g. "High cream & butter — calorie dense", "Good protein source")~~
+- ~~Sticky log bar: fixed bottom with total + "Log Meal" button~~
+- ~~Compact capy mascot: 36px avatar + speech bubble~~
+- ~~Replaced NutritionCard usage in ScanView with inline accordion cards~~
+- ~~HealthCheckButton and HealthProfilePrompt redesigned as full-width prominent cards~~
+
 ### ~~UI Refresh + Capy's Garden~~ ✅ SHIPPED
 - ~~Punchier color palette (richer greens, darker foreground, warmer orange)~~
 - ~~Bolder fonts across all views (extrabold headings, bold labels)~~
