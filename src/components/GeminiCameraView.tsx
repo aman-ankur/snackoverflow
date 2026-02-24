@@ -9,6 +9,7 @@ import {
   RefreshCw,
   Zap,
   ZapOff,
+  CheckCircle2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -30,6 +31,9 @@ interface GeminiCameraViewProps {
   readyLabel?: string;
   placeholderTitle?: string;
   placeholderSubtitle?: string;
+  capturedFrame?: string | null;
+  hasResults?: boolean;
+  onScanAgain?: () => void;
 }
 
 export default function GeminiCameraView({
@@ -50,26 +54,60 @@ export default function GeminiCameraView({
   readyLabel = "Ready — tap Analyze",
   placeholderTitle = "Point your camera at your fridge",
   placeholderSubtitle = "AI will identify items and suggest recipes",
+  capturedFrame = null,
+  hasResults = false,
+  onScanAgain,
 }: GeminiCameraViewProps) {
+  // State B or C: we have a captured frame (analyzing or results ready)
+  const isFrozen = Boolean(capturedFrame);
+
   return (
     <div className="relative w-full overflow-hidden rounded-2xl bg-card border border-border">
-      {/* Camera Feed — near full-screen when streaming */}
-      <div className={`relative w-full bg-black transition-all duration-300 ${isStreaming ? "h-[50vh]" : "aspect-[4/3]"}`}>
+      {/* Camera / Frozen Frame Area */}
+      <div
+        className={`relative w-full bg-black transition-all duration-300 ${
+          isFrozen ? "h-40" : isStreaming ? "h-[50vh]" : "aspect-[4/3]"
+        }`}
+      >
+        {/* Live video (hidden when frozen) */}
         <video
           ref={videoRef}
-          className="absolute inset-0 h-full w-full object-cover"
+          className={`absolute inset-0 h-full w-full object-cover ${isFrozen ? "hidden" : ""}`}
           playsInline
           muted
           autoPlay
         />
         <canvas
           ref={canvasRef}
-          className="absolute inset-0 h-full w-full object-cover"
+          className={`absolute inset-0 h-full w-full object-cover ${isFrozen ? "hidden" : ""}`}
         />
 
-        {/* Scanning overlay */}
+        {/* Frozen snapshot */}
+        {isFrozen && capturedFrame && (
+          <img
+            src={capturedFrame}
+            alt="Captured meal"
+            className="absolute inset-0 h-full w-full object-cover"
+          />
+        )}
+
+        {/* White flash on capture */}
         <AnimatePresence>
-          {isStreaming && (
+          {isFrozen && isAnalyzing && (
+            <motion.div
+              key="capture-flash"
+              initial={{ opacity: 0.8 }}
+              animate={{ opacity: 0 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="absolute inset-0 bg-white pointer-events-none"
+            />
+          )}
+        </AnimatePresence>
+
+        {/* Scanning overlay — live camera only */}
+        <AnimatePresence>
+          {isStreaming && !isFrozen && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -81,30 +119,34 @@ export default function GeminiCameraView({
               <div className="absolute top-3 right-3 w-6 h-6 border-t-2 border-r-2 border-accent/50 rounded-tr" />
               <div className="absolute bottom-3 left-3 w-6 h-6 border-b-2 border-l-2 border-accent/50 rounded-bl" />
               <div className="absolute bottom-3 right-3 w-6 h-6 border-b-2 border-r-2 border-accent/50 rounded-br" />
-
-              {/* Analyzing pulse overlay */}
-              {isAnalyzing && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: [0, 0.15, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity }}
-                  className="absolute inset-0 bg-accent"
-                />
-              )}
             </motion.div>
           )}
         </AnimatePresence>
 
         {/* Status badge */}
         <AnimatePresence>
-          {isStreaming && (
+          {(isStreaming || isFrozen) && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -10 }}
               className="absolute top-3 left-1/2 -translate-x-1/2 flex items-center gap-2 rounded-full bg-black/60 backdrop-blur-md px-3 py-1.5 border border-white/10"
             >
-              {isAnalyzing ? (
+              {isFrozen && isAnalyzing ? (
+                <>
+                  <RefreshCw className="h-3 w-3 text-accent animate-spin" />
+                  <span className="text-xs font-medium text-white/90">
+                    Analyzing your meal...
+                  </span>
+                </>
+              ) : isFrozen && hasResults ? (
+                <>
+                  <CheckCircle2 className="h-3 w-3 text-accent" />
+                  <span className="text-xs font-medium text-white/90">
+                    Analysis complete
+                  </span>
+                </>
+              ) : isAnalyzing ? (
                 <>
                   <RefreshCw className="h-3 w-3 text-accent animate-spin" />
                   <span className="text-xs font-medium text-white/90">
@@ -135,8 +177,8 @@ export default function GeminiCameraView({
           )}
         </AnimatePresence>
 
-        {/* Placeholder when not streaming */}
-        {!isStreaming && (
+        {/* Placeholder when not streaming and no frozen frame */}
+        {!isStreaming && !isFrozen && (
           <div className="absolute inset-0 flex flex-col items-center justify-center gap-4 bg-card">
             <div className="rounded-full bg-accent-glow p-5">
               <Camera className="h-10 w-10 text-accent" />
@@ -161,18 +203,48 @@ export default function GeminiCameraView({
       </div>
 
       {/* Controls */}
-      <div className="flex items-center justify-center gap-2.5 p-3 bg-card">
-        {!isStreaming ? (
-          <button
-            onClick={onStart}
-            disabled={!hasApiKey}
-            className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-accent-dim active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Camera className="h-4 w-4" />
-            Start Camera
-          </button>
-        ) : (
+      <div className="flex flex-col items-center gap-1.5 p-3 bg-card">
+        {isFrozen ? (
+          /* Frozen states: analyzing or results */
           <>
+            {isAnalyzing && (
+              <p className="text-[10px] text-muted">
+                Photo captured — you can put your phone down
+              </p>
+            )}
+            <div className="flex items-center justify-center gap-2.5">
+              {isAnalyzing ? (
+                <button
+                  disabled
+                  className="flex items-center gap-2 rounded-full bg-accent/50 px-5 py-2.5 text-sm font-semibold text-white/70 cursor-not-allowed"
+                >
+                  <RefreshCw className="h-4 w-4 animate-spin" />
+                  Analyzing...
+                </button>
+              ) : (
+                <button
+                  onClick={onScanAgain}
+                  className="flex items-center gap-2 rounded-full bg-accent px-5 py-2.5 text-sm font-semibold text-white transition-all hover:bg-accent-dim active:scale-95"
+                >
+                  <ScanSearch className="h-4 w-4" />
+                  Scan Again
+                </button>
+              )}
+            </div>
+          </>
+        ) : !isStreaming ? (
+          <div className="flex items-center justify-center gap-2.5">
+            <button
+              onClick={onStart}
+              disabled={!hasApiKey}
+              className="flex items-center gap-2 rounded-full bg-accent px-6 py-2.5 text-sm font-semibold text-white transition-all hover:bg-accent-dim active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Camera className="h-4 w-4" />
+              Start Camera
+            </button>
+          </div>
+        ) : (
+          <div className="flex items-center justify-center gap-2.5">
             <button
               onClick={onFlip}
               className="flex items-center justify-center rounded-full bg-card-hover border border-border p-2.5 transition-all hover:bg-border active:scale-95"
@@ -220,7 +292,7 @@ export default function GeminiCameraView({
             >
               <CameraOff className="h-4 w-4 text-red-400" />
             </button>
-          </>
+          </div>
         )}
       </div>
     </div>

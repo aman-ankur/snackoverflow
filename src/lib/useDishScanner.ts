@@ -89,6 +89,7 @@ function normalizeResult(raw: unknown): DishAnalysisResult {
       0,
       Math.round(toNumber(input.totalFiber) || dishes.reduce((sum, d) => sum + d.fiber_g, 0))
     ),
+    ...(typeof input.provider === "string" ? { provider: input.provider } : {}),
   };
 }
 
@@ -99,6 +100,9 @@ export function useDishScanner() {
   const streamRef = useRef<MediaStream | null>(null);
   const lastFrameRef = useRef<string | null>(null);
 
+  const [mockMode] = useState(
+    () => typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mock") === "scan"
+  );
   const [isStreaming, setIsStreaming] = useState(false);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -107,12 +111,19 @@ export function useDishScanner() {
   const [lastAnalyzedAt, setLastAnalyzedAt] = useState<Date | null>(null);
   const [scanCount, setScanCount] = useState(0);
   const [mealType, setMealType] = useState<MealType>("lunch");
+  const [capturedFrame, setCapturedFrame] = useState<string | null>(null);
 
   useEffect(() => {
     captureCanvasRef.current = document.createElement("canvas");
   }, []);
 
   const startCamera = useCallback(async () => {
+    if (mockMode) {
+      setIsStreaming(true);
+      setError(null);
+      return;
+    }
+
     try {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach((track) => track.stop());
@@ -139,9 +150,14 @@ export function useDishScanner() {
     } catch {
       setError("Camera access denied. Please allow camera permissions.");
     }
-  }, [facingMode]);
+  }, [facingMode, mockMode]);
 
   const stopCamera = useCallback(() => {
+    if (mockMode) {
+      setIsStreaming(false);
+      return;
+    }
+
     if (streamRef.current) {
       streamRef.current.getTracks().forEach((track) => track.stop());
       streamRef.current = null;
@@ -152,7 +168,7 @@ export function useDishScanner() {
     }
 
     setIsStreaming(false);
-  }, []);
+  }, [mockMode]);
 
   const flipCamera = useCallback(() => {
     setFacingMode((prev) => (prev === "user" ? "environment" : "user"));
@@ -184,6 +200,27 @@ export function useDishScanner() {
   const analyzeFrame = useCallback(async () => {
     if (isAnalyzing) return;
 
+    if (mockMode) {
+      setIsAnalyzing(true);
+      setError(null);
+      try {
+        const { MOCK_FOOD_IMAGE, MOCK_SCAN_RESULT, MOCK_ANALYSIS_DELAY_MS } = await import(
+          "@/lib/mockScanData"
+        );
+        setCapturedFrame(MOCK_FOOD_IMAGE);
+        lastFrameRef.current = MOCK_FOOD_IMAGE;
+        await new Promise((resolve) => setTimeout(resolve, MOCK_ANALYSIS_DELAY_MS));
+        setAnalysis(MOCK_SCAN_RESULT);
+        setLastAnalyzedAt(new Date());
+        setScanCount((count) => count + 1);
+      } catch {
+        setError("Mock scan failed");
+      } finally {
+        setIsAnalyzing(false);
+      }
+      return;
+    }
+
     const frame = captureFrame();
     if (!frame) {
       setError("Could not capture frame from camera");
@@ -192,6 +229,7 @@ export function useDishScanner() {
 
     setIsAnalyzing(true);
     setError(null);
+    setCapturedFrame(frame);
     lastFrameRef.current = frame;
 
     try {
@@ -221,7 +259,7 @@ export function useDishScanner() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAnalyzing, captureFrame, mealType]);
+  }, [isAnalyzing, captureFrame, mealType, mockMode]);
 
   const correctDish = useCallback(async (dishIndex: number, correctedName: string) => {
     const frame = lastFrameRef.current;
@@ -266,6 +304,7 @@ export function useDishScanner() {
     setAnalysis(null);
     setLastAnalyzedAt(null);
     setScanCount(0);
+    setCapturedFrame(null);
     lastFrameRef.current = null;
   }, []);
 
@@ -288,6 +327,8 @@ export function useDishScanner() {
     setMealType,
     lastAnalyzedAt,
     scanCount,
+    capturedFrame,
+    mockMode,
     startCamera,
     stopCamera,
     flipCamera,
