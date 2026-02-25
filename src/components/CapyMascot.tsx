@@ -8,6 +8,8 @@ interface CapyMascotProps {
   size?: number;
   className?: string;
   animate?: boolean;
+  /** When true, randomly picks from multiple capy avatars. Default: false (uses original mascot). */
+  randomize?: boolean;
 }
 
 const CAPY_AVATARS = [
@@ -16,28 +18,44 @@ const CAPY_AVATARS = [
   "/model/capy-logo.gif",
 ];
 
-export default function CapyMascot({ mood = "happy", size = 120, className = "", animate = true }: CapyMascotProps) {
-  // Pick randomly on mount (client only) to avoid hydration mismatch
-  const [src, setSrc] = useState(CAPY_AVATARS[0]);
+const MOOD_IMAGE: Record<string, string> = {
+  happy: "/model/capy-happy.png",
+  excited: "/model/capy-happy.png",
+  sleepy: "/model/capy-happy.png",
+  motivated: "/model/capy-motivated.png",
+  concerned: "/model/capy-default.png",
+  default: "/model/capy-default.png",
+};
+
+export default function CapyMascot({ mood = "happy", size = 120, className = "", animate = true, randomize = false }: CapyMascotProps) {
+  const defaultSrc = MOOD_IMAGE[mood] ?? MOOD_IMAGE.default;
+
+  // Only randomize when explicitly opted in (home header)
+  const [src, setSrc] = useState(randomize ? CAPY_AVATARS[0] : defaultSrc);
   useEffect(() => {
-    setSrc(CAPY_AVATARS[Math.floor(Math.random() * CAPY_AVATARS.length)]);
-  }, []);
+    if (randomize) {
+      setSrc(CAPY_AVATARS[Math.floor(Math.random() * CAPY_AVATARS.length)]);
+    }
+  }, [randomize]);
+
+  // Update mood-based src when not randomizing
+  const finalSrc = randomize ? src : defaultSrc;
 
   // Coconut capy works great as circle crop; others need contain to avoid cutting
-  const isCircleSafe = src === CAPY_AVATARS[0];
+  const isRandomNonSquare = randomize && finalSrc !== CAPY_AVATARS[0];
 
   return (
     <div
       style={{ width: size, height: size }}
-      className={`relative flex items-center justify-center rounded-full ${isCircleSafe ? "" : "bg-accent-light/50"} overflow-hidden ${className}`}
+      className={`relative flex items-center justify-center ${randomize ? `rounded-full overflow-hidden ${isRandomNonSquare ? "bg-accent-light/50" : ""}` : ""} ${className}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={src}
+        src={`${finalSrc}?v=2`}
         alt="Capy mascot"
         width={size}
         height={size}
-        className={isCircleSafe ? "object-cover" : "object-contain p-1"}
+        className={randomize ? (isRandomNonSquare ? "object-contain p-1" : "object-cover rounded-full") : "object-contain"}
       />
       {animate && mood === "excited" && (
         <span
