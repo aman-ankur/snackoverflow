@@ -120,8 +120,11 @@ We compared two approaches:
 
 ### Collapsed Dish Card
 - Shows primary dish name, calories, macros
-- "Tap for details" hint
-- No indication of alternatives (discovered on expand)
+- **If alternatives exist**: Shows alternative names as small pills (e.g., "↔ Steamed Rice", "↔ Fried Rice")
+  - Pills appear between macros and contextual note
+  - Accent green color with subtle border
+  - Makes alternatives immediately discoverable without expanding
+- "Tap for details" hint at bottom
 
 ### Expanded Dish Card
 - **If alternatives exist**:
@@ -138,6 +141,62 @@ We compared two approaches:
 - **Below alternatives**: standard editing controls (macros, weight, ingredients, etc.)
 
 ### Selection Interaction
+1. User taps alternative option
+2. Radio indicator moves to new selection
+3. Nutrition values update instantly throughout card
+4. Plate total recalculates and updates
+5. No loading spinner, no API call
+6. Smooth transition via React state update
+
+---
+
+## Design Evolution: Alternative Pills
+
+### Problem
+Initial implementation had no visual indication of alternatives on collapsed cards. Users had to expand every medium/low confidence dish to discover if alternatives existed, creating unnecessary friction.
+
+### Solution: Pill List Preview (Option 6)
+After exploring 6 design alternatives, we chose **Pill List Preview** where alternative names appear as small pills on collapsed cards.
+
+**6 Options Explored:**
+1. **Badge with Count** - Floating "2 more options" badge (too prominent, blocks content)
+2. **Icon Next to Name** - Small ↔ icon before dish name (too subtle, no context)
+3. **Enhanced Confidence Badge** - Badge includes "tap to see 2 more" (wordy, cluttered)
+4. **Border + Background Glow** - Green border + gradient + corner badge (too aggressive)
+5. **Bottom Tap Hint** - Dashed separator with "Tap to compare..." (makes cards taller)
+6. **Pill List Preview** ⭐ - Show actual alternative names as pills (CHOSEN)
+
+**Why Pill List Preview Wins:**
+- ✅ **Shows WHAT alternatives are, not just that they exist** — "↔ Steamed Rice" gives immediate context
+- ✅ User instantly understands: "Oh, it could be steamed or fried rice"
+- ✅ Pills are scannable and visually lightweight
+- ✅ Natural placement between macros and footer
+- ✅ No additional explanation needed (self-documenting UI)
+
+**Implementation:**
+```tsx
+{/* Alternative pills preview (collapsed state only) */}
+{!isExpanded && rawDish.alternatives && rawDish.alternatives.length > 0 &&
+ shouldShowAlternatives(rawDish, rawDish.alternatives) && (
+  <div className="flex flex-wrap gap-1.5 mt-2.5">
+    {rawDish.alternatives.map((alt, altIndex) => (
+      <span key={`${dishItem.name}-alt-${altIndex}`}
+        className="inline-flex items-center gap-1 rounded-full border
+                   border-accent/20 bg-accent-light/30 px-2.5 py-1
+                   text-[11px] text-accent-dim font-medium">
+        <span className="text-accent font-bold">↔</span>
+        {alt.name}
+      </span>
+    ))}
+  </div>
+)}
+```
+
+Interactive comparison mockup: `docs/ui-mockups/alternative-indicators.html`
+
+---
+
+### Previous Selection Interaction
 1. User taps alternative option
 2. Radio indicator moves to new selection
 3. Nutrition values update instantly throughout card
