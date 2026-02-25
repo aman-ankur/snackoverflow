@@ -36,7 +36,6 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
 
   // Phase 2: Add image loading error handling
   const [imageError, setImageError] = useState(false);
-  const [imageLoading, setImageLoading] = useState(true);
 
   useEffect(() => {
     setMounted(true);
@@ -53,7 +52,6 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
 
   // Phase 4: Reset error state on src change
   useEffect(() => {
-    setImageLoading(true);
     setImageError(false);
   }, [src]);
 
@@ -64,7 +62,6 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
   };
 
   const handleImageLoad = () => {
-    setImageLoading(false);
     setImageError(false);
   };
 
@@ -79,17 +76,6 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
       style={{ width: size, height: size }}
       className={`relative flex items-center justify-center ${randomize ? "rounded-full overflow-hidden" : ""} ${className}`}
     >
-      {/* Phase 3: Add loading placeholder */}
-      {imageLoading && !imageError && (
-        <div
-          className="absolute inset-0 rounded-full animate-pulse"
-          style={{
-            width: size,
-            height: size,
-            backgroundColor: 'var(--color-accent-light)'
-          }}
-        />
-      )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`${finalSrc}?v=2`}
