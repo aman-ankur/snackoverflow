@@ -120,10 +120,12 @@ We compared two approaches:
 
 ### Collapsed Dish Card
 - Shows primary dish name, calories, macros
-- **If alternatives exist**: Shows alternative names as small pills (e.g., "↔ Steamed Rice", "↔ Fried Rice")
+- **If alternatives exist**: Shows "Or tap to select:" label followed by purple alternative pills (e.g., "Steamed Rice", "Fried Rice")
   - Pills appear between macros and contextual note
-  - Accent green color with subtle border
-  - Makes alternatives immediately discoverable without expanding
+  - **Purple color scheme** (distinct from macro pills: green/orange/red)
+  - List icon (≡) + thicker border (2px) + shadow for visual hierarchy
+  - Label provides clear context without requiring expansion
+  - Makes alternatives immediately discoverable and understandable
 - "Tap for details" hint at bottom
 
 ### Expanded Dish Card
@@ -152,47 +154,64 @@ We compared two approaches:
 
 ## Design Evolution: Alternative Pills
 
-### Problem
+### Initial Problem (v1)
 Initial implementation had no visual indication of alternatives on collapsed cards. Users had to expand every medium/low confidence dish to discover if alternatives existed, creating unnecessary friction.
 
-### Solution: Pill List Preview (Option 6)
-After exploring 6 design alternatives, we chose **Pill List Preview** where alternative names appear as small pills on collapsed cards.
+### Visual Confusion Problem (v2)
+Added green alternative pills with ↔ icon, but they looked identical to macro pills (Protein/Carbs/Fat), causing user confusion. Both used:
+- Same green accent color scheme
+- Same rounded-full pill shape
+- Similar padding and borders
+- Horizontal layout in rows
 
-**6 Options Explored:**
-1. **Badge with Count** - Floating "2 more options" badge (too prominent, blocks content)
-2. **Icon Next to Name** - Small ↔ icon before dish name (too subtle, no context)
-3. **Enhanced Confidence Badge** - Badge includes "tap to see 2 more" (wordy, cluttered)
-4. **Border + Background Glow** - Green border + gradient + corner badge (too aggressive)
-5. **Bottom Tap Hint** - Dashed separator with "Tap to compare..." (makes cards taller)
-6. **Pill List Preview** ⭐ - Show actual alternative names as pills (CHOSEN)
+**User feedback:** "this is not very clear that other 2 are alternates, its in same color green pill as other etc very confusing"
 
-**Why Pill List Preview Wins:**
-- ✅ **Shows WHAT alternatives are, not just that they exist** — "↔ Steamed Rice" gives immediate context
-- ✅ User instantly understands: "Oh, it could be steamed or fried rice"
-- ✅ Pills are scannable and visually lightweight
-- ✅ Natural placement between macros and footer
-- ✅ No additional explanation needed (self-documenting UI)
+### Final Solution: Purple Choice Theme (v3) ⭐
+
+After exploring 4 design alternatives (purple, gray, blue, amber), we chose **Purple Choice Theme** for maximum clarity.
+
+**Why Purple Wins:**
+- ✅ **Only color completely distinct from macro pills** (green Protein, orange Carbs, red Fat)
+- ✅ **Semantically indicates "choice"** in UI design patterns
+- ✅ **Clear label** ("Or tap to select:") provides context without expansion
+- ✅ **Visual hierarchy** via list icon (≡), thicker border (2px), and shadow
+- ✅ **Professional and accessible** — good contrast, easy to read
 
 **Implementation:**
 ```tsx
 {/* Alternative pills preview (collapsed state only) */}
 {!isExpanded && rawDish.alternatives && rawDish.alternatives.length > 0 &&
  shouldShowAlternatives(rawDish, rawDish.alternatives) && (
-  <div className="flex flex-wrap gap-1.5 mt-2.5">
-    {rawDish.alternatives.map((alt, altIndex) => (
-      <span key={`${dishItem.name}-alt-${altIndex}`}
-        className="inline-flex items-center gap-1 rounded-full border
-                   border-accent/20 bg-accent-light/30 px-2.5 py-1
-                   text-[11px] text-accent-dim font-medium">
-        <span className="text-accent font-bold">↔</span>
-        {alt.name}
-      </span>
-    ))}
+  <div className="flex flex-col gap-1.5 mt-3">
+    <p className="text-[10px] text-muted uppercase tracking-wide font-semibold flex items-center gap-1">
+      <svg className="w-3 h-3 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+        <path d="M8 7h12M8 12h12M8 17h12M3 7h.01M3 12h.01M3 17h.01" strokeLinecap="round" strokeLinejoin="round"/>
+      </svg>
+      Or tap to select:
+    </p>
+    <div className="flex flex-wrap gap-1.5">
+      {rawDish.alternatives.map((alt, altIndex) => (
+        <span
+          key={`${dishItem.name}-alt-${altIndex}`}
+          className="inline-flex items-center gap-1.5 rounded-full border-2 border-purple-300 bg-purple-50 px-3 py-1.5 text-[11px] text-purple-700 font-medium shadow-sm hover:shadow-md hover:border-purple-400 transition-all cursor-pointer"
+        >
+          <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+            <path d="M8 7h12M8 12h12M8 17h12M3 7h.01M3 12h.01M3 17h.01" strokeLinecap="round" strokeLinejoin="round"/>
+          </svg>
+          {alt.name}
+        </span>
+      ))}
+    </div>
   </div>
 )}
 ```
 
-Interactive comparison mockup: `docs/ui-mockups/alternative-indicators.html`
+**Other Options Considered:**
+- **Gray Dashed Border** — Neutral but less prominent, gray can feel "disabled"
+- **Blue Info Container** — Strong separation but adds bulk to card
+- **Amber Warning Theme** — Conflicts with orange Carbs pill, feels like warning vs. choice
+
+Interactive comparison mockup: `docs/ui-mockups/alternative-pills-comparison.html`
 
 ---
 
