@@ -190,7 +190,8 @@ Common Indian kitchen items with default days:
 - Adds optional fridge→dish linkage metadata when dish ingredients match recent fridge scan items
 - Parses/normalizes persisted data defensively
 - Computes repeated dish insights for Meal History UI
-- If logged in, pulls meals from Supabase on mount and syncs on every change (debounced)
+- If logged in, pulls meals from Supabase on mount and **merges by meal ID** (newer `loggedAt` wins) — no data loss on offline→online transition
+- Syncs on every change (debounced)
 
 ---
 
@@ -212,9 +213,9 @@ Common Indian kitchen items with default days:
 ### Key Behaviors
 - On mount, checks for existing session via `supabase.auth.getSession()`
 - Listens to `onAuthStateChange` for login/logout events
-- On `SIGNED_IN` event, triggers `migrateLocalStorageToCloud()` to push local data to Supabase (per-domain merge: only backfills domains where cloud is empty)
 - Registers `beforeunload` and `visibilitychange` listeners to flush pending debounced Supabase writes before the page unloads
 - Used via `useAuthContext()` from `AuthProvider.tsx` (React context)
+- **No migration on login** — each domain hook handles its own merge (see Sync Merge Strategy below)
 
 ### Network Resilience (Magic Link)
 `signInWithMagicLink` includes two layers of protection against network-level failures (e.g. WiFi DNS blocking `supabase.co`):
@@ -250,7 +251,9 @@ All auth methods emit timestamped `dlog()` calls (from `debugLog.ts`) at every s
 
 ### Key Behaviors
 - On mount, reads profile/goals/streak from localStorage
-- If logged in, pulls from Supabase and overrides localStorage (cloud is source of truth)
+- If logged in, pulls from Supabase and **merges** with local state (newer timestamp wins via `mergeObject`)
+- Uses `hasPulledCloud` ref to prevent re-pulling on every re-render
+- `saveProfile` and `updateGoals` set `updatedAt` timestamps for merge conflict resolution
 - On state change, saves to localStorage + debounced push to Supabase
 - If no profile, returns DEFAULT_GOALS (2000 kcal, 120g P, 250g C, 70g F)
 - `saveProfile` computes goals via `calculateGoals()` and persists both
@@ -411,6 +414,7 @@ interface HealthProfile {
 - Conditions with `"both"` status appear in both active and family history sections of the context
 - Elevated risk note added for "both" conditions
 - Syncs to Supabase `health_profile` domain when authenticated
+- **Merge on pull**: uses `mergeObject` with `updatedAt` — newer timestamp wins, preventing offline edits from being overwritten
 
 ---
 
@@ -467,7 +471,8 @@ On-demand AI health verdict fetcher with abort support.
 - Includes previous report's `scoreSummary` in API call for week-over-week comparison
 - Stores last 10 analyses (FIFO eviction)
 - Cache freshness: compares newest meal's `loggedAt` against analysis `generatedAt`
-- If logged in, pulls from Supabase on mount and syncs on every change (debounced)
+- If logged in, pulls from Supabase on mount and **merges by analysis ID** (newer `generatedAt` wins) — preserves offline-generated reports
+- Syncs on every change (debounced)
 
 ---
 
@@ -512,3 +517,45 @@ Not actively developed — YOLO mode is experimental.
 **File**: `src/lib/useDetection.ts`
 
 Legacy hook, not actively used. Was for TensorFlow.js COCO-SSD detection.
+
+---
+
+## Sync Merge Strategy (Offline→Online)
+
+**File**: `src/lib/supabase/merge.ts`
+
+When a user goes offline, makes changes, then logs in (or syncs), each hook merges local + cloud data instead of replacing local with cloud. This prevents silent data loss.
+
+### Merge Functions
+
+| Function | Used By | Strategy |
+|----------|---------|----------|
+| `mergeArrayById(local, cloud, getId, getTimestamp)` | meals, expiry_tracker, meal_analyses | Union by unique ID; same ID → newer timestamp wins |
+| `mergeObject(local, cloud, getUpdatedAt)` | profile, goals, streak, health_profile | Compare `updatedAt` timestamps; newer wins; graceful fallback when timestamps missing |
+| `mergeGarden(local, cloud)` | garden | `max()` for monotonic counters (flowers, daysGoalHit, totalMealsLogged, babyCapybaras, homeLevel); `lastComputedDate` for streak-dependent fields; journal merged by event ID |
+
+### Per-Hook Merge Details
+
+| Hook | Domain | Merge Key | Timestamp Field |
+|------|--------|-----------|-----------------|
+| `useMealLog` | meals | `meal.id` | `loggedAt` |
+| `useUserGoals` (profile) | profile | object-level | `updatedAt ?? completedAt` |
+| `useUserGoals` (goals) | goals | object-level | `updatedAt` |
+| `useUserGoals` (streak) | streak | object-level | `lastLogDate` |
+| `useHealthProfile` | health_profile | object-level | `updatedAt` |
+| `useGardenState` | garden | custom merge | `lastComputedDate` + `max()` counters |
+| `useExpiryTracker` | expiry_tracker | `name.toLowerCase()` | `addedAt` |
+| `useEatingAnalysis` | meal_analyses | `analysis.id` | `generatedAt` |
+
+### Key Design Decisions
+
+1. **No centralized migration** — removed `migrateLocalStorageToCloud()`. Each hook handles its own merge, which also covers the first-login case (merging against empty cloud returns local data unchanged; the persist effect then pushes it).
+2. **Functional updaters** — all merge calls inside `.then()` callbacks use React's `setState(prev => ...)` form to guarantee they merge against the latest local state, avoiding stale closure bugs.
+3. **Persist effects push automatically** — after merging, the updated state triggers each hook's existing persist `useEffect`, which pushes the merged result to cloud. No explicit push needed after merge.
+4. **`hasPulledCloud` ref** — every hook uses a ref to ensure cloud pull + merge happens exactly once per session, not on every re-render.
+
+### Edge Cases & Limitations
+
+- **Object-level merging** (profile, goals, health_profile): last-write-wins based on timestamp. If user edits different fields on two devices, the entire newer object wins (field-level merge is not implemented).
+- **Garden counters**: monotonic counters can never decrease across devices, but streak-dependent visual fields (treeLevel, butterflies, hasRainbow) use the device with the more recent `lastComputedDate`.
+- **No conflict UI**: there is no user-facing conflict resolution. The merge is automatic and silent. This is acceptable because the app's data model is additive (meals are appended, counters only increase).

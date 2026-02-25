@@ -35,7 +35,7 @@ src/app/
     capy-motivation/route.ts  — Context-aware motivational lines
 src/components/               — ~48 React components
 src/lib/                      — ~30 TypeScript utilities + custom hooks
-  supabase/                   — client.ts, server.ts, sync.ts (pull/push/merge)
+  supabase/                   — client.ts, server.ts, sync.ts (pull/push), merge.ts (offline→online merge)
   mealAggregator.ts           — Client-side pre-aggregation (~400 vs ~4000 raw tokens)
   tdeeCalculator.ts           — TDEE + BMR (Mifflin-St Jeor formula)
   healthContextBuilder.ts     — Deterministic health → AI prompt builder
@@ -153,7 +153,8 @@ page.tsx (main shell)
 ### Supabase
 - Offline-first: app works fully with localStorage, cloud sync is optional
 - Auth: magic link + password via Supabase
-- Sync: pull/push/merge with debouncing in `lib/supabase/sync.ts`
+- Sync: pull/push with debouncing in `lib/supabase/sync.ts`; merge functions in `lib/supabase/merge.ts`
+- **Merge strategy**: on login, each hook merges local + cloud by ID/timestamp (not "cloud wins"). Array domains use `mergeArrayById`; object domains use `mergeObject`; garden uses `mergeGarden` with `max()` for monotonic counters. No data silently lost during offline→online.
 - RLS enabled on all tables
 - **Auth on mobile**: Some WiFi networks DNS-block `supabase.co` — auth hangs forever since `fetch` has no timeout. Fixed with pre-flight ping (5s) + OTP timeout (12s) + user-friendly error messages. Debug overlay (dev mode only) logs every auth step for mobile diagnostics via `debugLog.ts`.
 

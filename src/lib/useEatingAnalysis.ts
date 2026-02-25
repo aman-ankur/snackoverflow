@@ -11,6 +11,7 @@ import type {
 import { aggregateMeals, serializeForPrompt } from "@/lib/mealAggregator";
 import { useAuthContext } from "@/components/AuthProvider";
 import { pullUserData, pushUserData } from "@/lib/supabase/sync";
+import { mergeArrayById } from "@/lib/supabase/merge";
 
 const STORAGE_KEY = "snackoverflow-meal-analyses-v1";
 const MAX_STORED = 10;
@@ -43,7 +44,14 @@ export function useEatingAnalysis() {
         if (!cloud?.meal_analyses) return;
         const cloudAnalyses = cloud.meal_analyses;
         if (Array.isArray(cloudAnalyses) && cloudAnalyses.length > 0) {
-          setAnalyses(cloudAnalyses as EatingAnalysis[]);
+          setAnalyses((local) =>
+            mergeArrayById(
+              local,
+              cloudAnalyses as EatingAnalysis[],
+              (a) => a.id,
+              (a) => a.generatedAt
+            )
+          );
         }
       })
       .catch(() => {});

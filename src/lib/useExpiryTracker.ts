@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useAuthContext } from "@/components/AuthProvider";
 import { pullUserData, pushUserData } from "@/lib/supabase/sync";
+import { mergeArrayById } from "@/lib/supabase/merge";
 
 export interface TrackedItem {
   name: string;
@@ -98,11 +99,18 @@ export function useExpiryTracker() {
       if (!cloud) return;
       const cloudItems = cloud.expiry_tracker;
       if (Array.isArray(cloudItems) && cloudItems.length > 0) {
-        const updated = (cloudItems as TrackedItem[]).map((item) => ({
+        const normalized = (cloudItems as TrackedItem[]).map((item) => ({
           ...item,
           category: getCategory(item.expiresAt) as TrackedItem["category"],
         }));
-        setItems(updated);
+        setItems((local) =>
+          mergeArrayById(
+            local,
+            normalized,
+            (i) => i.name.toLowerCase(),
+            (i) => i.addedAt
+          )
+        );
       }
     }).catch(() => {});
   }, [isLoggedIn, user]);

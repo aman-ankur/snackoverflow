@@ -5,6 +5,7 @@ import type { HealthProfile, HealthCondition, LabValue, LabHistoryEntry, DietPre
 import { buildHealthContextString } from "@/lib/healthContextBuilder";
 import { useAuthContext } from "@/components/AuthProvider";
 import { pullUserData, pushUserData } from "@/lib/supabase/sync";
+import { mergeObject } from "@/lib/supabase/merge";
 
 const STORAGE_KEY = "snackoverflow-health-profile-v1";
 
@@ -59,7 +60,7 @@ export function useHealthProfile() {
       .then((cloud) => {
         if (!cloud || !cloud.health_profile) return;
         const cloudProfile = cloud.health_profile as Partial<HealthProfile>;
-        const merged: HealthProfile = {
+        const normalizedCloud: HealthProfile = {
           conditions: Array.isArray(cloudProfile.conditions) ? cloudProfile.conditions : [],
           labValues: Array.isArray(cloudProfile.labValues) ? cloudProfile.labValues : [],
           labHistory: Array.isArray(cloudProfile.labHistory) ? cloudProfile.labHistory : [],
@@ -68,7 +69,9 @@ export function useHealthProfile() {
           healthContextString: typeof cloudProfile.healthContextString === "string" ? cloudProfile.healthContextString : "",
           updatedAt: typeof cloudProfile.updatedAt === "string" ? cloudProfile.updatedAt : "",
         };
-        setHealthProfileState(merged);
+        setHealthProfileState((local) =>
+          mergeObject(local, normalizedCloud, (hp) => hp.updatedAt)
+        );
       })
       .catch(() => {});
   }, [isLoggedIn, user, hasLoaded]);

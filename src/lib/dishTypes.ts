@@ -73,6 +73,7 @@ export interface UserProfile {
   activityLevel: ActivityLevel;
   goal: FitnessGoal;
   completedAt: string;
+  updatedAt?: string;
 }
 
 export interface NutritionGoals {
@@ -82,6 +83,7 @@ export interface NutritionGoals {
   fat: number;
   tdee: number;
   isCustom: boolean;
+  updatedAt?: string;
 }
 
 export interface StreakData {

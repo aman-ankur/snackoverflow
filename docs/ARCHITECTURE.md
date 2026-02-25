@@ -15,7 +15,7 @@
 | **On-Device Detection** | YOLOv8n via ONNX Runtime Web (WASM) |
 | **Auth** | Supabase Auth (email magic link + password) |
 | **Database** | Supabase Postgres (JSONB, RLS) |
-| **State** | React hooks + localStorage (cache) + Supabase (cloud sync) |
+| **State** | React hooks + localStorage (offline-first) + Supabase (cloud sync with merge) |
 | **Fonts** | DM Sans (400–900), JetBrains Mono (via next/font/google) |
 | **Dev Tools** | local-ssl-proxy (HTTPS for mobile camera testing) |
 | **Deployment** | Vercel |
@@ -115,7 +115,8 @@ snackoverflow/
 │       ├── supabase/
 │       │   ├── client.ts                # Browser Supabase client (createBrowserClient)
 │       │   ├── server.ts                # Server Supabase client (for auth callback)
-│       │   └── sync.ts                  # Pull/push/merge + debounced cloud sync
+│       │   └── sync.ts                  # Pull/push + debounced cloud sync
+│       │   └── merge.ts                 # Pure merge functions (mergeArrayById, mergeObject, mergeGarden)
 │       ├── useAuth.ts                   # Auth hook (magic link, password, sign out, network resilience)
 │       └── debugLog.ts                  # In-memory debug log buffer (on-screen diagnostics, dev mode only)
 ├── .env.example                      # Template for API keys
@@ -138,8 +139,7 @@ Auth Flow:
   → User-friendly error messages for network issues ("Try switching from WiFi to mobile data")
   → On-screen debug panel (dev mode only) logs every auth step for mobile diagnostics
   → Supabase Auth → /auth/callback → session established
-  → migrateLocalStorageToCloud() on login (per-domain merge: only pushes domains where cloud is empty)
-  → All hooks pull cloud data → override localStorage → sync on every change
+  → All hooks pull cloud data → merge with local state (by ID/timestamp) → sync merged result back
   → Debounced pushes (800ms) to avoid hammering Supabase, flushed on beforeunload/visibilitychange
 
 Home Tab (HomeView.tsx):
