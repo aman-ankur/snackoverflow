@@ -30,11 +30,17 @@
 - Manual scan only (no auto-scan) for low API cost
 - Reuses camera UI with dish-specific labels
 - Supports single dish or multi-dish plate/thali response
+- **Alternative Dish Selection**: When scanning food, AI returns top 3 possible identifications for visually ambiguous dishes with full nutrition data for each option
+  - Each option shows: name, Hindi name, confidence level, nutrition preview (calories + macros), reasoning
+  - User sees all options as radio buttons immediately in expanded dish card
+  - Selecting alternative → instant swap (no re-analysis needed, 0s latency)
+  - Common ambiguous cases: iced tea vs iced coffee, oats chilla vs besan cheela, milkshake vs protein shake, fried rice vs brown rice
+  - Initial scan: 3-4s (includes alternatives), alternative selection: instant
 - **Controls Strip**: horizontal scrollable row combining meal type pills (auto-selected by time of day with green dot indicator) + portion multiplier pills (`½×`, `1×`, `1.5×`, `2×`)
 - **Plate Total**: large centered calorie number with macro breakdown (protein, carbs, fat, fiber) + dish count and meal type
 - **Accordion dish cards**: per-dish collapsible cards with:
   - Collapsed: dish name, Hindi name, weight, confidence badge (Confident/Likely/Unsure), inline macro pills, contextual note (tag-based positive/warning), "Tap for details" hint
-  - Expanded: editable 5-col macro grid (cal/protein/carbs/fat/fiber), calorie editor, weight editor, portion display, key ingredients, health tip, tags, reasoning toggle, action buttons (Wrong dish?, Describe, Remove)
+  - Expanded: alternative selection (if available), editable 5-col macro grid (cal/protein/carbs/fat/fiber), calorie editor, weight editor, portion display, key ingredients, health tip, tags, reasoning toggle, action buttons (Wrong dish?, Describe, Remove)
   - Single-dish results auto-expand; multi-dish uses independent accordion (tapping one collapses others)
 - **Proportional editing**: changing calories scales all macros proportionally; changing weight scales everything proportionally
 - Health tags: high-protein, high-carb, high-fat, low/high-calorie, fiber-rich
@@ -45,7 +51,7 @@
   - "Analysis complete" (checkmark) once results are ready
   - "Scan Again" button to restart camera and clear results
 - **Provider tracking**: AI provider name displayed alongside dish count
-- **Mock scan mode** (`?mock=scan`): full UI testing without camera or API — auto-switches to Scan tab, simulates 3 Indian dishes (Dal Tadka, Jeera Rice, Aloo Gobi) after 1.5s delay. See `docs/TESTING.md` for details.
+- **Mock scan mode** (`?mock=scan`): full UI testing without camera or API — auto-switches to Scan tab, simulates 3 Indian dishes (Dal Tadka, Jeera Rice with alternatives, Aloo Gobi) after 1.5s delay. See `docs/TESTING.md` for details.
 - Daily summary cards with progress rings for calories/protein/carbs/fat
 - Meal history with:
   - "You had this X days ago" badge

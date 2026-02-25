@@ -8,6 +8,7 @@ import CapyMascot from "@/components/CapyMascot";
 import DescribeMealView from "@/components/DescribeMealView";
 import CoachMark from "@/components/CoachMark";
 import { MealHealthBanner, HealthCheckButton, HealthProfilePrompt } from "@/components/HealthVerdictCard";
+import { DishAlternatives } from "@/components/DishAlternatives";
 import type { HealthCondition } from "@/lib/dishTypes";
 import { useDishScanner } from "@/lib/useDishScanner";
 import { useHealthVerdict } from "@/lib/useHealthVerdict";
@@ -172,6 +173,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
   const [weightOverrides, setWeightOverrides] = useState<Map<number, number>>(new Map());
   const [calorieOverrides, setCalorieOverrides] = useState<Map<number, number>>(new Map());
   const [expandedDishIndex, setExpandedDishIndex] = useState<number | null>(null);
+  const [selectedAlternatives, setSelectedAlternatives] = useState<Map<number, number>>(new Map()); // Map<dishIndex, selectedOptionIndex>
   const resultsRef = useRef<HTMLDivElement>(null);
   const prevAnalysisRef = useRef<typeof dish.analysis>(null);
 
@@ -317,6 +319,64 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
   const handleMealTypeChange = useCallback((mt: MealType) => {
     dish.setMealType(mt);
     setLogMealType(mt);
+  }, [dish]);
+
+  const handleAlternativeSelect = useCallback((dishIndex: number, optionIndex: number) => {
+    if (!dish.analysis) return;
+
+    // Update selection tracking
+    setSelectedAlternatives(prev => new Map(prev).set(dishIndex, optionIndex));
+
+    // If primary selected (index 0), nothing to swap
+    if (optionIndex === 0) return;
+
+    // Swap dish with selected alternative (instant, no API call)
+    const updatedDishes = [...dish.analysis.dishes];
+    const currentDish = updatedDishes[dishIndex];
+
+    if (!currentDish.alternatives || optionIndex - 1 >= currentDish.alternatives.length) {
+      return;
+    }
+
+    const selectedAlt = currentDish.alternatives[optionIndex - 1];
+
+    // Replace current dish with alternative (keep alternatives for potential reselection)
+    updatedDishes[dishIndex] = {
+      ...selectedAlt,
+      alternatives: [currentDish, ...currentDish.alternatives.filter((_, i) => i !== optionIndex - 1)]
+    };
+
+    // Recalculate plate totals
+    const totals = updatedDishes.reduce((acc, d) => ({
+      calories: acc.calories + d.calories,
+      protein: acc.protein + d.protein_g,
+      carbs: acc.carbs + d.carbs_g,
+      fat: acc.fat + d.fat_g,
+      fiber: acc.fiber + d.fiber_g
+    }), { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 });
+
+    // Update analysis state (triggers re-render)
+    dish.setAnalysis({
+      ...dish.analysis,
+      dishes: updatedDishes,
+      totalCalories: totals.calories,
+      totalProtein: totals.protein,
+      totalCarbs: totals.carbs,
+      totalFat: totals.fat,
+      totalFiber: totals.fiber
+    });
+
+    // Clear any overrides for this dish
+    setWeightOverrides(prev => {
+      const next = new Map(prev);
+      next.delete(dishIndex);
+      return next;
+    });
+    setCalorieOverrides(prev => {
+      const next = new Map(prev);
+      next.delete(dishIndex);
+      return next;
+    });
   }, [dish]);
 
   const handleLogMeal = () => {
@@ -650,6 +710,18 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
                           className="overflow-hidden"
                         >
                           <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
+                            {/* Alternative dish selection */}
+                            {rawDish.alternatives && rawDish.alternatives.length > 0 && (
+                              <div className="pb-4 border-b border-border">
+                                <DishAlternatives
+                                  primaryDish={rawDish}
+                                  alternatives={rawDish.alternatives}
+                                  selectedIndex={selectedAlternatives.get(originalIndex) ?? 0}
+                                  onSelect={(optionIndex) => handleAlternativeSelect(originalIndex, optionIndex)}
+                                />
+                              </div>
+                            )}
+
                             {/* Editable macro grid */}
                             <div>
                               <div className="grid grid-cols-5 gap-1.5">

@@ -95,6 +95,28 @@ d) Cross-check: calories ≈ (protein_g × 4) + (carbs_g × 4) + (fat_g × 9). I
 Step 6 — SANITY CHECK:
 A typical Indian home meal is 400-600 kcal. If your total exceeds 800 for what looks like a normal home plate, your per-100g values are likely too high — recheck against the reference table.
 
+Step 6B — ALTERNATIVE IDENTIFICATIONS:
+For EACH dish, identify the top 2 most likely alternative names if the visual appearance could match multiple dishes. For each alternative, provide FULL NUTRITION DATA just like the primary dish.
+
+Rules for alternatives:
+- Only include alternatives if they are genuinely plausible based on VISUAL similarity (color, texture, shape, plating)
+- If the dish is clearly identifiable (e.g., banana, packaged snack with visible label), return empty alternatives array
+- Each alternative must have complete nutrition data: calories, macros, ingredients, tags, health tip, reasoning
+- Alternatives should reflect realistic portion sizes (e.g., iced coffee typically has fewer calories than sweetened iced tea)
+- Use IFCT 2017 reference data for alternatives just like primary dish
+
+Examples of ambiguous cases requiring alternatives:
+• Iced tea vs iced coffee vs cold brew (all are brown liquid with ice)
+• Oats chilla vs besan cheela vs uttapam (all are savory pancake-like items)
+• Milkshake vs protein shake vs smoothie (all are thick beverages in glass)
+• Fried rice vs brown rice vs jeera rice (all look like cooked rice grains)
+• Chicken nuggets vs paneer nuggets (both are breaded fried pieces)
+
+Counter-examples (NO alternatives needed):
+• Banana (clearly identifiable fruit)
+• Packaged biscuits with visible brand (unambiguous)
+• Whole roti (distinct flat bread, no confusion)
+
 Step 7 — OUTPUT:
 Respond ONLY as strict JSON (no markdown, no extra text):
 {
@@ -113,7 +135,25 @@ Respond ONLY as strict JSON (no markdown, no extra text):
       "confidence": "high",
       "tags": ["high-protein"],
       "healthTip": "Good protein source. Reduce oil for fewer calories.",
-      "reasoning": "Scrambled paneer on plate. ~180g serving. Ref: paneer bhurji 160 cal/100g. 180g × 1.6 = 288 cal."
+      "reasoning": "Scrambled paneer on plate. ~180g serving. Ref: paneer bhurji 160 cal/100g. 180g × 1.6 = 288 cal.",
+      "alternatives": [
+        {
+          "name": "Egg Bhurji",
+          "hindi": "अंडा भुर्जी",
+          "portion": "1 serving (~180g)",
+          "estimated_weight_g": 180,
+          "calories": 216,
+          "protein_g": 18,
+          "carbs_g": 4,
+          "fat_g": 14,
+          "fiber_g": 1,
+          "ingredients": ["Eggs", "Onion", "Tomato", "Spices", "Oil"],
+          "confidence": "medium",
+          "tags": ["high-protein"],
+          "healthTip": "Excellent protein source. Lower calorie than paneer version.",
+          "reasoning": "Similar scrambled texture. Could be eggs instead of paneer. ~180g serving. Ref: egg bhurji 120 cal/100g."
+        }
+      ]
     }
   ],
   "totalCalories": 288,
@@ -214,6 +254,18 @@ function normalizeDish(raw: unknown): DishNutrition | null {
 
   if (dish.tags.length === 0) {
     dish.tags = deriveTags(dish);
+  }
+
+  // Recursively normalize alternatives (limit to 2)
+  if (Array.isArray(input.alternatives) && input.alternatives.length > 0) {
+    const normalizedAlternatives = input.alternatives
+      .slice(0, 2) // Limit to 2 alternatives
+      .map(normalizeDish)
+      .filter((d): d is DishNutrition => Boolean(d));
+
+    if (normalizedAlternatives.length > 0) {
+      dish.alternatives = normalizedAlternatives;
+    }
   }
 
   return dish;

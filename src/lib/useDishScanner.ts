@@ -20,7 +20,7 @@ function normalizeDish(raw: unknown): DishNutrition | null {
   const confidenceRaw =
     typeof input.confidence === "string" ? input.confidence.toLowerCase().trim() : "medium";
 
-  return {
+  const dish: DishNutrition = {
     name: typeof input.name === "string" && input.name.trim() ? input.name.trim() : "Unknown Dish",
     hindi: typeof input.hindi === "string" ? input.hindi.trim() : "",
     portion: typeof input.portion === "string" && input.portion.trim() ? input.portion.trim() : "1 serving",
@@ -49,6 +49,20 @@ function normalizeDish(raw: unknown): DishNutrition | null {
         ? input.reasoning.trim()
         : "",
   };
+
+  // Recursively normalize alternatives (limit to 2)
+  if (Array.isArray(input.alternatives) && input.alternatives.length > 0) {
+    const normalizedAlternatives = input.alternatives
+      .slice(0, 2) // Limit to 2 alternatives
+      .map(normalizeDish)
+      .filter((d): d is DishNutrition => Boolean(d));
+
+    if (normalizedAlternatives.length > 0) {
+      dish.alternatives = normalizedAlternatives;
+    }
+  }
+
+  return dish;
 }
 
 function normalizeResult(raw: unknown): DishAnalysisResult {
@@ -325,6 +339,7 @@ export function useDishScanner() {
     isAnalyzing,
     error,
     analysis,
+    setAnalysis, // NEW: expose setter for direct state updates (alternative selection)
     mealType,
     setMealType,
     lastAnalyzedAt,

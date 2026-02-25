@@ -17,6 +17,7 @@ export interface DishNutrition {
   healthTip: string;
   estimated_weight_g: number;
   reasoning: string;
+  alternatives?: DishNutrition[]; // Full nutrition for up to 2 alternative identifications
 }
 
 export interface DishAnalysisResult {
