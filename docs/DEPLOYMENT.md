@@ -115,6 +115,8 @@ create table public.user_data (
   goals jsonb default null,
   streak jsonb default null,
   meals jsonb default '[]'::jsonb,
+  health_profile jsonb default null,
+  meal_analyses jsonb default null,
   garden jsonb default null,
   expiry_tracker jsonb default '[]'::jsonb,
   fridge_scans jsonb default '[]'::jsonb,
