@@ -12,7 +12,9 @@ interface CapyMascotProps {
 
 const CAPY_AVATARS = [
   "/model/capy-coconut.jpeg",
-  "/model/capy-orange.jpg",
+  "/model/capy-cartoon.avif",
+  "/model/capy-duck.avif",
+  "/model/capy-bird.webp",
   "/model/capy-logo.gif",
 ];
 
