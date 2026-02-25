@@ -1,14 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Flame, Refrigerator, ChevronRight, Plus, Coffee, Sun, Moon, Sunset, ShieldCheck, CheckCircle2, AlertTriangle, Circle, Brain } from "lucide-react";
 import { getMealHealthRating, type HealthRating } from "@/lib/healthRating";
 import CapyMascot from "@/components/CapyMascot";
 import CapyLottie from "@/components/CapyLottie";
 import WhatsNewCard from "@/components/WhatsNewCard";
+import QuickInsightCard from "@/components/QuickInsight";
 import CoachMark from "@/components/CoachMark";
 import { getCapyState, getGreeting } from "@/lib/capyLines";
+import { getQuickInsight } from "@/lib/quickInsights";
 import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, EatingAnalysis, AnalysisScore } from "@/lib/dishTypes";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
 
@@ -137,6 +139,25 @@ export default function HomeView({
     [todayTotals, goals, streak, todayMeals.length, userName]
   );
 
+  const quickInsight = useMemo(
+    () => getQuickInsight(todayTotals, goals, streak, todayMeals),
+    [todayTotals, goals, streak, todayMeals]
+  );
+
+  // Track WhatsNewCard dismissed state for QuickInsight visibility
+  const [whatsNewDismissed, setWhatsNewDismissed] = useState(false);
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem("snackoverflow-whats-new-seen");
+      setWhatsNewDismissed(seen === "v1");
+    } catch {
+      setWhatsNewDismissed(false);
+    }
+  }, []);
+
+  const calRemaining = Math.max(0, Math.round(goals.calories - todayTotals.calories));
+  const calPercent = goals.calories > 0 ? Math.min((todayTotals.calories / goals.calories) * 100, 100) : 0;
+
   const mealsByType = useMemo(() => {
     const grouped: Record<string, LoggedMeal[]> = {
       breakfast: [],
@@ -154,23 +175,44 @@ export default function HomeView({
 
   return (
     <div className="space-y-4">
-      {/* Greeting + Capy */}
-      <div className="rounded-2xl bg-gradient-to-br from-accent-light/40 to-card border border-accent/10 p-4">
-        <div className="flex items-center gap-3">
-          <div className="shrink-0 animate-breathe">
-            <CapyLottie size={64} />
+      {/* Clean Row Header */}
+      <div className="px-1">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2.5">
+            <CapyMascot mood={capyState.mood} size={56} animate={false} randomize />
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-extrabold text-foreground">{greeting}</p>
+                {streak.currentStreak > 0 && (
+                  <div className="flex items-center gap-0.5 rounded-full bg-orange-light border border-orange/20 px-2 py-0.5">
+                    <Flame className="h-3 w-3 text-orange" />
+                    <span className="text-[10px] font-bold text-orange">{streak.currentStreak}</span>
+                  </div>
+                )}
+              </div>
+              <p className="text-[11px] text-muted mt-0.5 leading-snug max-w-[200px] truncate">{capyState.line}</p>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-xs font-bold text-muted">{greeting}</p>
-            <div className="mt-1 rounded-xl bg-accent-light border border-accent/15 px-3 py-2">
-              <p className="text-xs text-foreground leading-relaxed">{capyState.line}</p>
+          <div className="text-right">
+            <p className="text-lg font-bold text-foreground">{calRemaining}</p>
+            <p className="text-[10px] text-muted -mt-0.5">kcal left</p>
+            <div className="mt-1 h-1.5 w-20 rounded-full bg-border overflow-hidden">
+              <motion.div
+                className="h-full rounded-full bg-accent"
+                initial={{ width: 0 }}
+                animate={{ width: `${calPercent}%` }}
+                transition={{ duration: 0.8, ease: "easeOut" }}
+              />
             </div>
           </div>
         </div>
       </div>
 
-      {/* What's New */}
+      {/* What's New (dismissable) */}
       <WhatsNewCard onTryIt={onWhatsNewTryIt} />
+
+      {/* Quick Insight (shows after WhatsNew dismissed) */}
+      <QuickInsightCard insight={quickInsight} whatsNewDismissed={whatsNewDismissed} />
 
       {/* Latest Eating Analysis */}
       {latestAnalysis && (() => {
@@ -207,12 +249,6 @@ export default function HomeView({
       <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-white border border-accent/10 p-4">
         <div className="flex items-center justify-between mb-3">
           <h3 className="text-base font-extrabold text-foreground">Daily Intake</h3>
-          {streak.currentStreak > 0 && (
-            <div className="flex items-center gap-1 rounded-full bg-orange-light border border-orange/20 px-2.5 py-1">
-              <Flame className="h-3 w-3 text-orange" />
-              <span className="text-[10px] font-bold text-orange">{streak.currentStreak} Day</span>
-            </div>
-          )}
         </div>
 
         <div className="flex items-center justify-center py-2">
@@ -322,7 +358,7 @@ export default function HomeView({
       </button>
 
       {/* Streak Card */}
-      {streak.currentStreak >= 3 && (
+      {streak.currentStreak >= 7 && (
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
