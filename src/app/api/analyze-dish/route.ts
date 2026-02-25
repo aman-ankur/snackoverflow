@@ -96,18 +96,28 @@ Step 6 — SANITY CHECK:
 A typical Indian home meal is 400-600 kcal. If your total exceeds 800 for what looks like a normal home plate, your per-100g values are likely too high — recheck against the reference table.
 
 Step 6B — ALTERNATIVE IDENTIFICATIONS:
-For EACH dish, generate top 2 alternatives with FULL nutrition (same format as primary) ONLY if the primary dish has "medium" or "low" confidence.
+For EACH dish, ALWAYS generate top 2 alternatives with FULL nutrition (same format as primary) UNLESS the item is clearly unambiguous.
 
-Include alternatives ONLY if:
-- Primary dish confidence is "medium" or "low" (REQUIRED CONDITION)
+SKIP alternatives ONLY for these unambiguous items:
+- Single whole fruit (banana, apple, orange)
+- Labeled packaging with visible brand name
+- Single distinctive item with no visual lookalikes (whole roti, whole idli, whole boiled egg)
+
+GENERATE alternatives for EVERYTHING ELSE, regardless of confidence level:
+- Any cooked dish, curry, sabzi, or gravy
+- Any rice preparation (jeera rice, biryani, pulao, fried rice)
+- Any fried or breaded item (pakora, nuggets, cutlet)
+- Any beverage (tea, coffee, shake, smoothie, lassi)
+- Any mixed plate or thali item
+- Any dish where two similar dishes could look the same (paneer bhurji vs egg bhurji, aloo gobi vs gobi aloo)
+
+Alternatives must be:
 - Visually similar (color, texture, shape match)
 - Genuinely plausible given the image
-- NOT clearly identifiable (banana, labeled packaging, distinctive shape)
+- Different dishes with meaningfully different nutrition
 
-If confidence is "high", return empty alternatives array or omit the field entirely.
-
-Examples needing alternatives: Iced tea/coffee, chilla/uttapam, milkshake/smoothie, fried/brown rice, chicken/paneer nuggets.
-Skip alternatives for: High confidence dishes, banana, packaged snacks, whole roti.
+Examples: paneer bhurji/egg bhurji, iced tea/iced coffee, chilla/uttapam, milkshake/smoothie, dal tadka/dal fry, chicken curry/paneer curry.
+Skip: banana, packaged Parle-G biscuits, single whole roti, single boiled egg.
 
 Step 7 — OUTPUT:
 Respond ONLY as strict JSON (no markdown, no extra text):
@@ -313,7 +323,7 @@ async function tryGemini25Flash(base64Data: string, prompt: string): Promise<{ r
       model: "gemini-2.5-flash",
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 2560,
         thinkingConfig: { thinkingBudget: 1024 },
       } as Record<string, unknown>,
     });
@@ -344,7 +354,7 @@ async function tryGemini20Flash(base64Data: string, prompt: string): Promise<{ r
       model: "gemini-2.0-flash",
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 2048,
+        maxOutputTokens: 2560,
       } as Record<string, unknown>,
     });
     const result = await model.generateContent([prompt, imageContent]);
@@ -382,7 +392,7 @@ async function tryOpenAI(base64Data: string, prompt: string): Promise<{ result: 
         },
       ],
       temperature: 0.2,
-      max_tokens: 2048,
+      max_tokens: 2560,
       response_format: { type: "json_object" },
     });
 
@@ -427,7 +437,7 @@ async function tryGroq(base64Data: string, prompt: string): Promise<{ result: Di
           },
         ],
         temperature: 0.2,
-        max_tokens: 1800,
+        max_tokens: 2400,
       });
 
       const text = result.choices[0]?.message?.content || "";
