@@ -357,6 +357,41 @@ Daily limits:
 - UI renders 2 options (primary + 1 alternative)
 - Still shows radio buttons for consistency
 
+### Client-Side Filtering (Smart Hide Logic)
+
+To prevent showing unhelpful or confusing alternatives, we filter them on the client:
+
+```typescript
+function shouldShowAlternatives(primary: DishNutrition, alternatives: DishNutrition[]): boolean {
+  // Rule 1: If primary is "high" confidence, only show alternatives if at least one is "medium" or "high"
+  if (primary.confidence === "high") {
+    const hasReasonableAlternative = alternatives.some(alt => alt.confidence !== "low");
+    if (!hasReasonableAlternative) return false;
+  }
+
+  // Rule 2: If only 1 alternative and it's "low" confidence, hide it
+  if (alternatives.length === 1 && alternatives[0].confidence === "low") {
+    return false;
+  }
+
+  // Rule 3: Hide if all alternatives have exact same calories (likely AI glitch)
+  const uniqueCalories = new Set(alternatives.map(alt => alt.calories));
+  if (uniqueCalories.size === 1 && alternatives[0].calories === primary.calories) {
+    return false;
+  }
+
+  return true;
+}
+```
+
+**When alternatives are hidden:**
+- ✅ Primary: "Banana" (high confidence) + Alternatives: "Fried Rice" (low), "Pizza" (low) → **HIDDEN** (no reasonable alternatives)
+- ✅ Primary: "Roti" (high confidence) + Alternatives: "Paratha" (medium) → **SHOWN** (at least one medium alternative)
+- ✅ Primary: "Iced Tea" (medium) + Alternatives: "Iced Coffee" (low) → **HIDDEN** (single low-confidence alternative)
+- ✅ Primary: "Rice" (medium) + Alternatives: "Rice" (210 cal), "Rice" (210 cal) → **HIDDEN** (duplicate calories, AI glitch)
+
+This ensures users only see alternatives when they're genuinely helpful!
+
 ### API Error on Initial Scan
 - Fallback providers don't support alternatives yet
 - Falls back gracefully to standard response without alternatives

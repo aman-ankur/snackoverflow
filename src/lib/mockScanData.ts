@@ -34,6 +34,7 @@ export const MOCK_SCAN_RESULT: DishAnalysisResult = {
       tags: ["high-protein", "fiber-rich"],
       healthTip: "Great source of plant protein. Pair with rice for complete amino acids.",
       reasoning: "Yellow lentil curry with tempering visible on top",
+      // No alternatives - clearly identifiable dal tadka (high confidence)
     },
     {
       name: "Jeera Rice",
@@ -100,6 +101,7 @@ export const MOCK_SCAN_RESULT: DishAnalysisResult = {
       tags: [],
       healthTip: "Good vegetable dish. Watch the oil quantity for lower calories.",
       reasoning: "Potato and cauliflower dry curry",
+      // No alternatives - typical aloo gobi is fairly distinctive
     },
   ],
   totalCalories: 550,

@@ -134,6 +134,36 @@ function capitalize(s: string): string {
   return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
+/**
+ * Filter alternatives to only show genuinely useful options.
+ * Hides alternatives when:
+ * - Primary dish has "high" confidence AND all alternatives are "low"
+ * - Alternatives are semantically very different (e.g., "Banana" alternatives "Fried Rice")
+ * - Only 1 alternative with "low" confidence
+ */
+function shouldShowAlternatives(primary: DishNutrition, alternatives: DishNutrition[]): boolean {
+  if (!alternatives || alternatives.length === 0) return false;
+
+  // Rule 1: If primary is "high" confidence, only show alternatives if at least one is "medium" or "high"
+  if (primary.confidence === "high") {
+    const hasReasonableAlternative = alternatives.some(alt => alt.confidence !== "low");
+    if (!hasReasonableAlternative) return false;
+  }
+
+  // Rule 2: If only 1 alternative and it's "low" confidence, hide it
+  if (alternatives.length === 1 && alternatives[0].confidence === "low") {
+    return false;
+  }
+
+  // Rule 3: Hide if all alternatives have exact same calories (likely AI glitch)
+  const uniqueCalories = new Set(alternatives.map(alt => alt.calories));
+  if (uniqueCalories.size === 1 && alternatives[0].calories === primary.calories) {
+    return false;
+  }
+
+  return true;
+}
+
 /* ─── Tiny inline components ─── */
 
 function MacroStat({ label, value, color }: { label: string; value: number; color: string }) {
@@ -711,7 +741,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
                         >
                           <div className="border-t border-border px-4 pb-4 pt-3 space-y-4">
                             {/* Alternative dish selection */}
-                            {rawDish.alternatives && rawDish.alternatives.length > 0 && (
+                            {rawDish.alternatives && rawDish.alternatives.length > 0 && shouldShowAlternatives(rawDish, rawDish.alternatives) && (
                               <div className="pb-4 border-b border-border">
                                 <DishAlternatives
                                   primaryDish={rawDish}
