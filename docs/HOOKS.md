@@ -216,6 +216,14 @@ Common Indian kitchen items with default days:
 - Registers `beforeunload` and `visibilitychange` listeners to flush pending debounced Supabase writes before the page unloads
 - Used via `useAuthContext()` from `AuthProvider.tsx` (React context)
 
+### Network Resilience (Magic Link)
+`signInWithMagicLink` includes two layers of protection against network-level failures (e.g. WiFi DNS blocking `supabase.co`):
+1. **Pre-flight ping** (5s timeout): `GET ${SUPABASE_URL}/auth/v1/settings` — if this fails, returns a user-friendly error immediately ("Can't connect to auth server. Try switching from WiFi to mobile data, or check if a DNS blocker or ad-blocker is active.")
+2. **OTP timeout** (12s): wraps `signInWithOtp` in `Promise.race` so the spinner never hangs forever — returns "Request timed out. Try switching from WiFi to mobile data."
+
+### Debug Logging
+All auth methods emit timestamped `dlog()` calls (from `debugLog.ts`) at every step — visible in the on-screen DebugPanel when Dev Mode is enabled. Useful for diagnosing mobile-specific auth issues where browser DevTools aren't accessible.
+
 ---
 
 ## `useUserGoals()` — Goal Setting & Streak Hook

@@ -229,6 +229,31 @@
 - New dep: `openai` (npm package)
 
 ## 21. Pull-to-Refresh (NEW)
+
+## 22. Auth Network Resilience & Debug Overlay (NEW)
+
+### Problem Solved
+On some WiFi networks (corporate, hotel, restrictive DNS), `supabase.co` is blocked at the DNS level. The browser `fetch` API has no built-in timeout, so `signInWithOtp` would hang forever — the user sees an infinite spinner with no feedback.
+
+### Solution
+- **Pre-flight connectivity check**: Before calling `signInWithOtp`, a 5-second `GET` ping to `${SUPABASE_URL}/auth/v1/settings` detects network blocks early
+- **OTP timeout**: `Promise.race` wraps the actual OTP call with a 12-second timeout
+- **User-friendly errors**: Clear messages guide users to switch from WiFi to mobile data or check DNS/ad blockers
+
+### Debug Overlay (Dev Mode Only)
+- **DebugPanel** component in `AuthScreen.tsx`: floating purple bug icon that toggles a dark overlay showing timestamped auth logs
+- Only visible when Dev Mode is enabled (Profile → Dev Mode toggle)
+- Uses `debugLog.ts` — in-memory circular buffer (80 entries) with pub/sub pattern (`dlog()`, `getDebugLogs()`, `subscribeDebugLogs()`)
+- All auth methods (`signInWithMagicLink`, `signUp`, `signInWithPassword`) emit `dlog()` at every step
+- Useful for diagnosing mobile-specific auth issues where Chrome DevTools aren't accessible
+
+### Files
+- `src/lib/debugLog.ts` — in-memory log buffer + subscribe API
+- `src/lib/useAuth.ts` — auth hook with network resilience (ping + timeout)
+- `src/components/AuthScreen.tsx` — DebugPanel (dev mode gated)
+
+### Known Issue
+WiFi networks that DNS-block `supabase.co` will always fail for auth. The app detects this quickly and shows a helpful message. Mobile data bypasses the restriction.
 - Custom touch-gesture pull-to-refresh on all tabs (since native PTR is disabled by `overscroll-behavior: none`)
 - **PullToRefresh component** (`src/components/PullToRefresh.tsx`):
   - Detects `touchstart`/`touchmove`/`touchend` when `scrollTop === 0`

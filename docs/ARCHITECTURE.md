@@ -116,7 +116,8 @@ snackoverflow/
 │       │   ├── client.ts                # Browser Supabase client (createBrowserClient)
 │       │   ├── server.ts                # Server Supabase client (for auth callback)
 │       │   └── sync.ts                  # Pull/push/merge + debounced cloud sync
-│       └── useAuth.ts                   # Auth hook (magic link, password, sign out)
+│       ├── useAuth.ts                   # Auth hook (magic link, password, sign out, network resilience)
+│       └── debugLog.ts                  # In-memory debug log buffer (on-screen diagnostics, dev mode only)
 ├── .env.example                      # Template for API keys
 ├── .env.local                        # Actual API keys (gitignored)
 ├── next.config.ts                    # Next.js config (reactCompiler: true)
@@ -132,6 +133,10 @@ User opens app → layout.tsx wraps with AuthProvider → page.tsx renders Botto
 Auth Flow:
   Guest mode (default): app works fully with localStorage only, no login required
   Profile tab → AuthScreen → email magic link or password signup/login
+  → Pre-flight ping to Supabase auth API (5s timeout) — catches DNS/network blocks early
+  → signInWithOtp wrapped in 12s timeout — prevents infinite spinner on network failures
+  → User-friendly error messages for network issues ("Try switching from WiFi to mobile data")
+  → On-screen debug panel (dev mode only) logs every auth step for mobile diagnostics
   → Supabase Auth → /auth/callback → session established
   → migrateLocalStorageToCloud() on login (per-domain merge: only pushes domains where cloud is empty)
   → All hooks pull cloud data → override localStorage → sync on every change

@@ -155,6 +155,7 @@ page.tsx (main shell)
 - Auth: magic link + password via Supabase
 - Sync: pull/push/merge with debouncing in `lib/supabase/sync.ts`
 - RLS enabled on all tables
+- **Auth on mobile**: Some WiFi networks DNS-block `supabase.co` — auth hangs forever since `fetch` has no timeout. Fixed with pre-flight ping (5s) + OTP timeout (12s) + user-friendly error messages. Debug overlay (dev mode only) logs every auth step for mobile diagnostics via `debugLog.ts`.
 
 ## Testing
 
