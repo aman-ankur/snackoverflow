@@ -220,13 +220,15 @@ export function useDishScanner() {
       setIsAnalyzing(true);
       setError(null);
       try {
-        const { MOCK_FOOD_IMAGE, MOCK_SCAN_RESULT, MOCK_ANALYSIS_DELAY_MS } = await import(
+        const { MOCK_FOOD_IMAGE, getNextMockScenario, MOCK_ANALYSIS_DELAY_MS } = await import(
           "@/lib/mockScanData"
         );
+        const scenario = getNextMockScenario();
+        console.log(`[Mock Scan] Scenario: ${scenario.label}`);
         setCapturedFrame(MOCK_FOOD_IMAGE);
         lastFrameRef.current = MOCK_FOOD_IMAGE;
         await new Promise((resolve) => setTimeout(resolve, getDevMode() ? 400 : MOCK_ANALYSIS_DELAY_MS));
-        setAnalysis(MOCK_SCAN_RESULT);
+        setAnalysis(scenario.data);
         setLastAnalyzedAt(new Date());
         setScanCount((count) => count + 1);
       } catch {

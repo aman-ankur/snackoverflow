@@ -233,24 +233,39 @@ Added new step to `buildDishPrompt()`:
 
 ```
 Step 6B — ALTERNATIVE IDENTIFICATIONS:
-For EACH dish, generate top 2 alternatives with FULL nutrition (same format as primary)
-ONLY if the primary dish has "medium" or "low" confidence.
+For EACH dish, ALWAYS generate top 2 alternatives with FULL nutrition (same format as primary)
+UNLESS the item is clearly unambiguous.
 
-Include alternatives ONLY if:
-- Primary dish confidence is "medium" or "low" (REQUIRED CONDITION)
+SKIP alternatives ONLY for these unambiguous items:
+- Single whole fruit (banana, apple, orange)
+- Labeled packaging with visible brand name
+- Single distinctive item with no visual lookalikes (whole roti, whole idli, whole boiled egg)
+
+GENERATE alternatives for EVERYTHING ELSE, regardless of confidence level:
+- Any cooked dish, curry, sabzi, or gravy
+- Any rice preparation (jeera rice, biryani, pulao, fried rice)
+- Any fried or breaded item (pakora, nuggets, cutlet)
+- Any beverage (tea, coffee, shake, smoothie, lassi)
+- Any mixed plate or thali item
+- Any dish where two similar dishes could look the same
+  (paneer bhurji vs egg bhurji, aloo gobi vs gobi aloo)
+
+Alternatives must be:
 - Visually similar (color, texture, shape match)
 - Genuinely plausible given the image
-- NOT clearly identifiable (banana, labeled packaging, distinctive shape)
+- Different dishes with meaningfully different nutrition
 
-If confidence is "high", return empty alternatives array or omit the field entirely.
-
-Examples needing alternatives: Iced tea/coffee, chilla/uttapam, milkshake/smoothie,
-fried/brown rice, chicken/paneer nuggets.
-Skip alternatives for: High confidence dishes, banana, packaged snacks, whole roti.
+Examples: paneer bhurji/egg bhurji, iced tea/iced coffee, dal tadka/dal fry,
+chilla/uttapam, milkshake/smoothie, chicken curry/paneer curry.
+Skip: banana, packaged Parle-G biscuits, single whole roti, single boiled egg.
 ```
 
-**Performance optimization:** By conditioning on confidence level, we save 1-1.5s on high-confidence
-dishes (60-70% of scans) while maintaining instant swap capability for ambiguous dishes.
+**Why "Semantic Skip" instead of confidence-gated?**
+The previous approach gated alternatives on medium/low confidence. This missed the key failure case:
+**high-confidence misidentifications** — e.g., AI says "paneer bhurji" with high confidence but it's
+actually "egg bhurji". Since both look visually identical, the AI can be confident AND wrong.
+The semantic skip rule decouples the skip condition from confidence while still avoiding wasted
+tokens on obviously unambiguous items (banana, whole roti, labeled packaging).
 - Use IFCT 2017 reference data for alternatives just like primary dish
 
 Examples requiring alternatives:
@@ -411,24 +426,25 @@ const handleAlternativeSelect = useCallback((dishIndex: number, optionIndex: num
 
 | Scan Type | Tokens | Cost (Free Tier) |
 |-----------|--------|------------------|
-| High confidence (no alternatives) | 1600 | ✅ FREE |
-| Medium/low confidence (with alternatives) | **2600** | **✅ FREE** |
+| Unambiguous item (no alternatives) | 1600 | ✅ FREE |
+| Ambiguous dish (with alternatives) | **2600** | **✅ FREE** |
 
-**Optimization:** Alternatives only generated for medium/low confidence dishes (~30-40% of scans).
+**Optimization:** Alternatives skipped only for clearly unambiguous items (whole fruit, labeled packaging, single distinctive items). Most cooked dishes (~60-70% of scans) will now generate alternatives.
 
 Daily limits:
 - Gemini 2.5 Flash: 1500 requests/day, 10M tokens/day
-- 100 scans/day mixed = ~200K tokens = **2% of limit** (down from 2.6%)
+- 100 scans/day mixed = ~230K tokens = **2.3% of limit**
 
 ### Latency
 
-| Dish Confidence | Time | Alternatives Generated |
-|-----------------|------|----------------------|
-| High confidence | 2-3s | ❌ No (faster scan) |
-| Medium confidence | 3-4s | ✅ Yes |
-| Low confidence | 3-4s | ✅ Yes |
+| Dish Type | Time | Alternatives Generated |
+|-----------|------|----------------------|
+| Unambiguous (banana, roti) | 2-3s | ❌ No (semantic skip) |
+| Ambiguous cooked dish | 3-4s | ✅ Yes |
 
-**Average scan time:** ~2.5-3s (estimated 60-70% high confidence, 30-40% medium/low)
+**Average scan time:** ~3-3.5s (estimated 30-40% unambiguous, 60-70% ambiguous with alternatives)
+
+**Latency increase vs previous:** ~0.4-0.5s average (only affects the ~40% of scans that were previously high-confidence-ambiguous and got no alternatives)
 
 **Alternative selection:** 0s (instant swap, no API call)
 
@@ -453,11 +469,9 @@ To prevent showing unhelpful or confusing alternatives, we filter them on the cl
 
 ```typescript
 function shouldShowAlternatives(primary: DishNutrition, alternatives: DishNutrition[]): boolean {
-  // Rule 1: If primary is "high" confidence, only show alternatives if at least one is "medium" or "high"
-  if (primary.confidence === "high") {
-    const hasReasonableAlternative = alternatives.some(alt => alt.confidence !== "low");
-    if (!hasReasonableAlternative) return false;
-  }
+  // Rule 1: Hide if ALL alternatives are "low" confidence (universal, not primary-dependent)
+  const allLow = alternatives.every(alt => alt.confidence === "low");
+  if (allLow) return false;
 
   // Rule 2: If only 1 alternative and it's "low" confidence, hide it
   if (alternatives.length === 1 && alternatives[0].confidence === "low") {
@@ -470,15 +484,22 @@ function shouldShowAlternatives(primary: DishNutrition, alternatives: DishNutrit
     return false;
   }
 
+  // Rule 4: Hide if alternative names are identical to primary (trivial variants)
+  const primaryNorm = primary.name.toLowerCase().trim();
+  const allSameName = alternatives.every(alt => alt.name.toLowerCase().trim() === primaryNorm);
+  if (allSameName) return false;
+
   return true;
 }
 ```
 
 **When alternatives are hidden:**
-- ✅ Primary: "Banana" (high confidence) + Alternatives: "Fried Rice" (low), "Pizza" (low) → **HIDDEN** (no reasonable alternatives)
-- ✅ Primary: "Roti" (high confidence) + Alternatives: "Paratha" (medium) → **SHOWN** (at least one medium alternative)
+- ✅ Primary: "Paneer Bhurji" (high) + Alternatives: "Egg Bhurji" (medium), "Tofu Bhurji" (medium) → **SHOWN** (not all low)
+- ✅ Primary: "Banana" (high) + Alternatives: none generated → **No alternatives** (semantic skip in prompt)
+- ✅ Primary: "Dal Tadka" (high) + Alternatives: "Fried Rice" (low), "Pizza" (low) → **HIDDEN** (all low confidence)
 - ✅ Primary: "Iced Tea" (medium) + Alternatives: "Iced Coffee" (low) → **HIDDEN** (single low-confidence alternative)
 - ✅ Primary: "Rice" (medium) + Alternatives: "Rice" (210 cal), "Rice" (210 cal) → **HIDDEN** (duplicate calories, AI glitch)
+- ✅ Primary: "Dal Fry" (high) + Alternatives: "Dal Fry" (high), "Dal Fry" (medium) → **HIDDEN** (identical names)
 
 This ensures users only see alternatives when they're genuinely helpful!
 
@@ -502,9 +523,10 @@ npm run dev
 ```
 
 Mock data includes:
+- **Dal Tadka** with 2 alternatives (Dal Fry, Sambar) — high confidence primary, demonstrates always-on behavior
 - **Jeera Rice** with 2 alternatives (Steamed Rice, Fried Rice)
 - Different nutrition profiles for each option
-- Confidence levels vary (medium, medium, low)
+- Confidence levels vary (high, medium, low)
 
 ### Manual Testing Checklist
 - [ ] Scan dish with alternatives → verify all 3 options render
