@@ -96,26 +96,15 @@ Step 6 — SANITY CHECK:
 A typical Indian home meal is 400-600 kcal. If your total exceeds 800 for what looks like a normal home plate, your per-100g values are likely too high — recheck against the reference table.
 
 Step 6B — ALTERNATIVE IDENTIFICATIONS:
-For EACH dish, identify the top 2 most likely alternative names if the visual appearance could match multiple dishes. For each alternative, provide FULL NUTRITION DATA just like the primary dish.
+For EACH dish, if visually ambiguous, provide top 2 alternatives with FULL nutrition (same format as primary).
 
-Rules for alternatives:
-- Only include alternatives if they are genuinely plausible based on VISUAL similarity (color, texture, shape, plating)
-- If the dish is clearly identifiable (e.g., banana, packaged snack with visible label), return empty alternatives array
-- Each alternative must have complete nutrition data: calories, macros, ingredients, tags, health tip, reasoning
-- Alternatives should reflect realistic portion sizes (e.g., iced coffee typically has fewer calories than sweetened iced tea)
-- Use IFCT 2017 reference data for alternatives just like primary dish
+Include alternatives ONLY if:
+- Visually similar (color, texture, shape match)
+- Genuinely plausible given the image
+- NOT clearly identifiable (banana, labeled packaging, distinctive shape)
 
-Examples of ambiguous cases requiring alternatives:
-• Iced tea vs iced coffee vs cold brew (all are brown liquid with ice)
-• Oats chilla vs besan cheela vs uttapam (all are savory pancake-like items)
-• Milkshake vs protein shake vs smoothie (all are thick beverages in glass)
-• Fried rice vs brown rice vs jeera rice (all look like cooked rice grains)
-• Chicken nuggets vs paneer nuggets (both are breaded fried pieces)
-
-Counter-examples (NO alternatives needed):
-• Banana (clearly identifiable fruit)
-• Packaged biscuits with visible brand (unambiguous)
-• Whole roti (distinct flat bread, no confusion)
+Examples: Iced tea/coffee, chilla/uttapam, milkshake/smoothie, fried/brown rice, chicken/paneer nuggets.
+Skip for: Banana, packaged snacks, whole roti.
 
 Step 7 — OUTPUT:
 Respond ONLY as strict JSON (no markdown, no extra text):

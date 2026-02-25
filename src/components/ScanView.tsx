@@ -711,7 +711,22 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
                         </span>
                       </div>
 
-                      {/* Row 3: contextual note */}
+                      {/* Row 3: Alternative pills preview (collapsed state only) */}
+                      {!isExpanded && rawDish.alternatives && rawDish.alternatives.length > 0 && shouldShowAlternatives(rawDish, rawDish.alternatives) && (
+                        <div className="flex flex-wrap gap-1.5 mt-2.5">
+                          {rawDish.alternatives.map((alt, altIndex) => (
+                            <span
+                              key={`${dishItem.name}-alt-${altIndex}`}
+                              className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent-light/30 px-2.5 py-1 text-[11px] text-accent-dim font-medium"
+                            >
+                              <span className="text-accent font-bold">↔</span>
+                              {alt.name}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Row 4: contextual note */}
                       {note && (
                         <p className={`mt-2.5 text-xs leading-relaxed ${
                           note.type === "warning" ? "text-amber-600" : "text-accent-dim"
@@ -720,7 +735,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
                         </p>
                       )}
 
-                      {/* Row 4: expand hint */}
+                      {/* Row 5: expand hint */}
                       {!isExpanded && (
                         <div className="flex items-center justify-center gap-1 mt-3 text-[11px] text-muted">
                           <ChevronDown className="h-3 w-3" />

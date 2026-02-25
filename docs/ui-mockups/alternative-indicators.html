@@ -1,0 +1,958 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alternative Dish Indicators — Comparison</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #F5F2EB 0%, #E8E3D6 100%);
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0D0D0D;
+      margin-bottom: 12px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #4A4540;
+      margin-bottom: 40px;
+      font-size: 16px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    .option-container {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .option-header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #F5F2EB;
+    }
+
+    .option-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0D0D0D;
+      margin-bottom: 8px;
+    }
+
+    .option-desc {
+      font-size: 13px;
+      color: #4A4540;
+      line-height: 1.5;
+    }
+
+    .cards-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Base dish card styles */
+    .dish-card {
+      background: white;
+      border: 2px solid #DDD8CC;
+      border-radius: 16px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      position: relative;
+    }
+
+    .dish-card:hover {
+      border-color: #5AAC5A;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(90, 172, 90, 0.15);
+    }
+
+    .dish-card.no-alternatives {
+      opacity: 0.6;
+    }
+
+    .confidence-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .confidence-high {
+      background: #D4F4DD;
+      color: #2D7A4F;
+    }
+
+    .confidence-medium {
+      background: #FFE8D6;
+      color: #C77B3A;
+    }
+
+    .dish-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .dish-name-section {
+      flex: 1;
+    }
+
+    .dish-name {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0D0D0D;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .dish-subtitle {
+      font-size: 13px;
+      color: #4A4540;
+    }
+
+    .dish-calories {
+      font-size: 20px;
+      font-weight: 700;
+      color: #5AAC5A;
+    }
+
+    .dish-macros {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .macro-item {
+      font-size: 13px;
+      color: #4A4540;
+    }
+
+    .dish-footer {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #4A4540;
+    }
+
+    .expand-icon {
+      opacity: 0.5;
+    }
+
+    /* OPTION 1: Badge with count */
+    .option1 .alternatives-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: linear-gradient(135deg, #5AAC5A 0%, #4A9A4A 100%);
+      color: white;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      box-shadow: 0 2px 8px rgba(90, 172, 90, 0.3);
+    }
+
+    .alternatives-badge svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* OPTION 2: Icon next to name */
+    .option2 .alternatives-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      background: #5AAC5A;
+      border-radius: 50%;
+      color: white;
+      font-size: 12px;
+    }
+
+    /* OPTION 3: Confidence badge with hint */
+    .option3 .confidence-badge-enhanced {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #FFE8D6 0%, #FFD8B6 100%);
+      color: #C77B3A;
+      border: 1px solid #FFDAB9;
+    }
+
+    .option3 .alternatives-hint {
+      font-size: 10px;
+      opacity: 0.85;
+      font-weight: 500;
+      margin-left: 4px;
+    }
+
+    /* OPTION 4: Border + background treatment */
+    .option4 .dish-card.has-alternatives {
+      border: 2px solid #5AAC5A;
+      background: linear-gradient(135deg, #FFFFFF 0%, #F0FFF4 100%);
+      position: relative;
+    }
+
+    .option4 .dish-card.has-alternatives::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+      background: linear-gradient(180deg, #5AAC5A 0%, #4A9A4A 100%);
+      border-radius: 16px 0 0 16px;
+    }
+
+    .option4 .alternatives-corner-badge {
+      position: absolute;
+      top: -2px;
+      right: -2px;
+      background: #5AAC5A;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 0 14px 0 14px;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    /* OPTION 5: Bottom tap hint */
+    .option5 .alternatives-footer {
+      margin-top: 8px;
+      padding-top: 8px;
+      border-top: 1px dashed #5AAC5A;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-size: 12px;
+      color: #5AAC5A;
+      font-weight: 600;
+    }
+
+    .option5 .alternatives-footer svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* OPTION 6: Pill list preview */
+    .option6 .alternatives-preview {
+      margin-top: 8px;
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .option6 .alt-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: #F5F2EB;
+      border: 1px solid #DDD8CC;
+      border-radius: 12px;
+      font-size: 11px;
+      color: #4A4540;
+      font-weight: 500;
+    }
+
+    .option6 .alt-pill-icon {
+      font-size: 10px;
+      color: #5AAC5A;
+    }
+
+    /* Recommended badge */
+    .recommended {
+      position: absolute;
+      top: -12px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #F08C42;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(240, 140, 66, 0.4);
+    }
+
+    .pros-cons {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #F5F2EB;
+    }
+
+    .pros-cons h4 {
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: #0D0D0D;
+    }
+
+    .pros-list, .cons-list {
+      list-style: none;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .pros-list li {
+      color: #2D7A4F;
+      margin-bottom: 4px;
+    }
+
+    .pros-list li::before {
+      content: '✓ ';
+      font-weight: bold;
+    }
+
+    .cons-list li {
+      color: #C77B3A;
+      margin-bottom: 4px;
+    }
+
+    .cons-list li::before {
+      content: '⚠ ';
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Alternative Dish Indicators — 6 Options</h1>
+    <p class="subtitle">Compare different ways to show that a dish has alternative identifications</p>
+
+    <div class="comparison-grid">
+
+      <!-- OPTION 1: Badge with count -->
+      <div class="option-container option1">
+        <div class="option-header">
+          <div class="option-title">Option 1: Badge with Count</div>
+          <div class="option-desc">Floating badge in top-right corner shows "2 more options"</div>
+        </div>
+
+        <div class="cards-stack">
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-high">High confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Dal Tadka</div>
+                <div class="dish-subtitle">दाल तड़का · 200g</div>
+              </div>
+              <div class="dish-calories">180 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 9g</span>
+              <span class="macro-item">Carbs 22g</span>
+              <span class="macro-item">Fat 6g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card">
+            <span class="alternatives-badge">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M3 12h18M3 6h18M3 18h18"/>
+              </svg>
+              2 more options
+            </span>
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Jeera Rice</div>
+                <div class="dish-subtitle">जीरा चावल · 180g</div>
+              </div>
+              <div class="dish-calories">210 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 42g</span>
+              <span class="macro-item">Fat 3g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Aloo Gobi</div>
+                <div class="dish-subtitle">आलू गोभी · 150g</div>
+              </div>
+              <div class="dish-calories">160 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 18g</span>
+              <span class="macro-item">Fat 8g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Highly visible, impossible to miss</li>
+            <li>Shows exact count (2 more)</li>
+            <li>Doesn't interfere with existing layout</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Takes up space, might feel cluttered</li>
+            <li>Could block calorie value on small screens</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OPTION 2: Icon next to name -->
+      <div class="option-container option2">
+        <div class="option-header">
+          <div class="option-title">Option 2: Icon Next to Name</div>
+          <div class="option-desc">Small circular icon appears directly before dish name</div>
+        </div>
+
+        <div class="cards-stack">
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-high">High confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Dal Tadka</div>
+                <div class="dish-subtitle">दाल तड़का · 200g</div>
+              </div>
+              <div class="dish-calories">180 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 9g</span>
+              <span class="macro-item">Carbs 22g</span>
+              <span class="macro-item">Fat 6g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">
+                  <span class="alternatives-icon">⇄</span>
+                  Jeera Rice
+                </div>
+                <div class="dish-subtitle">जीरा चावल · 180g</div>
+              </div>
+              <div class="dish-calories">210 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 42g</span>
+              <span class="macro-item">Fat 3g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Aloo Gobi</div>
+                <div class="dish-subtitle">आलू गोभी · 150g</div>
+              </div>
+              <div class="dish-calories">160 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 18g</span>
+              <span class="macro-item">Fat 8g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Subtle and clean, doesn't clutter UI</li>
+            <li>Icon meaning becomes clear with usage</li>
+            <li>Minimal layout changes</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Easy to miss on first use</li>
+            <li>Doesn't show count (how many alternatives?)</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OPTION 3: Confidence badge with hint -->
+      <div class="option-container option3">
+        <div class="option-header">
+          <div class="option-title">Option 3: Enhanced Confidence Badge</div>
+          <div class="option-desc">Confidence badge includes "(tap to see 2 more)" hint text</div>
+        </div>
+
+        <div class="cards-stack">
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-high">High confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Dal Tadka</div>
+                <div class="dish-subtitle">दाल तड़का · 200g</div>
+              </div>
+              <div class="dish-calories">180 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 9g</span>
+              <span class="macro-item">Carbs 22g</span>
+              <span class="macro-item">Fat 6g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card">
+            <span class="confidence-badge-enhanced confidence-medium">
+              Medium confidence
+              <span class="alternatives-hint">· Tap to see 2 more</span>
+            </span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Jeera Rice</div>
+                <div class="dish-subtitle">जीरा चावल · 180g</div>
+              </div>
+              <div class="dish-calories">210 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 42g</span>
+              <span class="macro-item">Fat 3g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Aloo Gobi</div>
+                <div class="dish-subtitle">आलू गोभी · 150g</div>
+              </div>
+              <div class="dish-calories">160 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 18g</span>
+              <span class="macro-item">Fat 8g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Uses existing confidence badge space</li>
+            <li>Clear call-to-action ("tap to see")</li>
+            <li>Shows count explicitly</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Badge becomes very long/wordy</li>
+            <li>Mixes confidence + action in one element</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OPTION 4: Border + background treatment -->
+      <div class="option-container option4">
+        <div class="option-header">
+          <div class="option-title">Option 4: Border + Background Glow</div>
+          <div class="option-desc">Green border, subtle green gradient background, left accent bar + corner badge</div>
+        </div>
+
+        <div class="cards-stack">
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-high">High confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Dal Tadka</div>
+                <div class="dish-subtitle">दाल तड़का · 200g</div>
+              </div>
+              <div class="dish-calories">180 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 9g</span>
+              <span class="macro-item">Carbs 22g</span>
+              <span class="macro-item">Fat 6g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card has-alternatives">
+            <span class="alternatives-corner-badge">+2</span>
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Jeera Rice</div>
+                <div class="dish-subtitle">जीरा चावल · 180g</div>
+              </div>
+              <div class="dish-calories">210 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 42g</span>
+              <span class="macro-item">Fat 3g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Aloo Gobi</div>
+                <div class="dish-subtitle">आलू गोभी · 150g</div>
+              </div>
+              <div class="dish-calories">160 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 18g</span>
+              <span class="macro-item">Fat 8g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Strongest visual differentiation</li>
+            <li>Multiple cues (border, glow, bar, badge)</li>
+            <li>Feels "special" / draws attention</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Most aggressive styling, could feel "busy"</li>
+            <li>Background color change might be too much</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OPTION 5: Bottom tap hint -->
+      <div class="option-container option5">
+        <div class="option-header">
+          <div class="option-title">Option 5: Bottom Tap Hint</div>
+          <div class="option-desc">Dashed border separator with "Tap to compare 2 similar dishes" text at bottom</div>
+        </div>
+
+        <div class="cards-stack">
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-high">High confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Dal Tadka</div>
+                <div class="dish-subtitle">दाल तड़का · 200g</div>
+              </div>
+              <div class="dish-calories">180 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 9g</span>
+              <span class="macro-item">Carbs 22g</span>
+              <span class="macro-item">Fat 6g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Jeera Rice</div>
+                <div class="dish-subtitle">जीरा चावल · 180g</div>
+              </div>
+              <div class="dish-calories">210 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 42g</span>
+              <span class="macro-item">Fat 3g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+            <div class="alternatives-footer">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                <path d="M9 18l6-6-6-6"/>
+              </svg>
+              Tap to compare 2 similar dishes
+            </div>
+          </div>
+
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Aloo Gobi</div>
+                <div class="dish-subtitle">आलू गोभी · 150g</div>
+              </div>
+              <div class="dish-calories">160 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 18g</span>
+              <span class="macro-item">Fat 8g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Clear call-to-action with context</li>
+            <li>Natural placement (above existing footer)</li>
+            <li>Explains value ("compare similar dishes")</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Makes cards taller (more scroll)</li>
+            <li>Text might be too wordy for some users</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OPTION 6: Pill list preview -->
+      <div class="option-container option6">
+        <span class="recommended">⭐ RECOMMENDED</span>
+        <div class="option-header">
+          <div class="option-title">Option 6: Pill List Preview</div>
+          <div class="option-desc">Show alternative names as small pills below macros — gives context upfront</div>
+        </div>
+
+        <div class="cards-stack">
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-high">High confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Dal Tadka</div>
+                <div class="dish-subtitle">दाल तड़का · 200g</div>
+              </div>
+              <div class="dish-calories">180 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 9g</span>
+              <span class="macro-item">Carbs 22g</span>
+              <span class="macro-item">Fat 6g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Jeera Rice</div>
+                <div class="dish-subtitle">जीरा चावल · 180g</div>
+              </div>
+              <div class="dish-calories">210 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 42g</span>
+              <span class="macro-item">Fat 3g</span>
+            </div>
+            <div class="alternatives-preview">
+              <span class="alt-pill">
+                <span class="alt-pill-icon">↔</span>
+                Steamed Rice
+              </span>
+              <span class="alt-pill">
+                <span class="alt-pill-icon">↔</span>
+                Fried Rice
+              </span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+
+          <div class="dish-card no-alternatives">
+            <span class="confidence-badge confidence-medium">Medium confidence</span>
+            <div class="dish-header">
+              <div class="dish-name-section">
+                <div class="dish-name">Aloo Gobi</div>
+                <div class="dish-subtitle">आलू गोभी · 150g</div>
+              </div>
+              <div class="dish-calories">160 kcal</div>
+            </div>
+            <div class="dish-macros">
+              <span class="macro-item">Protein 4g</span>
+              <span class="macro-item">Carbs 18g</span>
+              <span class="macro-item">Fat 8g</span>
+            </div>
+            <div class="dish-footer">
+              <svg class="expand-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="6 9 12 15 18 9"></polyline>
+              </svg>
+              <span>Tap for details & editing</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li><strong>Shows actual alternative names</strong> — immediate context!</li>
+            <li>User understands "oh, it could be steamed or fried rice"</li>
+            <li>Pills are scannable and don't clutter the layout</li>
+            <li>Natural placement between macros and footer</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Slightly taller cards (but justified by value)</li>
+            <li>Long alternative names might wrap awkwardly</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div style="background: white; border-radius: 20px; padding: 24px; margin-top: 40px; box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);">
+      <h2 style="font-size: 24px; margin-bottom: 16px; color: #0D0D0D;">Recommendation: Option 6 (Pill List Preview)</h2>
+      <p style="font-size: 15px; line-height: 1.6; color: #4A4540; margin-bottom: 12px;">
+        <strong>Why Option 6 wins:</strong> It's the only approach that actually shows <em>what</em> the alternatives are, not just that they exist.
+        When users see "Steamed Rice" and "Fried Rice" pills, they immediately understand the AI's uncertainty and can make an informed decision
+        to tap and explore further.
+      </p>
+      <p style="font-size: 15px; line-height: 1.6; color: #4A4540;">
+        Options 1-5 tell users "there are alternatives" but don't explain what they are. Option 6 provides context upfront, which is more helpful
+        for the user journey. The pills are also visually lightweight and don't feel like clutter.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
