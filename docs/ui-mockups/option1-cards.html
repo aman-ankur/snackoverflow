@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 1: Card-Based Selection</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F5F2EB;
+      padding: 24px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4A4540;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .dish-cards {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .dish-card {
+      position: relative;
+      border: 2px solid #DDD8CC;
+      border-radius: 12px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: white;
+    }
+
+    .dish-card:hover {
+      border-color: #5AAC5A;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(90, 172, 90, 0.15);
+    }
+
+    .dish-card.selected {
+      border-color: #5AAC5A;
+      background: linear-gradient(135deg, #f0fdf0 0%, #f0fdf4 100%);
+      box-shadow: 0 4px 16px rgba(90, 172, 90, 0.2);
+    }
+
+    .dish-card.selected::before {
+      content: '✓';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 24px;
+      height: 24px;
+      background: #5AAC5A;
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .dish-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+      flex-wrap: wrap;
+    }
+
+    .dish-name {
+      font-weight: 600;
+      font-size: 15px;
+      color: #0D0D0D;
+    }
+
+    .dish-hindi {
+      font-size: 13px;
+      color: #4A4540;
+    }
+
+    .confidence-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .confidence-medium {
+      background: #FEF3C7;
+      color: #D97706;
+    }
+
+    .confidence-high {
+      background: #D1FAE5;
+      color: #059669;
+    }
+
+    .confidence-low {
+      background: #F3F4F6;
+      color: #6B7280;
+    }
+
+    .nutrition-preview {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+      font-size: 12px;
+      color: #4A4540;
+    }
+
+    .nutrition-preview span {
+      font-weight: 500;
+    }
+
+    .reasoning {
+      font-size: 12px;
+      color: #6B7280;
+      line-height: 1.5;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="label">Select Dish</div>
+    <div class="dish-cards">
+
+      <!-- Option 1: Iced Tea (Selected) -->
+      <div class="dish-card selected" onclick="selectDish(0)">
+        <div class="dish-header">
+          <span class="dish-name">Iced Tea</span>
+          <span class="dish-hindi">· आइस्ड चाय</span>
+          <span class="confidence-badge confidence-medium">Likely</span>
+        </div>
+        <div class="nutrition-preview">
+          <span>80 cal</span>
+          <span>P: 0g</span>
+          <span>C: 20g</span>
+          <span>F: 0g</span>
+        </div>
+        <div class="reasoning">
+          Brown liquid with ice. Amber color suggests tea.
+        </div>
+      </div>
+
+      <!-- Option 2: Iced Coffee -->
+      <div class="dish-card" onclick="selectDish(1)">
+        <div class="dish-header">
+          <span class="dish-name">Iced Coffee</span>
+          <span class="dish-hindi">· आइस्ड कॉफी</span>
+          <span class="confidence-badge confidence-medium">Likely</span>
+        </div>
+        <div class="nutrition-preview">
+          <span>5 cal</span>
+          <span>P: 1g</span>
+          <span>C: 1g</span>
+          <span>F: 0g</span>
+        </div>
+        <div class="reasoning">
+          Darker brown liquid suggests coffee rather than tea.
+        </div>
+      </div>
+
+      <!-- Option 3: Cold Brew Coffee -->
+      <div class="dish-card" onclick="selectDish(2)">
+        <div class="dish-header">
+          <span class="dish-name">Cold Brew Coffee</span>
+          <span class="dish-hindi">· कोल्ड ब्रू कॉफी</span>
+          <span class="confidence-badge confidence-low">Unsure</span>
+        </div>
+        <div class="nutrition-preview">
+          <span>5 cal</span>
+          <span>P: 1g</span>
+          <span>C: 1g</span>
+          <span>F: 0g</span>
+        </div>
+        <div class="reasoning">
+          Less common but visually identical to regular iced coffee.
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    function selectDish(index) {
+      document.querySelectorAll('.dish-card').forEach((card, i) => {
+        card.classList.toggle('selected', i === index);
+      });
+    }
+  </script>
+</body>
+</html>
