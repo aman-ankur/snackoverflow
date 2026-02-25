@@ -30,16 +30,46 @@ const MOOD_IMAGE: Record<string, string> = {
 export default function CapyMascot({ mood = "happy", size = 120, className = "", animate = true, randomize = false }: CapyMascotProps) {
   const defaultSrc = MOOD_IMAGE[mood] ?? MOOD_IMAGE.default;
 
-  // Only randomize when explicitly opted in (home header)
-  const [src, setSrc] = useState(randomize ? CAPY_AVATARS[0] : defaultSrc);
+  // Phase 1: Fix hydration mismatch with mounted guard
+  const [mounted, setMounted] = useState(false);
+  const [src, setSrc] = useState(defaultSrc); // Always use defaultSrc for SSR
+
+  // Phase 2: Add image loading error handling
+  const [imageError, setImageError] = useState(false);
+  const [imageLoading, setImageLoading] = useState(true);
+
   useEffect(() => {
-    if (randomize) {
-      setSrc(CAPY_AVATARS[Math.floor(Math.random() * CAPY_AVATARS.length)]);
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted && randomize) {
+      const randomSrc = CAPY_AVATARS[Math.floor(Math.random() * CAPY_AVATARS.length)];
+      setSrc(randomSrc);
+    } else if (!randomize) {
+      setSrc(defaultSrc);
     }
-  }, [randomize]);
+  }, [mounted, randomize, defaultSrc]);
+
+  // Phase 4: Reset error state on src change
+  useEffect(() => {
+    setImageLoading(true);
+    setImageError(false);
+  }, [src]);
+
+  const handleImageError = () => {
+    console.warn('[CapyMascot] Failed to load:', src, '- falling back to default');
+    setImageError(true);
+    setSrc('/model/capy-default.png'); // Fallback to default mascot
+  };
+
+  const handleImageLoad = () => {
+    setImageLoading(false);
+    setImageError(false);
+  };
 
   // Update mood-based src when not randomizing
-  const finalSrc = randomize ? src : defaultSrc;
+  const finalSrc = src;
 
   // All avatars are square, so they all use object-cover to fill the circle
   // (coconut, bird, and GIF are all square images)
@@ -49,6 +79,17 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
       style={{ width: size, height: size }}
       className={`relative flex items-center justify-center ${randomize ? "rounded-full overflow-hidden" : ""} ${className}`}
     >
+      {/* Phase 3: Add loading placeholder */}
+      {imageLoading && !imageError && (
+        <div
+          className="absolute inset-0 rounded-full animate-pulse"
+          style={{
+            width: size,
+            height: size,
+            backgroundColor: 'var(--color-accent-light)'
+          }}
+        />
+      )}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src={`${finalSrc}?v=2`}
@@ -56,6 +97,8 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
         width={size}
         height={size}
         className={randomize ? "object-cover rounded-full" : "object-contain"}
+        onError={handleImageError}
+        onLoad={handleImageLoad}
       />
       {animate && mood === "excited" && (
         <span
