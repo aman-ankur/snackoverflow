@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import type { CapyMood } from "@/lib/dishTypes";
 
 interface CapyMascotProps {
@@ -9,17 +10,18 @@ interface CapyMascotProps {
   animate?: boolean;
 }
 
-const MOOD_IMAGE: Record<string, string> = {
-  happy: "/model/capy-happy.png",
-  excited: "/model/capy-happy.png",
-  sleepy: "/model/capy-happy.png",
-  motivated: "/model/capy-motivated.png",
-  concerned: "/model/capy-default.png",
-  default: "/model/capy-default.png",
-};
+const CAPY_AVATARS = [
+  "/model/capy-coconut.jpeg",
+  "/model/capy-orange.jpg",
+  "/model/capy-logo.gif",
+];
 
 export default function CapyMascot({ mood = "happy", size = 120, className = "", animate = true }: CapyMascotProps) {
-  const src = MOOD_IMAGE[mood] ?? MOOD_IMAGE.default;
+  // Pick randomly on mount (client only) to avoid hydration mismatch
+  const [src, setSrc] = useState(CAPY_AVATARS[0]);
+  useEffect(() => {
+    setSrc(CAPY_AVATARS[Math.floor(Math.random() * CAPY_AVATARS.length)]);
+  }, []);
 
   return (
     <div
@@ -28,11 +30,11 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
-        src={`${src}?v=2`}
+        src={src}
         alt="Capy mascot"
         width={size}
         height={size}
-        className="object-contain"
+        className="object-cover rounded-full"
       />
       {animate && mood === "excited" && (
         <span

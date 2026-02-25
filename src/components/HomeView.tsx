@@ -179,7 +179,7 @@ export default function HomeView({
       <div className="px-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <CapyMascot mood={capyState.mood} size={36} animate={false} />
+            <CapyMascot mood={capyState.mood} size={56} animate={false} />
             <div>
               <div className="flex items-center gap-2">
                 <p className="text-sm font-extrabold text-foreground">{greeting}</p>
