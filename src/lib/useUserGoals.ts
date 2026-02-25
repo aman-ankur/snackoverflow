@@ -1,10 +1,11 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
 import type { UserProfile, NutritionGoals, StreakData } from "@/lib/dishTypes";
 import { calculateGoals, DEFAULT_GOALS } from "@/lib/tdeeCalculator";
 import { useAuthContext } from "@/components/AuthProvider";
 import { pullUserData, pushUserData } from "@/lib/supabase/sync";
+import { mergeObject } from "@/lib/supabase/merge";
 
 const PROFILE_KEY = "snackoverflow-user-goals-v1";
 const MEAL_LOG_KEY = "snackoverflow-meal-log-v1";
@@ -111,6 +112,7 @@ export function useUserGoals() {
   });
   const [hasLoaded, setHasLoaded] = useState(false);
   const { user, isLoggedIn } = useAuthContext();
+  const hasPulledCloud = useRef(false);
 
   useEffect(() => {
     const stored = loadStored();
@@ -123,14 +125,25 @@ export function useUserGoals() {
 
   // Pull from Supabase when user logs in
   useEffect(() => {
-    if (!isLoggedIn || !user || !hasLoaded) return;
+    if (!isLoggedIn || !user || !hasLoaded || hasPulledCloud.current) return;
+    hasPulledCloud.current = true;
     pullUserData(user.id).then((cloud) => {
       if (!cloud) return;
-      if (cloud.profile) setProfileState(cloud.profile as UserProfile);
-      if (cloud.goals) setGoalsState(cloud.goals as NutritionGoals);
+      if (cloud.profile) {
+        setProfileState((local) =>
+          mergeObject(local, cloud.profile as UserProfile, (p) => p.updatedAt ?? p.completedAt)
+        );
+      }
+      if (cloud.goals) {
+        setGoalsState((local) =>
+          mergeObject(local, cloud.goals as NutritionGoals, (g) => g.updatedAt ?? "") ?? local
+        );
+      }
       if (cloud.streak) {
-        const cloudStreak = cloud.streak as StreakData;
-        setStreakState(computeStreak(cloudStreak));
+        setStreakState((local) => {
+          const merged = mergeObject(local, cloud.streak as StreakData, (s) => s.lastLogDate);
+          return merged ?? local;
+        });
       }
     }).catch(() => {});
   }, [isLoggedIn, user, hasLoaded]);
@@ -150,7 +163,8 @@ export function useUserGoals() {
 
   const saveProfile = useCallback(
     (newProfile: UserProfile) => {
-      setProfileState(newProfile);
+      const withTimestamp = { ...newProfile, updatedAt: new Date().toISOString() };
+      setProfileState(withTimestamp);
       const computed = calculateGoals(
         newProfile.gender,
         newProfile.weightKg,
@@ -159,13 +173,13 @@ export function useUserGoals() {
         newProfile.activityLevel,
         newProfile.goal
       );
-      setGoalsState(computed);
+      setGoalsState({ ...computed, updatedAt: new Date().toISOString() });
     },
     []
   );
 
   const updateGoals = useCallback((partial: Partial<NutritionGoals>) => {
-    setGoalsState((prev) => ({ ...prev, ...partial, isCustom: true }));
+    setGoalsState((prev) => ({ ...prev, ...partial, isCustom: true, updatedAt: new Date().toISOString() }));
   }, []);
 
   const refreshStreak = useCallback(() => {

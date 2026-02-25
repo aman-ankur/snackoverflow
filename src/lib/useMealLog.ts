@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { DishNutrition, LoggedMeal, MealTotals, MealType } from "@/lib/dishTypes";
 import { useAuthContext } from "@/components/AuthProvider";
 import { pullUserData, pushUserData } from "@/lib/supabase/sync";
+import { mergeArrayById } from "@/lib/supabase/merge";
 
 const STORAGE_KEY = "snackoverflow-meal-log-v1";
 const FRIDGE_SCAN_HISTORY_KEY = "snackoverflow-fridge-scan-history";
@@ -197,9 +198,17 @@ export function useMealLog() {
       if (Array.isArray(cloudMeals) && cloudMeals.length > 0) {
         const normalized = cloudMeals
           .map(normalizeMeal)
-          .filter((m): m is LoggedMeal => Boolean(m))
-          .sort((a, b) => (a.loggedAt < b.loggedAt ? 1 : -1));
-        if (normalized.length > 0) setMeals(normalized);
+          .filter((m): m is LoggedMeal => Boolean(m));
+        if (normalized.length > 0) {
+          setMeals((prev) =>
+            mergeArrayById(
+              prev,
+              normalized,
+              (m) => m.id,
+              (m) => m.loggedAt
+            ).sort((a, b) => (a.loggedAt < b.loggedAt ? 1 : -1))
+          );
+        }
       }
     }).catch(() => {});
   }, [isLoggedIn, user]);
