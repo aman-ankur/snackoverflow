@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 3: Swipeable Carousel</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F5F2EB;
+      padding: 24px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4A4540;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .swipe-hint {
+      font-size: 11px;
+      color: #9CA3AF;
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Carousel Container */
+    .carousel-container {
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+
+    .carousel-track {
+      display: flex;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      gap: 12px;
+    }
+
+    .carousel-item {
+      min-width: 100%;
+      background: linear-gradient(135deg, #f0fdf0 0%, #f0fdf4 100%);
+      border: 2px solid #5AAC5A;
+      border-radius: 12px;
+      padding: 20px;
+    }
+
+    .item-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 16px;
+    }
+
+    .item-title {
+      flex: 1;
+    }
+
+    .dish-name {
+      font-weight: 700;
+      font-size: 17px;
+      color: #0D0D0D;
+      margin-bottom: 4px;
+    }
+
+    .dish-hindi {
+      font-size: 14px;
+      color: #4A4540;
+    }
+
+    .confidence-badge {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+
+    .confidence-medium {
+      background: #FEF3C7;
+      color: #D97706;
+    }
+
+    .confidence-high {
+      background: #D1FAE5;
+      color: #059669;
+    }
+
+    .confidence-low {
+      background: #F3F4F6;
+      color: #6B7280;
+    }
+
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+
+    .nutrition-box {
+      background: white;
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+
+    .nutrition-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0D0D0D;
+    }
+
+    .nutrition-label {
+      font-size: 10px;
+      color: #6B7280;
+      margin-top: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+
+    .reasoning {
+      font-size: 13px;
+      color: #4A4540;
+      line-height: 1.5;
+      padding: 12px;
+      background: rgba(255,255,255,0.6);
+      border-radius: 8px;
+      font-style: italic;
+    }
+
+    /* Pagination Dots */
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #D1D5DB;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .dot.active {
+      background: #5AAC5A;
+      width: 24px;
+      border-radius: 4px;
+    }
+
+    /* Navigation Arrows */
+    .nav-arrow {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      background: white;
+      border: 2px solid #5AAC5A;
+      color: #5AAC5A;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 18px;
+      font-weight: bold;
+      z-index: 2;
+      transition: all 0.2s ease;
+      opacity: 0.8;
+    }
+
+    .nav-arrow:hover {
+      background: #5AAC5A;
+      color: white;
+      opacity: 1;
+      transform: translateY(-50%) scale(1.1);
+    }
+
+    .nav-arrow.left {
+      left: -12px;
+    }
+
+    .nav-arrow.right {
+      right: -12px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="label">Select Dish</div>
+    <div class="swipe-hint">
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="15 18 9 12 15 6"></polyline>
+      </svg>
+      Swipe or tap arrows to switch
+      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polyline points="9 18 15 12 9 6"></polyline>
+      </svg>
+    </div>
+
+    <div class="carousel-container">
+      <!-- Left Arrow -->
+      <div class="nav-arrow left" onclick="prevSlide()">‹</div>
+
+      <!-- Carousel Track -->
+      <div class="carousel-track" id="carouselTrack">
+
+        <!-- Slide 1: Iced Tea -->
+        <div class="carousel-item">
+          <div class="item-header">
+            <div class="item-title">
+              <div class="dish-name">Iced Tea</div>
+              <div class="dish-hindi">आइस्ड चाय</div>
+            </div>
+            <span class="confidence-badge confidence-medium">Likely</span>
+          </div>
+
+          <div class="nutrition-grid">
+            <div class="nutrition-box">
+              <div class="nutrition-value">80</div>
+              <div class="nutrition-label">Cal</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">0g</div>
+              <div class="nutrition-label">Protein</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">20g</div>
+              <div class="nutrition-label">Carbs</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">0g</div>
+              <div class="nutrition-label">Fat</div>
+            </div>
+          </div>
+
+          <div class="reasoning">
+            Brown liquid with ice. Amber color suggests tea.
+          </div>
+        </div>
+
+        <!-- Slide 2: Iced Coffee -->
+        <div class="carousel-item">
+          <div class="item-header">
+            <div class="item-title">
+              <div class="dish-name">Iced Coffee</div>
+              <div class="dish-hindi">आइस्ड कॉफी</div>
+            </div>
+            <span class="confidence-badge confidence-medium">Likely</span>
+          </div>
+
+          <div class="nutrition-grid">
+            <div class="nutrition-box">
+              <div class="nutrition-value">5</div>
+              <div class="nutrition-label">Cal</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">1g</div>
+              <div class="nutrition-label">Protein</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">1g</div>
+              <div class="nutrition-label">Carbs</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">0g</div>
+              <div class="nutrition-label">Fat</div>
+            </div>
+          </div>
+
+          <div class="reasoning">
+            Darker brown liquid suggests coffee rather than tea.
+          </div>
+        </div>
+
+        <!-- Slide 3: Cold Brew Coffee -->
+        <div class="carousel-item">
+          <div class="item-header">
+            <div class="item-title">
+              <div class="dish-name">Cold Brew Coffee</div>
+              <div class="dish-hindi">कोल्ड ब्रू कॉफी</div>
+            </div>
+            <span class="confidence-badge confidence-low">Unsure</span>
+          </div>
+
+          <div class="nutrition-grid">
+            <div class="nutrition-box">
+              <div class="nutrition-value">5</div>
+              <div class="nutrition-label">Cal</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">1g</div>
+              <div class="nutrition-label">Protein</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">1g</div>
+              <div class="nutrition-label">Carbs</div>
+            </div>
+            <div class="nutrition-box">
+              <div class="nutrition-value">0g</div>
+              <div class="nutrition-label">Fat</div>
+            </div>
+          </div>
+
+          <div class="reasoning">
+            Less common but visually identical to regular iced coffee.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Right Arrow -->
+      <div class="nav-arrow right" onclick="nextSlide()">›</div>
+    </div>
+
+    <!-- Pagination Dots -->
+    <div class="pagination">
+      <div class="dot active" onclick="goToSlide(0)"></div>
+      <div class="dot" onclick="goToSlide(1)"></div>
+      <div class="dot" onclick="goToSlide(2)"></div>
+    </div>
+  </div>
+
+  <script>
+    let currentSlide = 0;
+    const totalSlides = 3;
+    const track = document.getElementById('carouselTrack');
+
+    function updateCarousel() {
+      track.style.transform = `translateX(-${currentSlide * 100}%)`;
+
+      // Update dots
+      document.querySelectorAll('.dot').forEach((dot, i) => {
+        dot.classList.toggle('active', i === currentSlide);
+      });
+    }
+
+    function nextSlide() {
+      currentSlide = (currentSlide + 1) % totalSlides;
+      updateCarousel();
+    }
+
+    function prevSlide() {
+      currentSlide = (currentSlide - 1 + totalSlides) % totalSlides;
+      updateCarousel();
+    }
+
+    function goToSlide(index) {
+      currentSlide = index;
+      updateCarousel();
+    }
+
+    // Touch swipe support
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    track.addEventListener('touchstart', e => {
+      touchStartX = e.changedTouches[0].screenX;
+    });
+
+    track.addEventListener('touchend', e => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    });
+
+    function handleSwipe() {
+      if (touchEndX < touchStartX - 50) nextSlide();
+      if (touchEndX > touchStartX + 50) prevSlide();
+    }
+  </script>
+</body>
+</html>

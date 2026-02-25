@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Option 2: Segmented Control with Expansion</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #F5F2EB;
+      padding: 24px;
+      max-width: 480px;
+      margin: 0 auto;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .label {
+      font-size: 12px;
+      font-weight: 600;
+      color: #4A4540;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Segmented Control */
+    .segmented-control {
+      position: relative;
+      display: flex;
+      background: #F3F4F6;
+      border-radius: 10px;
+      padding: 4px;
+      gap: 4px;
+      margin-bottom: 16px;
+    }
+
+    .segment {
+      flex: 1;
+      padding: 10px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #6B7280;
+      text-align: center;
+      cursor: pointer;
+      border-radius: 8px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .segment.active {
+      background: white;
+      color: #5AAC5A;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+
+    /* Expanded Detail Panel */
+    .detail-panel {
+      border-radius: 12px;
+      background: linear-gradient(135deg, #f0fdf0 0%, #f0fdf4 100%);
+      border: 2px solid #5AAC5A;
+      padding: 16px;
+      overflow: hidden;
+      transition: all 0.3s ease;
+    }
+
+    .detail-panel[data-dish="0"] { animation: fadeIn 0.3s ease; }
+    .detail-panel[data-dish="1"] { animation: fadeIn 0.3s ease; }
+    .detail-panel[data-dish="2"] { animation: fadeIn 0.3s ease; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .detail-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+
+    .detail-name {
+      font-weight: 700;
+      font-size: 16px;
+      color: #0D0D0D;
+    }
+
+    .detail-hindi {
+      font-size: 14px;
+      color: #4A4540;
+    }
+
+    .confidence-badge {
+      font-size: 11px;
+      padding: 3px 8px;
+      border-radius: 12px;
+      font-weight: 600;
+    }
+
+    .confidence-medium {
+      background: #FEF3C7;
+      color: #D97706;
+    }
+
+    .confidence-high {
+      background: #D1FAE5;
+      color: #059669;
+    }
+
+    .confidence-low {
+      background: #F3F4F6;
+      color: #6B7280;
+    }
+
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+
+    .nutrition-item {
+      text-align: center;
+    }
+
+    .nutrition-value {
+      font-size: 18px;
+      font-weight: 700;
+      color: #0D0D0D;
+    }
+
+    .nutrition-label {
+      font-size: 11px;
+      color: #6B7280;
+      margin-top: 2px;
+    }
+
+    .reasoning {
+      font-size: 12px;
+      color: #4A4540;
+      line-height: 1.5;
+      padding: 10px;
+      background: rgba(255,255,255,0.5);
+      border-radius: 8px;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="label">Select Dish</div>
+
+    <!-- Segmented Control -->
+    <div class="segmented-control">
+      <div class="segment active" onclick="selectSegment(0)">
+        Iced Tea
+      </div>
+      <div class="segment" onclick="selectSegment(1)">
+        Iced Coffee
+      </div>
+      <div class="segment" onclick="selectSegment(2)">
+        Cold Brew
+      </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" data-dish="0" id="detailPanel">
+      <div class="detail-header">
+        <span class="detail-name">Iced Tea</span>
+        <span class="detail-hindi">· आइस्ड चाय</span>
+        <span class="confidence-badge confidence-medium">Likely</span>
+      </div>
+
+      <div class="nutrition-grid">
+        <div class="nutrition-item">
+          <div class="nutrition-value">80</div>
+          <div class="nutrition-label">cal</div>
+        </div>
+        <div class="nutrition-item">
+          <div class="nutrition-value">0g</div>
+          <div class="nutrition-label">Protein</div>
+        </div>
+        <div class="nutrition-item">
+          <div class="nutrition-value">20g</div>
+          <div class="nutrition-label">Carbs</div>
+        </div>
+        <div class="nutrition-item">
+          <div class="nutrition-value">0g</div>
+          <div class="nutrition-label">Fat</div>
+        </div>
+      </div>
+
+      <div class="reasoning" id="reasoning">
+        Brown liquid with ice. Amber color suggests tea.
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const dishes = [
+      {
+        name: "Iced Tea",
+        hindi: "आइस्ड चाय",
+        confidence: "medium",
+        calories: 80,
+        protein: 0,
+        carbs: 20,
+        fat: 0,
+        reasoning: "Brown liquid with ice. Amber color suggests tea."
+      },
+      {
+        name: "Iced Coffee",
+        hindi: "आइस्ड कॉफी",
+        confidence: "medium",
+        calories: 5,
+        protein: 1,
+        carbs: 1,
+        fat: 0,
+        reasoning: "Darker brown liquid suggests coffee rather than tea."
+      },
+      {
+        name: "Cold Brew Coffee",
+        hindi: "कोल्ड ब्रू कॉफी",
+        confidence: "low",
+        calories: 5,
+        protein: 1,
+        carbs: 1,
+        fat: 0,
+        reasoning: "Less common but visually identical to regular iced coffee."
+      }
+    ];
+
+    function selectSegment(index) {
+      // Update segment active state
+      document.querySelectorAll('.segment').forEach((seg, i) => {
+        seg.classList.toggle('active', i === index);
+      });
+
+      // Update detail panel
+      const dish = dishes[index];
+      const panel = document.getElementById('detailPanel');
+      panel.setAttribute('data-dish', index);
+
+      // Update content
+      panel.querySelector('.detail-name').textContent = dish.name;
+      panel.querySelector('.detail-hindi').textContent = `· ${dish.hindi}`;
+
+      const badge = panel.querySelector('.confidence-badge');
+      badge.className = `confidence-badge confidence-${dish.confidence}`;
+      badge.textContent = dish.confidence === 'high' ? 'Confident' : dish.confidence === 'medium' ? 'Likely' : 'Unsure';
+
+      const values = panel.querySelectorAll('.nutrition-value');
+      values[0].textContent = dish.calories;
+      values[1].textContent = dish.protein + 'g';
+      values[2].textContent = dish.carbs + 'g';
+      values[3].textContent = dish.fat + 'g';
+
+      document.getElementById('reasoning').textContent = dish.reasoning;
+    }
+  </script>
+</body>
+</html>
