@@ -209,17 +209,34 @@
   - Bread: "1 roti / 2 rotis / 3 rotis"
   - Drinks: "Small cup / Regular cup / Tall glass"
   - Snacks: "Small handful / Handful / Large handful"
+- **Fractional quantity support**: "half croissant", "quarter pizza", "1.5 roti" — the Regular portion represents the user's exact described amount (half a standard serving, etc.)
 - **Smart defaulting**: if user says "1 papad", AI defaults to the single-papad portion
-- Per-dish: Hindi name, ingredients, tags, health tip, expandable reasoning
-- Portion picker updates macros and plate total in real-time
-- "Wrong dish?" inline name editor per dish
+- **Accordion dish cards** (matches ScanView design):
+  - Collapsed: dish name + calories, Hindi name + weight, inline macro pills (Protein/Carbs/Fat), contextual note, confidence dot, "Tap for details" hint
+  - Expanded: 5-column macro grid (Cal/Protein/Carbs/Fat/Fiber), calorie editor with proportional scaling, portion picker, tags, health tip, reasoning toggle, "Wrong dish?" editor
+  - Single-dish auto-expands; tapping one collapses others
+- **Plate Total**: large centered card with 5xl calorie number, dish count, meal type, 4 macro stats (Protein/Carbs/Fat/Fiber)
+- **Capy mascot**: compact inline capy with mood-based message (light <400kcal, heavy >700kcal)
+- **Log bar**: card-style with calories + meal type on left, "Log Meal" button on right
+- "Clear & re-describe" link below log bar
 - **Correction flow**: if camera scan was wrong, "Describe instead" link pre-fills context
 - **MealTypeSheet integration**: "Describe" button alongside "Scan" in empty meal slots
+- **Button label**: "Estimate Nutrition" (distinct from scan's "Analyze Dish")
 - Logs to same meal system as camera scan — appears on Home immediately
 - **Provider chain**: Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq parallel race
 - **Performance**: ~1-2s when Gemini available, ~4-5s fallback (parallel race), 6s max timeout
 - New files: `describe-meal/route.ts`, `useDescribeMeal.ts`, `DescribeMealView.tsx`
 - New dep: `openai` (npm package)
+
+## 21. Pull-to-Refresh (NEW)
+- Custom touch-gesture pull-to-refresh on all tabs (since native PTR is disabled by `overscroll-behavior: none`)
+- **PullToRefresh component** (`src/components/PullToRefresh.tsx`):
+  - Detects `touchstart`/`touchmove`/`touchend` when `scrollTop === 0`
+  - Dampened pull distance (logarithmic curve, max 100px)
+  - Arrow icon rotates to 180° at threshold (60px), then switches to spinner
+  - Triggers refresh callback, animates back when done
+- Wraps `<main>` content in `page.tsx`
+- Refresh action: refreshes streak data + visual confirmation spinner
 
 ## 18. Health Personalization
 

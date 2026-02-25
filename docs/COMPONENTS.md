@@ -59,21 +59,32 @@ All components are in `src/components/`. All are `"use client"` components.
 
 ### `DescribeMealView.tsx` (NEW)
 **Text-based meal description UI — AI interprets natural language into structured nutrition data.**
-- Props: `logMeal`, `refreshStreak`, `onMealLogged?`, `correctionContext?: { scannedAs: string; mealType: MealType }`
+- Props: `logMeal`, `refreshStreak`, `onMealLogged?`, `correctionContext?: { scannedAs: string; mealType: MealType }`, `healthContextString?`, `hasHealthProfile?`, `healthConditions?`, `onSetupHealthProfile?`
 - Uses `useDescribeMeal()` hook for state management and API calls
 - **Input section**:
   - Textarea with 200-char limit and live character counter
-  - Meal type pills (breakfast/lunch/snack/dinner)
-  - "Analyze with AI" button (disabled until text entered, shows loading state)
+  - Meal type pills as horizontal inline strip (matches ScanView controls)
+  - "Estimate Nutrition" button (disabled until text entered, shows loading state)
   - Correction banner when opened from a bad camera scan ("Scanned as X — describe what it actually is")
-- **Results section** (per dish):
-  - Dish name (English + Hindi) with "Wrong dish?" inline editor
-  - Macro cards (calories, protein, carbs, fat)
-  - **3 food-specific portion options** (e.g. "Small katori / Regular katori / Large bowl" for curries, "1 roti / 2 rotis / 3 rotis" for bread)
-  - Tags, health tip, expandable "How was this estimated?" reasoning
-- **Plate Total** bar with combined macros across all dishes
-- **Log This Meal** button with success animation
-- Portion selection updates macros and total in real-time
+- **Results section** (matches ScanView accordion design):
+  - **Plate Total**: large centered card with 5xl calorie number, dish count + meal type, 4 macro stats (Protein/Carbs/Fat/Fiber) via `MacroStat`
+  - **AI Health Check**: on-demand button or verdict banner (same as ScanView)
+  - **Capy mascot**: compact 36px avatar + speech bubble with mood-based message
+  - **Accordion dish cards**: per-dish collapsible cards (independent state via `expandedDishIndex`)
+    - Collapsed: dish name + calories, Hindi name + weight, inline macro pills, contextual note via `generateDishNote()`, confidence dot, "Tap for details" hint
+    - Expanded: 5-column macro grid (Cal/Protein/Carbs/Fat/Fiber), calorie editor with proportional scaling, 3-option portion picker, tags, health tip, reasoning toggle, "Wrong dish?" name editor
+    - Single-dish auto-expands; tapping one collapses others
+  - **Log bar**: card-style with calories + meal type on left, "Log Meal" button on right
+  - "Clear & re-describe" link below log bar
+- After logging: 1.2s "Logged ✓" animation → clears state → calls `onMealLogged`
+
+### `PullToRefresh.tsx` (NEW)
+**Custom touch-gesture pull-to-refresh component.**
+- Props: `onRefresh: () => void | Promise<void>`, `children`, `className?`
+- Detects touch gestures when `scrollTop === 0`
+- Dampened pull distance (max 100px, 0.4× damping)
+- Arrow icon rotates at threshold (60px), switches to spinner during refresh
+- Used in `page.tsx` to wrap `<main>` content
 
 ### `HealthProfileWizard.tsx`
 **Multi-step health condition wizard with Dr. Capy mascot.**

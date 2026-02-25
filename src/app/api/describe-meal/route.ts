@@ -66,6 +66,7 @@ Rules:
 - CRITICAL: The total number of dish entries must match the number of distinct food items. NEVER create a combined entry AND separate entries for the same food. If you have "fried rice" and "manchurian gravy" as 2 dishes, do NOT also add a third "fried rice with manchurian" dish
 - Exactly 3 portions per dish with food-specific Indian labels (katori/roti count/cup/handful etc)
 - defaultIndex: match user's described quantity (0=small,1=regular,2=large). If user says "2 roti", regular portion = 2 roti
+- FRACTIONAL QUANTITIES: If user says "half X" or "½ X", the REGULAR portion (defaultIndex=1) must represent HALF of a standard single serving of X. Small = slightly less than half, Large = a full one. Examples: "half croissant" → regular ~40g ~130kcal, "quarter pizza" → regular ~1 slice ~100g, "half cup rice" → regular ~100g. Similarly for "1.5 roti" → regular = 1.5 roti (~57g)
 - Portion weights: 1 roti ~38g, 1 katori ~180g, 1 cup cooked rice ~200g, 1 idli ~45g, 1 dosa ~80-100g, 1 bhatura ~65g, 1 slice bread ~30g, 1 tbsp butter ~14g, 1 boiled egg ~50g
 - Cross-check: cal ≈ (P×4)+(C×4)+(F×9). If off by >15%, adjust
 - Sanity check: a typical Indian home meal is 400-600 kcal. If total exceeds 800 for a normal description, recheck per-100g values
