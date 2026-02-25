@@ -41,13 +41,13 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
   // Update mood-based src when not randomizing
   const finalSrc = randomize ? src : defaultSrc;
 
-  // Coconut capy works great as circle crop; others need contain to avoid cutting
-  const isRandomNonSquare = randomize && finalSrc !== CAPY_AVATARS[0];
+  // All avatars are square, so they all use object-cover to fill the circle
+  // (coconut, bird, and GIF are all square images)
 
   return (
     <div
       style={{ width: size, height: size }}
-      className={`relative flex items-center justify-center ${randomize ? `rounded-full overflow-hidden ${isRandomNonSquare ? "bg-accent-light/50" : ""}` : ""} ${className}`}
+      className={`relative flex items-center justify-center ${randomize ? "rounded-full overflow-hidden" : ""} ${className}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -55,7 +55,7 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
         alt="Capy mascot"
         width={size}
         height={size}
-        className={randomize ? (isRandomNonSquare ? "object-contain p-1" : "object-cover rounded-full") : "object-contain"}
+        className={randomize ? "object-cover rounded-full" : "object-contain"}
       />
       {animate && mood === "excited" && (
         <span

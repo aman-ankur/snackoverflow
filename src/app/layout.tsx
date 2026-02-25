@@ -16,18 +16,27 @@ const jetBrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SnackOverflow — Smart Kitchen Assistant",
-  description: "AI-powered kitchen assistant that identifies ingredients and suggests personalized Indian recipes with a fun capybara companion",
+  title: "SnackOverflow — AI Nutrition Tracker",
+  description: "AI-powered nutrition tracking for Indian food. Scan dishes or describe meals in Hindi-English to get instant nutrition info with a fun capybara companion.",
   openGraph: {
-    title: "SnackOverflow — Smart Kitchen Assistant",
-    description: "AI-powered kitchen assistant that identifies ingredients and suggests personalized Indian recipes with a fun capybara companion",
+    title: "SnackOverflow — AI Nutrition Tracker",
+    description: "AI-powered nutrition tracking for Indian food. Scan dishes or describe meals in Hindi-English to get instant nutrition info with a fun capybara companion.",
     siteName: "SnackOverflow",
     type: "website",
+    images: [
+      {
+        url: "/model/capy-mascot.png",
+        width: 512,
+        height: 512,
+        alt: "SnackOverflow capybara mascot",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "SnackOverflow — Smart Kitchen Assistant",
-    description: "AI-powered kitchen assistant that identifies ingredients and suggests personalized Indian recipes with a fun capybara companion",
+    title: "SnackOverflow — AI Nutrition Tracker",
+    description: "AI-powered nutrition tracking for Indian food. Scan dishes or describe meals in Hindi-English to get instant nutrition info with a fun capybara companion.",
+    images: ["/model/capy-mascot.png"],
   },
 };
 
