@@ -96,15 +96,18 @@ Step 6 — SANITY CHECK:
 A typical Indian home meal is 400-600 kcal. If your total exceeds 800 for what looks like a normal home plate, your per-100g values are likely too high — recheck against the reference table.
 
 Step 6B — ALTERNATIVE IDENTIFICATIONS:
-For EACH dish, if visually ambiguous, provide top 2 alternatives with FULL nutrition (same format as primary).
+For EACH dish, generate top 2 alternatives with FULL nutrition (same format as primary) ONLY if the primary dish has "medium" or "low" confidence.
 
 Include alternatives ONLY if:
+- Primary dish confidence is "medium" or "low" (REQUIRED CONDITION)
 - Visually similar (color, texture, shape match)
 - Genuinely plausible given the image
 - NOT clearly identifiable (banana, labeled packaging, distinctive shape)
 
-Examples: Iced tea/coffee, chilla/uttapam, milkshake/smoothie, fried/brown rice, chicken/paneer nuggets.
-Skip for: Banana, packaged snacks, whole roti.
+If confidence is "high", return empty alternatives array or omit the field entirely.
+
+Examples needing alternatives: Iced tea/coffee, chilla/uttapam, milkshake/smoothie, fried/brown rice, chicken/paneer nuggets.
+Skip alternatives for: High confidence dishes, banana, packaged snacks, whole roti.
 
 Step 7 — OUTPUT:
 Respond ONLY as strict JSON (no markdown, no extra text):
