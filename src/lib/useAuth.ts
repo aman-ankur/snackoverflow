@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
-import { migrateLocalStorageToCloud, flushPendingPushes } from "@/lib/supabase/sync";
+import { flushPendingPushes } from "@/lib/supabase/sync";
 import { dlog } from "@/lib/debugLog";
 
 interface AuthState {
@@ -29,11 +29,6 @@ export function useAuth() {
       const user = session?.user ?? null;
       dlog(`useAuth: getSession done, user=${user?.email ?? "null"}`);
       setState({ user, isLoggedIn: !!user, isLoading: false });
-
-      // Migrate localStorage to cloud on first detection of logged-in user
-      if (user) {
-        migrateLocalStorageToCloud(user.id).catch(() => {});
-      }
     });
 
     // Listen for auth changes
@@ -43,10 +38,6 @@ export function useAuth() {
       const user = session?.user ?? null;
       dlog(`useAuth: onAuthStateChange event=${_event} user=${user?.email ?? "null"}`);
       setState({ user, isLoggedIn: !!user, isLoading: false });
-
-      if (_event === "SIGNED_IN" && user) {
-        migrateLocalStorageToCloud(user.id).catch(() => {});
-      }
     });
 
     // Flush pending Supabase writes on tab close / navigation

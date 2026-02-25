@@ -108,7 +108,6 @@ export function flushPendingPushes(): void {
 
 /**
  * Push multiple domains at once (immediate, no debounce).
- * Used for first-login migration.
  */
 export async function pushAllUserData(
   userId: string,
@@ -121,84 +120,4 @@ export async function pushAllUserData(
       { id: userId, ...data, updated_at: new Date().toISOString() },
       { onConflict: "id" }
     );
-}
-
-/**
- * Migrate localStorage data to Supabase on first login.
- * Per-domain merge: only pushes domains where cloud is empty but local has data.
- */
-export async function migrateLocalStorageToCloud(
-  userId: string
-): Promise<void> {
-  const cloud = await pullUserData(userId);
-
-  const localData: Partial<Record<SyncDomain, unknown>> = {};
-
-  try {
-    const goalsRaw = localStorage.getItem("snackoverflow-user-goals-v1");
-    if (goalsRaw) {
-      const parsed = JSON.parse(goalsRaw);
-      if (parsed.profile) localData.profile = parsed.profile;
-      if (parsed.goals) localData.goals = parsed.goals;
-      if (parsed.streak) localData.streak = parsed.streak;
-    }
-  } catch { /* ignore */ }
-
-  try {
-    const mealsRaw = localStorage.getItem("snackoverflow-meal-log-v1");
-    if (mealsRaw) {
-      const parsed = JSON.parse(mealsRaw);
-      if (Array.isArray(parsed) && parsed.length > 0) localData.meals = parsed;
-    }
-  } catch { /* ignore */ }
-
-  try {
-    const gardenRaw = localStorage.getItem("snackoverflow-garden-v1");
-    if (gardenRaw) localData.garden = JSON.parse(gardenRaw);
-  } catch { /* ignore */ }
-
-  try {
-    const expiryRaw = localStorage.getItem("snackoverflow-expiry-tracker");
-    if (expiryRaw) {
-      const parsed = JSON.parse(expiryRaw);
-      if (Array.isArray(parsed) && parsed.length > 0)
-        localData.expiry_tracker = parsed;
-    }
-  } catch { /* ignore */ }
-
-  try {
-    const fridgeRaw = localStorage.getItem("snackoverflow-fridge-scan-history");
-    if (fridgeRaw) {
-      const parsed = JSON.parse(fridgeRaw);
-      if (Array.isArray(parsed) && parsed.length > 0)
-        localData.fridge_scans = parsed;
-    }
-  } catch { /* ignore */ }
-
-  try {
-    const plannerRaw = localStorage.getItem("snackoverflow-meal-planner");
-    if (plannerRaw) localData.meal_planner = JSON.parse(plannerRaw);
-  } catch { /* ignore */ }
-
-  try {
-    const healthRaw = localStorage.getItem("snackoverflow-health-profile-v1");
-    if (healthRaw) localData.health_profile = JSON.parse(healthRaw);
-  } catch { /* ignore */ }
-
-  // Only push domains where cloud is empty/null but local has data
-  const toMigrate: Partial<Record<SyncDomain, unknown>> = {};
-  for (const [domain, localValue] of Object.entries(localData)) {
-    const cloudValue = cloud?.[domain as keyof UserDataRow];
-    const cloudEmpty =
-      cloudValue === null ||
-      cloudValue === undefined ||
-      (Array.isArray(cloudValue) && cloudValue.length === 0);
-    if (cloudEmpty && localValue != null) {
-      toMigrate[domain as SyncDomain] = localValue;
-    }
-  }
-
-  if (Object.keys(toMigrate).length > 0) {
-    await pushAllUserData(userId, toMigrate);
-  }
 }

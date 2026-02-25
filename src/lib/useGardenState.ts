@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { MealTotals, NutritionGoals, StreakData } from "@/lib/dishTypes";
 import { useAuthContext } from "@/components/AuthProvider";
 import { pullUserData, pushUserData } from "@/lib/supabase/sync";
+import { mergeGarden } from "@/lib/supabase/merge";
 
 const STORAGE_KEY = "snackoverflow-garden-v1";
 const MEAL_LOG_KEY = "snackoverflow-meal-log-v1";
@@ -296,8 +297,7 @@ export function useGardenState(
     pullUserData(user.id).then((cloud) => {
       if (!cloud || !cloud.garden) return;
       const cloudGarden = { ...DEFAULT_STATE, ...(cloud.garden as Partial<GardenState>) };
-      setGarden(cloudGarden);
-      saveGarden(cloudGarden);
+      setGarden((local) => mergeGarden(local, cloudGarden));
     }).catch(() => {});
   }, [isLoggedIn, user, hasLoaded]);
 
