@@ -23,10 +23,13 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
     setSrc(CAPY_AVATARS[Math.floor(Math.random() * CAPY_AVATARS.length)]);
   }, []);
 
+  // Coconut capy works great as circle crop; others need contain to avoid cutting
+  const isCircleSafe = src === CAPY_AVATARS[0];
+
   return (
     <div
       style={{ width: size, height: size }}
-      className={`relative flex items-center justify-center ${className}`}
+      className={`relative flex items-center justify-center rounded-full ${isCircleSafe ? "" : "bg-accent-light/50"} overflow-hidden ${className}`}
     >
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
@@ -34,7 +37,7 @@ export default function CapyMascot({ mood = "happy", size = 120, className = "",
         alt="Capy mascot"
         width={size}
         height={size}
-        className="object-cover rounded-full"
+        className={isCircleSafe ? "object-cover" : "object-contain p-1"}
       />
       {animate && mood === "excited" && (
         <span
