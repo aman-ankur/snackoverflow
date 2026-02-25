@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Alternative Pills Design Comparison</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #F5F2EB 0%, #E8E3D6 100%);
+      padding: 40px 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      text-align: center;
+      color: #0D0D0D;
+      margin-bottom: 12px;
+      font-size: 32px;
+    }
+
+    .subtitle {
+      text-align: center;
+      color: #4A4540;
+      margin-bottom: 40px;
+      font-size: 16px;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 24px;
+      margin-bottom: 40px;
+    }
+
+    @media (max-width: 1200px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .option-container {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      position: relative;
+    }
+
+    .option-header {
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 2px solid #F5F2EB;
+    }
+
+    .option-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #0D0D0D;
+      margin-bottom: 8px;
+    }
+
+    .option-desc {
+      font-size: 13px;
+      color: #4A4540;
+      line-height: 1.5;
+    }
+
+    .recommended {
+      position: absolute;
+      top: -12px;
+      right: 24px;
+      background: #F08C42;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      box-shadow: 0 2px 8px rgba(240, 140, 66, 0.4);
+    }
+
+    /* Dish card styles */
+    .dish-card {
+      background: white;
+      border: 2px solid #DDD8CC;
+      border-radius: 16px;
+      padding: 16px;
+      transition: all 0.2s ease;
+    }
+
+    .confidence-badge {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      background: #FFE8D6;
+      color: #C77B3A;
+    }
+
+    .dish-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 12px;
+    }
+
+    .dish-name-section h4 {
+      font-size: 17px;
+      font-weight: 600;
+      color: #0D0D0D;
+      margin-bottom: 4px;
+    }
+
+    .dish-subtitle {
+      font-size: 13px;
+      color: #4A4540;
+    }
+
+    .dish-calories {
+      font-size: 20px;
+      font-weight: 700;
+      color: #5AAC5A;
+    }
+
+    /* Macro pills (current) */
+    .macro-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 10px;
+    }
+
+    .macro-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 9999px;
+      padding: 2px 8px;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .macro-pill-protein {
+      background: rgba(212, 237, 207, 0.6);
+      border: 1px solid rgba(90, 172, 90, 0.15);
+      color: #489848;
+    }
+
+    .macro-pill-carbs {
+      background: rgba(253, 232, 212, 0.6);
+      border: 1px solid rgba(240, 140, 66, 0.15);
+      color: #F08C42;
+    }
+
+    .macro-pill-fat {
+      background: rgba(254, 242, 242, 0.6);
+      border: 1px solid rgba(239, 68, 68, 0.3);
+      color: #EF4444;
+    }
+
+    .macro-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+
+    .macro-dot-protein { background: #5AAC5A; }
+    .macro-dot-carbs { background: #F08C42; }
+    .macro-dot-fat { background: #EF4444; }
+
+    /* OPTION 1: Purple Choice Theme */
+    .option1 .alternatives-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .option1 .alternatives-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #4A4540;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .option1 .alternatives-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .option1 .alt-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 9999px;
+      border: 2px solid #D8B4FE;
+      background: #FAF5FF;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: #7C3AED;
+      font-weight: 500;
+      box-shadow: 0 1px 2px rgba(124, 58, 237, 0.1);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option1 .alt-pill:hover {
+      box-shadow: 0 4px 6px rgba(124, 58, 237, 0.2);
+      border-color: #C084FC;
+      background: #F3E8FF;
+    }
+
+    .option1 .alt-icon {
+      color: #9333EA;
+    }
+
+    /* OPTION 2: Gray Dashed Border */
+    .option2 .alternatives-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 2px dashed #DDD8CC;
+    }
+
+    .option2 .alternatives-label {
+      font-size: 10px;
+      color: #4A4540;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .option2 .alternatives-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .option2 .alt-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 8px;
+      border: 2px dashed #D1D5DB;
+      background: #F9FAFB;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: #374151;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option2 .alt-pill:hover {
+      border-style: solid;
+      background: #F3F4F6;
+      border-color: #9CA3AF;
+    }
+
+    .option2 .alt-icon {
+      color: #6B7280;
+    }
+
+    /* OPTION 3: Blue Info Theme */
+    .option3 .alternatives-section {
+      display: flex;
+      align-items: start;
+      gap: 8px;
+      margin-top: 12px;
+      padding: 8px;
+      border-radius: 12px;
+      background: rgba(239, 246, 255, 0.5);
+      border: 1px solid rgba(147, 197, 253, 0.3);
+    }
+
+    .option3 .info-icon-wrapper {
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .option3 .info-icon {
+      width: 16px;
+      height: 16px;
+      color: #3B82F6;
+    }
+
+    .option3 .alternatives-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .option3 .alternatives-label {
+      font-size: 10px;
+      color: #1E40AF;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .option3 .alternatives-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .option3 .alt-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      border-radius: 6px;
+      border: 1px solid #93C5FD;
+      background: white;
+      padding: 4px 10px;
+      font-size: 11px;
+      color: #1E40AF;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option3 .alt-pill:hover {
+      background: #EFF6FF;
+    }
+
+    .option3 .alt-icon {
+      color: #60A5FA;
+    }
+
+    /* OPTION 4: Amber Warning Theme */
+    .option4 .alternatives-section {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .option4 .alternatives-label {
+      font-size: 10px;
+      color: #92400E;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .option4 .alternatives-pills {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .option4 .alt-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      border-radius: 9999px;
+      border: 2px solid #FCD34D;
+      background: #FFFBEB;
+      padding: 6px 12px;
+      font-size: 11px;
+      color: #92400E;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .option4 .alt-pill:hover {
+      background: #FEF3C7;
+      border-color: #FBBF24;
+    }
+
+    .option4 .alt-icon {
+      color: #F59E0B;
+      font-weight: 700;
+    }
+
+    .contextual-note {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #C77B3A;
+    }
+
+    .pros-cons {
+      margin-top: 16px;
+      padding-top: 16px;
+      border-top: 1px solid #F5F2EB;
+    }
+
+    .pros-cons h4 {
+      font-size: 13px;
+      margin-bottom: 8px;
+      color: #0D0D0D;
+    }
+
+    .pros-list, .cons-list {
+      list-style: none;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+
+    .pros-list li {
+      color: #2D7A4F;
+      margin-bottom: 4px;
+    }
+
+    .pros-list li::before {
+      content: '✓ ';
+      font-weight: bold;
+    }
+
+    .cons-list li {
+      color: #C77B3A;
+      margin-bottom: 4px;
+    }
+
+    .cons-list li::before {
+      content: '⚠ ';
+    }
+
+    .summary {
+      background: white;
+      border-radius: 20px;
+      padding: 24px;
+      margin-top: 40px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+    }
+
+    .summary h2 {
+      font-size: 24px;
+      margin-bottom: 16px;
+      color: #0D0D0D;
+    }
+
+    .summary p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #4A4540;
+      margin-bottom: 12px;
+    }
+
+    .summary strong {
+      color: #0D0D0D;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Alternative Pills Design Comparison</h1>
+    <p class="subtitle">4 options to differentiate alternative dishes from macro pills</p>
+
+    <div class="comparison-grid">
+
+      <!-- OPTION 1: Purple Choice Theme -->
+      <div class="option-container option1">
+        <span class="recommended">⭐ RECOMMENDED</span>
+        <div class="option-header">
+          <div class="option-title">Option 1: Purple "Choice" Theme</div>
+          <div class="option-desc">Purple color indicates "choice" or "alternative paths". List icon + label + shadow for hierarchy.</div>
+        </div>
+
+        <div class="dish-card">
+          <span class="confidence-badge">Medium confidence</span>
+          <div class="dish-header">
+            <div class="dish-name-section">
+              <h4>Jeera Rice</h4>
+              <p class="dish-subtitle">जीरा चावल · 180g</p>
+            </div>
+            <div class="dish-calories">210 kcal</div>
+          </div>
+
+          <div class="macro-pills">
+            <span class="macro-pill macro-pill-protein">
+              <span class="macro-dot macro-dot-protein"></span>
+              Protein 4g
+            </span>
+            <span class="macro-pill macro-pill-carbs">
+              <span class="macro-dot macro-dot-carbs"></span>
+              Carbs 42g
+            </span>
+            <span class="macro-pill macro-pill-fat">
+              <span class="macro-dot macro-dot-fat"></span>
+              Fat 3g
+            </span>
+          </div>
+
+          <div class="alternatives-section">
+            <p class="alternatives-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#9333EA" stroke-width="2.5">
+                <path d="M8 7h12M8 12h12M8 17h12M3 7h.01M3 12h.01M3 17h.01" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              Or tap to select:
+            </p>
+            <div class="alternatives-pills">
+              <span class="alt-pill">
+                <svg class="alt-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M8 7h12M8 12h12M8 17h12M3 7h.01M3 12h.01M3 17h.01" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Steamed Rice
+              </span>
+              <span class="alt-pill">
+                <svg class="alt-icon" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                  <path d="M8 7h12M8 12h12M8 17h12M3 7h.01M3 12h.01M3 17h.01" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+                Fried Rice
+              </span>
+            </div>
+          </div>
+
+          <p class="contextual-note">⚠ High in refined carbs, low fiber</p>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Purple is distinct from all macro colors (green/orange/red)</li>
+            <li>Clear label provides context: "Or tap to select:"</li>
+            <li>Thicker border (2px) adds visual weight</li>
+            <li>List icon (≡) suggests selection/options</li>
+            <li>Shadow creates depth and separation</li>
+            <li>Semantically indicates "choice"</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Adds slight vertical space (worth it for clarity)</li>
+            <li>Purple may feel unexpected in Sage & Cream theme</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OPTION 2: Gray Dashed Border -->
+      <div class="option-container option2">
+        <div class="option-header">
+          <div class="option-title">Option 2: Neutral Gray with Dashed Border</div>
+          <div class="option-desc">Dashed borders signal "alternative/optional". Neutral gray doesn't compete with macro colors.</div>
+        </div>
+
+        <div class="dish-card">
+          <span class="confidence-badge">Medium confidence</span>
+          <div class="dish-header">
+            <div class="dish-name-section">
+              <h4>Jeera Rice</h4>
+              <p class="dish-subtitle">जीरा चावल · 180g</p>
+            </div>
+            <div class="dish-calories">210 kcal</div>
+          </div>
+
+          <div class="macro-pills">
+            <span class="macro-pill macro-pill-protein">
+              <span class="macro-dot macro-dot-protein"></span>
+              Protein 4g
+            </span>
+            <span class="macro-pill macro-pill-carbs">
+              <span class="macro-dot macro-dot-carbs"></span>
+              Carbs 42g
+            </span>
+            <span class="macro-pill macro-pill-fat">
+              <span class="macro-dot macro-dot-fat"></span>
+              Fat 3g
+            </span>
+          </div>
+
+          <div class="alternatives-section">
+            <p class="alternatives-label">
+              <span style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 2px solid #6B7280;"></span>
+              Could also be:
+            </p>
+            <div class="alternatives-pills">
+              <span class="alt-pill">
+                <span class="alt-icon">→</span>
+                Steamed Rice
+              </span>
+              <span class="alt-pill">
+                <span class="alt-icon">→</span>
+                Fried Rice
+              </span>
+            </div>
+          </div>
+
+          <p class="contextual-note">⚠ High in refined carbs, low fiber</p>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Dashed border visually signals "alternative/optional"</li>
+            <li>Gray is neutral, doesn't compete with macro colors</li>
+            <li>Top border separator creates clear section break</li>
+            <li>Rounded-lg (less rounded) differentiates from macro pills</li>
+            <li>Hover effect makes interactivity clear</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Less prominent than purple, could be missed</li>
+            <li>Gray might feel "disabled" or secondary</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OPTION 3: Blue Info Theme -->
+      <div class="option-container option3">
+        <div class="option-header">
+          <div class="option-title">Option 3: Blue "Info" Theme with Chevron</div>
+          <div class="option-desc">Blue container with info icon. Entire section has background for strong separation.</div>
+        </div>
+
+        <div class="dish-card">
+          <span class="confidence-badge">Medium confidence</span>
+          <div class="dish-header">
+            <div class="dish-name-section">
+              <h4>Jeera Rice</h4>
+              <p class="dish-subtitle">जीरा चावल · 180g</p>
+            </div>
+            <div class="dish-calories">210 kcal</div>
+          </div>
+
+          <div class="macro-pills">
+            <span class="macro-pill macro-pill-protein">
+              <span class="macro-dot macro-dot-protein"></span>
+              Protein 4g
+            </span>
+            <span class="macro-pill macro-pill-carbs">
+              <span class="macro-dot macro-dot-carbs"></span>
+              Carbs 42g
+            </span>
+            <span class="macro-pill macro-pill-fat">
+              <span class="macro-dot macro-dot-fat"></span>
+              Fat 3g
+            </span>
+          </div>
+
+          <div class="alternatives-section">
+            <div class="info-icon-wrapper">
+              <svg class="info-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10"/>
+                <path d="M12 16v-4M12 8h.01"/>
+              </svg>
+            </div>
+            <div class="alternatives-content">
+              <p class="alternatives-label">Could also be:</p>
+              <div class="alternatives-pills">
+                <span class="alt-pill">
+                  <span class="alt-icon">›</span>
+                  Steamed Rice
+                </span>
+                <span class="alt-pill">
+                  <span class="alt-icon">›</span>
+                  Fried Rice
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <p class="contextual-note">⚠ High in refined carbs, low fiber</p>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Strong visual separation with blue container</li>
+            <li>Info icon signals "additional information"</li>
+            <li>White pills stand out against blue background</li>
+            <li>Chevron (›) suggests "go to this option"</li>
+            <li>Compact rounded-md shape</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Blue container adds bulk to card</li>
+            <li>Might feel like a separate "info box" vs. integrated options</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- OPTION 4: Amber Warning Theme -->
+      <div class="option-container option4">
+        <div class="option-header">
+          <div class="option-title">Option 4: Amber "Warning" Theme</div>
+          <div class="option-desc">Amber/yellow matches "medium confidence" semantic meaning. Warning icon reinforces uncertainty.</div>
+        </div>
+
+        <div class="dish-card">
+          <span class="confidence-badge">Medium confidence</span>
+          <div class="dish-header">
+            <div class="dish-name-section">
+              <h4>Jeera Rice</h4>
+              <p class="dish-subtitle">जीरा चावल · 180g</p>
+            </div>
+            <div class="dish-calories">210 kcal</div>
+          </div>
+
+          <div class="macro-pills">
+            <span class="macro-pill macro-pill-protein">
+              <span class="macro-dot macro-dot-protein"></span>
+              Protein 4g
+            </span>
+            <span class="macro-pill macro-pill-carbs">
+              <span class="macro-dot macro-dot-carbs"></span>
+              Carbs 42g
+            </span>
+            <span class="macro-pill macro-pill-fat">
+              <span class="macro-dot macro-dot-fat"></span>
+              Fat 3g
+            </span>
+          </div>
+
+          <div class="alternatives-section">
+            <p class="alternatives-label">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 9v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+              </svg>
+              Not sure? Try these:
+            </p>
+            <div class="alternatives-pills">
+              <span class="alt-pill">
+                <span class="alt-icon">↔</span>
+                Steamed Rice
+              </span>
+              <span class="alt-pill">
+                <span class="alt-icon">↔</span>
+                Fried Rice
+              </span>
+            </div>
+          </div>
+
+          <p class="contextual-note">⚠ High in refined carbs, low fiber</p>
+        </div>
+
+        <div class="pros-cons">
+          <h4>Pros:</h4>
+          <ul class="pros-list">
+            <li>Amber matches "medium confidence" semantic meaning</li>
+            <li>Warning icon reinforces uncertainty</li>
+            <li>"Not sure? Try these:" explains the context</li>
+            <li>Thicker border adds prominence</li>
+          </ul>
+          <h4>Cons:</h4>
+          <ul class="cons-list">
+            <li>Amber is close to orange (carbs), might conflict</li>
+            <li>Could feel like a "warning" rather than a "choice"</li>
+            <li>Too much yellow/amber in the card</li>
+          </ul>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="summary">
+      <h2>Recommendation: Option 1 (Purple Choice Theme)</h2>
+      <p>
+        <strong>Why purple wins:</strong> It's the only color completely distinct from macro pills (green/orange/red).
+        Purple semantically indicates "choice" or "alternative paths" in UI design. The clear label ("Or tap to select:")
+        combined with the list icon (≡) and shadow creates perfect visual hierarchy.
+      </p>
+      <p>
+        <strong>Runner-up:</strong> Option 2 (Gray Dashed Border) is a good neutral alternative if purple feels too bold.
+        The dashed border is a universally understood pattern for "optional" or "alternative" content.
+      </p>
+      <p>
+        <strong>Avoid:</strong> Option 4 (Amber) conflicts with the orange carbs pill and creates too much warm color.
+        Option 3 (Blue) is solid but the container adds unnecessary bulk.
+      </p>
+    </div>
+  </div>
+</body>
+</html>

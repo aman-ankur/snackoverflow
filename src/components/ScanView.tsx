@@ -713,16 +713,26 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
 
                       {/* Row 3: Alternative pills preview (collapsed state only) */}
                       {!isExpanded && rawDish.alternatives && rawDish.alternatives.length > 0 && shouldShowAlternatives(rawDish, rawDish.alternatives) && (
-                        <div className="flex flex-wrap gap-1.5 mt-2.5">
-                          {rawDish.alternatives.map((alt, altIndex) => (
-                            <span
-                              key={`${dishItem.name}-alt-${altIndex}`}
-                              className="inline-flex items-center gap-1 rounded-full border border-accent/20 bg-accent-light/30 px-2.5 py-1 text-[11px] text-accent-dim font-medium"
-                            >
-                              <span className="text-accent font-bold">↔</span>
-                              {alt.name}
-                            </span>
-                          ))}
+                        <div className="flex flex-col gap-1.5 mt-3">
+                          <p className="text-[10px] text-muted uppercase tracking-wide font-semibold flex items-center gap-1">
+                            <svg className="w-3 h-3 text-purple-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                              <path d="M8 7h12M8 12h12M8 17h12M3 7h.01M3 12h.01M3 17h.01" strokeLinecap="round" strokeLinejoin="round"/>
+                            </svg>
+                            Or tap to select:
+                          </p>
+                          <div className="flex flex-wrap gap-1.5">
+                            {rawDish.alternatives.map((alt, altIndex) => (
+                              <span
+                                key={`${dishItem.name}-alt-${altIndex}`}
+                                className="inline-flex items-center gap-1.5 rounded-full border-2 border-purple-300 bg-purple-50 px-3 py-1.5 text-[11px] text-purple-700 font-medium shadow-sm hover:shadow-md hover:border-purple-400 transition-all cursor-pointer"
+                              >
+                                <svg className="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                                  <path d="M8 7h12M8 12h12M8 17h12M3 7h.01M3 12h.01M3 17h.01" strokeLinecap="round" strokeLinejoin="round"/>
+                                </svg>
+                                {alt.name}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       )}
 
