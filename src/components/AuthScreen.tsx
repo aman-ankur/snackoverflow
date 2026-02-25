@@ -5,6 +5,7 @@ import { Mail, Lock, ArrowRight, CheckCircle, AlertCircle, Bug } from "lucide-re
 import { motion, AnimatePresence } from "framer-motion";
 import CapyMascot from "@/components/CapyMascot";
 import { dlog, getDebugLogs, subscribeDebugLogs } from "@/lib/debugLog";
+import { useDevMode } from "@/lib/useDevMode";
 
 interface AuthScreenProps {
   onMagicLink: (email: string) => Promise<{ error: unknown }>;
@@ -87,6 +88,7 @@ export default function AuthScreen({
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [devMode] = useDevMode();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -135,7 +137,7 @@ export default function AuthScreen({
   if (sent) {
     return (
       <>
-        <DebugPanel />
+        {devMode && <DebugPanel />}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -172,7 +174,7 @@ export default function AuthScreen({
 
   return (
     <>
-      <DebugPanel />
+      {devMode && <DebugPanel />}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}

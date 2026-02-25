@@ -71,7 +71,7 @@ export function useAuth() {
       const redirectTo = `${siteUrl}/auth/callback`;
       dlog(`magicLink: origin=${window.location.origin} siteUrl=${siteUrl} redirectTo=${redirectTo}`);
 
-      // Network connectivity test — can the phone reach Supabase at all?
+      // Network connectivity test — can the device reach Supabase at all?
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
       dlog(`magicLink: testing connectivity to ${supabaseUrl}...`);
       try {
@@ -84,8 +84,7 @@ export function useAuth() {
       } catch (pingErr) {
         const msg = pingErr instanceof Error ? pingErr.message : String(pingErr);
         dlog(`magicLink: PING FAILED — ${msg}`);
-        dlog("magicLink: Your phone cannot reach Supabase. Check DNS/ad-blocker/Private DNS settings.");
-        return { error: { message: `Cannot reach auth server: ${msg}. Check if an ad-blocker or Private DNS is blocking supabase.co` } };
+        return { error: { message: "Can't connect to auth server. Try switching from WiFi to mobile data, or check if a DNS blocker or ad-blocker is active." } };
       }
 
       dlog("magicLink: calling signInWithOtp...");
@@ -98,7 +97,7 @@ export function useAuth() {
       });
 
       const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Supabase signInWithOtp timed out after 12s")), 12000)
+        setTimeout(() => reject(new Error("Request timed out. Try switching from WiFi to mobile data.")), 12000)
       );
 
       const { error } = await Promise.race([otpPromise, timeoutPromise]);
