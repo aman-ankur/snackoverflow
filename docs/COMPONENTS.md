@@ -268,13 +268,16 @@ All components are in `src/components/`. All are `"use client"` components.
 - **Removed sections** (from previous version): Total Progress card, Nutrition/Fitness 2-col cards, Today's Macros bars, Streak Card, Weekly Calorie bar chart, Patterns section, old flat Meal History
 
 ### `CapyMascot.tsx`
-**Image-based capybara mascot with mood-reactive variants.**
-- Props: `mood: CapyMood`, `size?: number`, `className?: string`, `animate?: boolean`
+**Image-based capybara mascot with mood-reactive variants and random avatars.**
+- Props: `mood: CapyMood`, `size?: number`, `className?: string`, `animate?: boolean`, `randomize?: boolean`
 - 5 moods mapped to 3 kawaii capybara images (transparent PNGs):
   - `happy`, `excited`, `sleepy` → `capy-happy.png` (bath capy with rubber duck)
   - `motivated` → `capy-motivated.png` (headphones capy with laptop)
   - `concerned`, default → `capy-default.png` (orange hat capy)
+- Random avatars (when `randomize={true}`): randomly picks from 3 avatars on mount
+  - `capy-coconut.jpeg`, `capy-bird.webp`, `capy-logo.gif`
 - Mood overlays: ✨ bounce for excited, 💤 pulse for sleepy
+- **Robust loading:** Hydration-safe (mounted guard), automatic fallback on image errors, loading placeholder (accent-light pulse)
 - Images at `/public/model/capy-{happy,default,motivated}.png` (300px, transparent background)
 - Uses plain `<img>` tag (not Next.js Image) to preserve PNG alpha channel
 
