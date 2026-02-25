@@ -71,6 +71,23 @@ export function useAuth() {
       const redirectTo = `${siteUrl}/auth/callback`;
       dlog(`magicLink: origin=${window.location.origin} siteUrl=${siteUrl} redirectTo=${redirectTo}`);
 
+      // Network connectivity test — can the phone reach Supabase at all?
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
+      dlog(`magicLink: testing connectivity to ${supabaseUrl}...`);
+      try {
+        const pingStart = Date.now();
+        const pingRes = await Promise.race([
+          fetch(`${supabaseUrl}/auth/v1/settings`, { method: "GET" }),
+          new Promise<never>((_, rej) => setTimeout(() => rej(new Error("ping timeout 5s")), 5000)),
+        ]);
+        dlog(`magicLink: ping OK status=${pingRes.status} in ${Date.now() - pingStart}ms`);
+      } catch (pingErr) {
+        const msg = pingErr instanceof Error ? pingErr.message : String(pingErr);
+        dlog(`magicLink: PING FAILED — ${msg}`);
+        dlog("magicLink: Your phone cannot reach Supabase. Check DNS/ad-blocker/Private DNS settings.");
+        return { error: { message: `Cannot reach auth server: ${msg}. Check if an ad-blocker or Private DNS is blocking supabase.co` } };
+      }
+
       dlog("magicLink: calling signInWithOtp...");
       const startMs = Date.now();
 
