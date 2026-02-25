@@ -60,10 +60,16 @@ export function useAuth() {
   const signInWithMagicLink = useCallback(async (email: string) => {
     const supabase = createClient();
     const redirectTo = `${window.location.origin}/auth/callback`;
+    console.log("[Auth] Sending magic link to:", email, "redirectTo:", redirectTo);
     const { error } = await supabase.auth.signInWithOtp({
       email,
       options: { emailRedirectTo: redirectTo },
     });
+    if (error) {
+      console.error("[Auth] Magic link error:", error.message, error.status, error);
+    } else {
+      console.log("[Auth] Magic link sent successfully");
+    }
     return { error };
   }, []);
 
