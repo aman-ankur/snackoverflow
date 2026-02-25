@@ -25,10 +25,10 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/model/capy-mascot.png",
-        width: 512,
-        height: 512,
-        alt: "SnackOverflow capybara mascot",
+        url: "/model/capy-coconut.jpeg",
+        width: 225,
+        height: 225,
+        alt: "SnackOverflow capybara mascot with coconut water",
       },
     ],
   },
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "SnackOverflow — AI Nutrition Tracker",
     description: "AI-powered nutrition tracking for Indian food. Scan dishes or describe meals in Hindi-English to get instant nutrition info with a fun capybara companion.",
-    images: ["/model/capy-mascot.png"],
+    images: ["/model/capy-coconut.jpeg"],
   },
 };
 
