@@ -51,7 +51,7 @@ All routes are Next.js App Router API routes in `src/app/api/`.
 
 ## POST `/api/analyze-dish`
 
-**Purpose**: Analyze a plated meal (single dish or thali) and return nutrition estimates.
+**Purpose**: Analyze a plated meal (single dish or thali) and return nutrition estimates with alternative identifications for visually ambiguous foods.
 
 **File**: `src/app/api/analyze-dish/route.ts`
 
@@ -59,7 +59,8 @@ All routes are Next.js App Router API routes in `src/app/api/`.
 ```json
 {
   "image": "data:image/jpeg;base64,...",
-  "mealType": "lunch"
+  "mealType": "lunch",
+  "correction": "Dish #1 is actually Iced Coffee. Re-analyze with this correction." // Optional
 }
 ```
 
@@ -71,6 +72,7 @@ All routes are Next.js App Router API routes in `src/app/api/`.
       "name": "Paneer Butter Masala",
       "hindi": "पनीर बटर मसाला",
       "portion": "1 katori (~200g)",
+      "estimated_weight_g": 200,
       "calories": 380,
       "protein_g": 18,
       "carbs_g": 12,
@@ -79,22 +81,72 @@ All routes are Next.js App Router API routes in `src/app/api/`.
       "ingredients": ["Paneer", "Butter", "Cream", "Tomato", "Cashew"],
       "confidence": "medium",
       "tags": ["high-fat", "high-protein"],
-      "healthTip": "High in fat due to butter/cream. Pair with roti instead of naan."
+      "healthTip": "High in fat due to butter/cream. Pair with roti instead of naan.",
+      "reasoning": "Creamy orange curry with visible paneer cubes. ~200g serving. Ref: paneer butter masala 190 cal/100g.",
+      "alternatives": [
+        {
+          "name": "Paneer Tikka Masala",
+          "hindi": "पनीर टिक्का मसाला",
+          "portion": "1 katori (~200g)",
+          "estimated_weight_g": 200,
+          "calories": 320,
+          "protein_g": 20,
+          "carbs_g": 10,
+          "fat_g": 22,
+          "fiber_g": 2,
+          "ingredients": ["Paneer", "Yogurt", "Tomato", "Cream", "Spices"],
+          "confidence": "medium",
+          "tags": ["high-protein"],
+          "healthTip": "Slightly lower in fat than butter masala.",
+          "reasoning": "Similar orange curry but could have tikka-style grilled paneer chunks instead of raw paneer."
+        },
+        {
+          "name": "Shahi Paneer",
+          "hindi": "शाही पनीर",
+          "portion": "1 katori (~200g)",
+          "estimated_weight_g": 200,
+          "calories": 400,
+          "protein_g": 16,
+          "carbs_g": 14,
+          "fat_g": 30,
+          "fiber_g": 2,
+          "ingredients": ["Paneer", "Cashew", "Cream", "Saffron", "Butter"],
+          "confidence": "low",
+          "tags": ["high-fat", "high-calorie"],
+          "healthTip": "Very rich and creamy. High in calories.",
+          "reasoning": "Less common but visually similar rich paneer curry with cream base."
+        }
+      ]
     }
   ],
   "totalCalories": 380,
   "totalProtein": 18,
   "totalCarbs": 12,
   "totalFat": 28,
-  "totalFiber": 2
+  "totalFiber": 2,
+  "provider": "G25F"
 }
 ```
 
-**Provider chain**: Gemini 2.5 Flash → Gemini 2.0 Flash → Groq Llama 4 Maverick/Scout  
-**Safety/normalization**: Strict JSON parsing + numeric normalization + confidence/tag fallback defaults  
-**Cost control**: 2-minute in-memory response cache for repeated near-identical dish scans  
-**Rate limit handling**: Returns 429 with friendly message when providers are exhausted  
-**Prompt improvements**: 6-step chain-of-thought (visual description → veg/non-veg check → dish ID → weight estimation → nutrition calc → JSON output). Weight estimation includes per-piece counting for small items (chips ≈ 3-5g each, nuggets ≈ 18-20g, momos ≈ 25-30g) to avoid defaulting to packet sizes.
+**Alternative Dish Selection (NEW)**:
+- For visually ambiguous dishes, AI returns **up to 2 alternatives** with full nutrition data
+- Each alternative includes complete macros, ingredients, tags, health tips, and reasoning
+- Alternatives are only provided for genuinely plausible visual matches (color, texture, shape, plating)
+- Common ambiguous cases:
+  - Beverages: Iced tea vs iced coffee vs cold brew
+  - Pancakes: Oats chilla vs besan cheela vs uttapam
+  - Shakes: Milkshake vs protein shake vs smoothie
+  - Rice: Fried rice vs brown rice vs jeera rice
+  - Nuggets: Chicken nuggets vs paneer nuggets
+- Clearly identifiable items (banana, packaged snacks with labels, whole roti) return empty alternatives array
+- **Token cost**: ~2600 tokens per scan (vs 1600 without alternatives), still FREE within Gemini limits
+- **Client-side handling**: Instant swap between options (0s latency, no re-analysis)
+
+**Provider chain**: Gemini 2.5 Flash → OpenAI gpt-4o-mini → Gemini 2.0 Flash → Groq Llama 4 Maverick/Scout
+**Safety/normalization**: Strict JSON parsing + numeric normalization + confidence/tag fallback defaults + recursive alternatives normalization
+**Cost control**: 2-minute in-memory response cache for repeated near-identical dish scans
+**Rate limit handling**: Returns 429 with friendly message when providers are exhausted
+**Prompt improvements**: 7-step chain-of-thought (visual description → veg/non-veg check → dish ID → weight estimation → nutrition calc → **alternative identifications** → JSON output). Step 6B generates alternatives with full nutrition for ambiguous dishes. Weight estimation includes per-piece counting for small items (chips ≈ 3-5g each, nuggets ≈ 18-20g, momos ≈ 25-30g) to avoid defaulting to packet sizes.
 
 ---
 

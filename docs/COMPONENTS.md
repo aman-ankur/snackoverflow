@@ -50,12 +50,37 @@ All components are in `src/components/`. All are `"use client"` components.
   - **Capy mascot**: compact 36px avatar + speech bubble with contextual message
   - **Accordion dish cards**: per-dish collapsible cards (independent state via `expandedDishIndex`)
     - Collapsed: name + `ConfidenceBadge` + calories, Hindi name + weight, inline macro pills, contextual note via `generateDishNote()`, "Tap for details" hint
-    - Expanded: editable 5-col macro grid, CalorieEditor + WeightEditor + portion display, key ingredients, health tip, tags, `ReasoningToggle`, action buttons (CorrectionChip / Describe / Remove)
+    - Expanded: **alternative dish selection** (via `DishAlternatives` component if alternatives exist), editable 5-col macro grid, CalorieEditor + WeightEditor + portion display, key ingredients, health tip, tags, `ReasoningToggle`, action buttons (CorrectionChip / Describe / Remove)
     - Single-dish auto-expands; tapping one collapses others
   - **Sticky log bar**: fixed bottom bar with total calories + meal type + "Log Meal" button
   - "Clear analysis & re-scan" link
   - After logging: 1.2s "Logged ✓" animation → clears analysis → calls `onMealLogged` (navigates to Home)
 - **Describe mode**: renders `DescribeMealView` component (see below)
+- **Alternative Selection Flow**:
+  - When API returns alternatives, renders `DishAlternatives` component at top of expanded section
+  - `handleAlternativeSelect()` performs instant swap (0s latency, no API call)
+  - Swaps dish in analysis state, recalculates plate totals, clears any weight/calorie overrides for that dish
+  - Uses `selectedAlternatives` Map to track which option is selected per dish (0 = primary, 1-2 = alternatives)
+
+### `DishAlternatives.tsx` (NEW)
+**Radio button UI for selecting between alternative dish identifications.**
+- Props: `primaryDish: DishNutrition`, `alternatives: DishNutrition[]`, `selectedIndex: number`, `onSelect: (index: number) => void`
+- **Visual Design**:
+  - "Select Dish" label at top
+  - Radio buttons for all options (primary + up to 2 alternatives)
+  - Each option shows:
+    - Radio indicator (green accent when selected)
+    - Dish name + Hindi name + confidence badge (Confident/Likely/Unsure with color coding)
+    - Nutrition preview: calories, P/C/F macros in small grey text
+    - Reasoning: why this identification is plausible (grey text)
+  - Selected option: `border-accent bg-accent/5`, unselected: `border-border bg-card hover:border-accent/50`
+- **Confidence Badge Colors**:
+  - High: `bg-green-100 text-green-700`
+  - Medium: `bg-orange-100 text-orange-700`
+  - Low: `bg-gray-100 text-gray-700`
+- **Animations**: Staggered fade-in with 80ms delay between options via framer-motion
+- **Interaction**: Clicking any option calls `onSelect(index)` — ScanView handles the instant swap
+- **Usage**: Only rendered when `dish.alternatives && dish.alternatives.length > 0`, placed at top of expanded dish card with bottom border separator
 
 ### `DescribeMealView.tsx` (NEW)
 **Text-based meal description UI — AI interprets natural language into structured nutrition data.**
