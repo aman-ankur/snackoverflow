@@ -137,18 +137,17 @@ function capitalize(s: string): string {
 /**
  * Filter alternatives to only show genuinely useful options.
  * Hides alternatives when:
- * - Primary dish has "high" confidence AND all alternatives are "low"
- * - Alternatives are semantically very different (e.g., "Banana" alternatives "Fried Rice")
+ * - ALL alternatives are "low" confidence (regardless of primary confidence)
  * - Only 1 alternative with "low" confidence
+ * - All alternatives have identical calories to primary (AI glitch)
+ * - Alternative names are identical to primary (trivial variants)
  */
 function shouldShowAlternatives(primary: DishNutrition, alternatives: DishNutrition[]): boolean {
   if (!alternatives || alternatives.length === 0) return false;
 
-  // Rule 1: If primary is "high" confidence, only show alternatives if at least one is "medium" or "high"
-  if (primary.confidence === "high") {
-    const hasReasonableAlternative = alternatives.some(alt => alt.confidence !== "low");
-    if (!hasReasonableAlternative) return false;
-  }
+  // Rule 1: Hide if ALL alternatives are "low" confidence (universal, not primary-dependent)
+  const allLow = alternatives.every(alt => alt.confidence === "low");
+  if (allLow) return false;
 
   // Rule 2: If only 1 alternative and it's "low" confidence, hide it
   if (alternatives.length === 1 && alternatives[0].confidence === "low") {
@@ -160,6 +159,11 @@ function shouldShowAlternatives(primary: DishNutrition, alternatives: DishNutrit
   if (uniqueCalories.size === 1 && alternatives[0].calories === primary.calories) {
     return false;
   }
+
+  // Rule 4: Hide if alternative names are identical to primary (trivial variants)
+  const primaryNorm = primary.name.toLowerCase().trim();
+  const allSameName = alternatives.every(alt => alt.name.toLowerCase().trim() === primaryNorm);
+  if (allSameName) return false;
 
   return true;
 }
