@@ -11,8 +11,20 @@ export async function GET(request: Request) {
     if (!error) {
       return NextResponse.redirect(origin);
     }
+    console.error("[Auth Callback] Code exchange failed:", error.message, error.status);
+    const errorUrl = new URL(origin);
+    errorUrl.searchParams.set("auth_error", error.message || "Failed to verify magic link");
+    return NextResponse.redirect(errorUrl.toString());
   }
 
-  // If no code or error, redirect to home
+  // No code present — might be an error from Supabase
+  const errorDescription = searchParams.get("error_description") || searchParams.get("error");
+  if (errorDescription) {
+    console.error("[Auth Callback] Auth error:", errorDescription);
+    const errorUrl = new URL(origin);
+    errorUrl.searchParams.set("auth_error", errorDescription);
+    return NextResponse.redirect(errorUrl.toString());
+  }
+
   return NextResponse.redirect(origin);
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import BottomTabBar, { type AppTab } from "@/components/BottomTabBar";
 import HomeView from "@/components/HomeView";
@@ -14,6 +14,7 @@ import GoalOnboarding from "@/components/GoalOnboarding";
 import HealthProfileWizard from "@/components/HealthProfileWizard";
 import WelcomeTour from "@/components/WelcomeTour";
 import EatingAnalysisSheet from "@/components/EatingAnalysisSheet";
+import PullToRefresh from "@/components/PullToRefresh";
 import dynamic from "next/dynamic";
 import { useMealLog } from "@/lib/useMealLog";
 import { useUserGoals } from "@/lib/useUserGoals";
@@ -111,10 +112,19 @@ export default function Home() {
     setActiveTab("scan");
   };
 
+  const handlePullRefresh = useCallback(async () => {
+    // Offline-first: data is already in-memory via hooks.
+    // Pull-to-refresh provides a visual "I've refreshed" moment.
+    // Force re-read streak in case it drifted.
+    userGoals.refreshStreak();
+    await new Promise((r) => setTimeout(r, 400));
+  }, [userGoals]);
+
   return (
     <div className="h-dvh flex flex-col bg-background overflow-hidden">
       {/* Main Content */}
       <main className="flex-1 overflow-y-auto overflow-x-hidden overscroll-none mx-auto w-full max-w-lg px-4 pt-4 pb-24">
+        <PullToRefresh onRefresh={handlePullRefresh}>
         <AnimatePresence mode="wait">
           {activeTab === "home" && (
             <motion.div
@@ -241,6 +251,7 @@ export default function Home() {
             </motion.div>
           )}
         </AnimatePresence>
+        </PullToRefresh>
       </main>
 
       <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
