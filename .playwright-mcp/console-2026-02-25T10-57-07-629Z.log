@@ -1,0 +1,38 @@
+[     398ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <AnimatePresence mode="wait">
+      <PresenceChild isPresent={true} initial={undefined} custom={undefined} presenceAffectsLayout={true} mode="wait" ...>
+        <PopChild pop={false} isPresent={true} anchorX="left" anchorY="top" root={undefined}>
+          <PopChildMeasure isPresent={true} childRef={{current:null}} sizeRef={{...}} pop={false}>
+            <motion.div initial={{opacity:0,y:8}} animate={{opacity:1,y:0}} exit={{opacity:0,y:-8}} ...>
+              <div style={{opacity:0, ...}} ref={function useMotionRef.useCallback}>
+                <HomeView todayMeals={[...]} todayTotals={{calories:0, ...}} goals={{calories:2000, ...}} streak={{...}} ...>
+                  <div className="space-y-4">
+                    <div className="px-1">
+                      <div className="flex items...">
+                        <div className="flex items...">
+                          <CapyMascot mood="sleepy" size={56} animate={false}>
+                            <div style={{width:56,height:56}} className={"relative..."}>
+                              <img
++                               src="/model/capy-logo.gif"
+-                               src="/model/capy-coconut.jpeg"
+                                alt="Capy mascot"
+                                width={56}
+                                height={56}
+                                className="object-cover rounded-full"
+                              >
+                          ...
+                        ...
+                    ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_f3530cac._.js:3127
