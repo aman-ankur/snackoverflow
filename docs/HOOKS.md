@@ -205,7 +205,8 @@ Common Indian kitchen items with default days:
 | `user` | User \| null | Supabase user object (includes `id`, `email`) |
 | `isLoggedIn` | boolean | Whether a session exists |
 | `isLoading` | boolean | Whether initial session check is in progress |
-| `signInWithMagicLink(email)` | function | Send magic link email |
+| `sendEmailOTP(email)` | function | Send 6-digit OTP code to email |
+| `verifyEmailOTP(email, token)` | function | Verify OTP code and establish session |
 | `signUp(email, password)` | function | Create account with password |
 | `signInWithPassword(email, password)` | function | Sign in with existing password |
 | `signOut()` | function | End session |
@@ -217,10 +218,12 @@ Common Indian kitchen items with default days:
 - Used via `useAuthContext()` from `AuthProvider.tsx` (React context)
 - **No migration on login** — each domain hook handles its own merge (see Sync Merge Strategy below)
 
-### Network Resilience (Magic Link)
-`signInWithMagicLink` includes two layers of protection against network-level failures (e.g. WiFi DNS blocking `supabase.co`):
+### Network Resilience (Email OTP)
+`sendEmailOTP` includes two layers of protection against network-level failures (e.g. WiFi DNS blocking `supabase.co`):
 1. **Pre-flight ping** (5s timeout): `GET ${SUPABASE_URL}/auth/v1/settings` — if this fails, returns a user-friendly error immediately ("Can't connect to auth server. Try switching from WiFi to mobile data, or check if a DNS blocker or ad-blocker is active.")
 2. **OTP timeout** (12s): wraps `signInWithOtp` in `Promise.race` so the spinner never hangs forever — returns "Request timed out. Try switching from WiFi to mobile data."
+
+`verifyEmailOTP` also uses a 12s timeout for the same reason.
 
 ### Debug Logging
 All auth methods emit timestamped `dlog()` calls (from `debugLog.ts`) at every step — visible in the on-screen DebugPanel when Dev Mode is enabled. Useful for diagnosing mobile-specific auth issues where browser DevTools aren't accessible.

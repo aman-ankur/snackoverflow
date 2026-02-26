@@ -238,7 +238,8 @@ export default function Home() {
                 onResetAll={userGoals.resetAll}
                 authUser={auth.user}
                 isLoggedIn={auth.isLoggedIn}
-                onMagicLink={auth.signInWithMagicLink}
+                onSendOTP={auth.sendEmailOTP}
+                onVerifyOTP={auth.verifyEmailOTP}
                 onSignUp={auth.signUp}
                 onSignInPassword={auth.signInWithPassword}
                 onSignOut={auth.signOut}

@@ -8,7 +8,8 @@ interface AuthContextValue {
   user: User | null;
   isLoggedIn: boolean;
   isLoading: boolean;
-  signInWithMagicLink: (email: string) => Promise<{ error: unknown }>;
+  sendEmailOTP: (email: string) => Promise<{ error: unknown }>;
+  verifyEmailOTP: (email: string, token: string) => Promise<{ error: unknown }>;
   signUp: (email: string, password: string) => Promise<{ error: unknown }>;
   signInWithPassword: (
     email: string,
