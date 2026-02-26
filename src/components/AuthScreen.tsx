@@ -155,7 +155,7 @@ export default function AuthScreen({
 
   const handleVerifyOTP = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    if (otpCode.length !== 6) return;
+    if (otpCode.length < 6) return;
     dlog(`AuthScreen: handleVerifyOTP email=${otpEmail} code=${otpCode}`);
     setLoading(true);
     setError(null);
@@ -306,11 +306,11 @@ export default function AuthScreen({
                 type="text"
                 inputMode="numeric"
                 pattern="[0-9]*"
-                maxLength={6}
+                maxLength={8}
                 placeholder="000000"
                 value={otpCode}
                 onChange={(e) => {
-                  const val = e.target.value.replace(/\D/g, "").slice(0, 6);
+                  const val = e.target.value.replace(/\D/g, "").slice(0, 8);
                   setOtpCode(val);
                 }}
                 autoComplete="one-time-code"
@@ -336,7 +336,7 @@ export default function AuthScreen({
             {/* Verify button */}
             <button
               type="submit"
-              disabled={loading || otpCode.length !== 6}
+              disabled={loading || otpCode.length < 6}
               className="w-full flex items-center justify-center gap-2 rounded-xl bg-accent text-white font-bold text-sm py-2.5 hover:bg-accent-dim transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? (
