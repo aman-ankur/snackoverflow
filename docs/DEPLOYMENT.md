@@ -146,8 +146,7 @@ create trigger on_auth_user_created
   for each row execute function public.handle_new_user();
 ```
 
-3. Go to **Authentication → Providers** → ensure Email is enabled (magic link ON)
-4. Go to **Authentication → URL Configuration** → add redirect URLs:
-   - `http://localhost:3000/auth/callback` (local dev)
-   - `https://your-app.vercel.app/auth/callback` (production)
-5. Copy Project URL + anon key → add to `.env.local` and Vercel env vars
+3. Go to **Authentication → Providers** → ensure Email is enabled
+4. Go to **Authentication → Email Templates → Magic Link** → replace template to use `{{ .Token }}` (sends 6-digit OTP code instead of clickable link)
+5. (Optional) Set up custom SMTP (e.g. Brevo) under **Project Settings → Authentication → SMTP Settings** to avoid built-in rate limits
+6. Copy Project URL + anon key → add to `.env.local` and Vercel env vars

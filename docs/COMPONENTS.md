@@ -467,16 +467,17 @@ Legacy recipe display components for YOLO mode. Uses static recipe database.
 ### `AuthProvider.tsx`
 **Auth context provider — wraps the entire app in `layout.tsx`.**
 - Provides `useAuthContext()` hook to all components
-- Exposes: `user`, `isLoggedIn`, `isLoading`, `signInWithMagicLink`, `signUp`, `signInWithPassword`, `signOut`
+- Exposes: `user`, `isLoggedIn`, `isLoading`, `sendEmailOTP`, `verifyEmailOTP`, `signUp`, `signInWithPassword`, `signOut`
 - Uses `useAuth()` hook internally
 
 ### `AuthScreen.tsx`
-**Capy-themed login UI with magic link + password modes.**
-- Props: `onMagicLink`, `onSignUp`, `onSignInPassword`
-- Three modes: `magic` (default), `password-login`, `password-signup`
-- States: email input → loading → "Check your email" success (for magic link/signup)
+**Capy-themed login UI with email OTP + password modes.**
+- Props: `onSendOTP`, `onVerifyOTP`, `onSignUp`, `onSignInPassword`
+- Four modes: `otp` (default), `otp-verify`, `password-login`, `password-signup`
+- OTP flow: email input → "Send Code" → 6-digit code input → "Verify & Sign In"
+- OTP verify screen: monospace code input, 60s resend cooldown, "Use a different email" link
 - Error display with AlertCircle icon
-- Mode switcher links at bottom to toggle between magic link / password / signup
+- Mode switcher links at bottom to toggle between email code / password / signup
 - Animated with Framer Motion
 - Rendered in ProfileView when user is not logged in
 

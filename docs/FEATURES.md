@@ -250,7 +250,7 @@ On some WiFi networks (corporate, hotel, restrictive DNS), `supabase.co` is bloc
 - **DebugPanel** component in `AuthScreen.tsx`: floating purple bug icon that toggles a dark overlay showing timestamped auth logs
 - Only visible when Dev Mode is enabled (Profile → Dev Mode toggle)
 - Uses `debugLog.ts` — in-memory circular buffer (80 entries) with pub/sub pattern (`dlog()`, `getDebugLogs()`, `subscribeDebugLogs()`)
-- All auth methods (`signInWithMagicLink`, `signUp`, `signInWithPassword`) emit `dlog()` at every step
+- All auth methods (`sendEmailOTP`, `verifyEmailOTP`, `signUp`, `signInWithPassword`) emit `dlog()` at every step
 - Useful for diagnosing mobile-specific auth issues where Chrome DevTools aren't accessible
 
 ### Files

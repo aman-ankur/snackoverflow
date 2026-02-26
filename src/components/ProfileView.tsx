@@ -20,7 +20,8 @@ interface ProfileViewProps {
   onResetAll: () => void;
   authUser: SupabaseUser | null;
   isLoggedIn: boolean;
-  onMagicLink: (email: string) => Promise<{ error: unknown }>;
+  onSendOTP: (email: string) => Promise<{ error: unknown }>;
+  onVerifyOTP: (email: string, token: string) => Promise<{ error: unknown }>;
   onSignUp: (email: string, password: string) => Promise<{ error: unknown }>;
   onSignInPassword: (email: string, password: string) => Promise<{ error: unknown }>;
   onSignOut: () => Promise<void>;
@@ -56,7 +57,8 @@ export default function ProfileView({
   onResetAll,
   authUser,
   isLoggedIn,
-  onMagicLink,
+  onSendOTP,
+  onVerifyOTP,
   onSignUp,
   onSignInPassword,
   onSignOut,
@@ -105,7 +107,8 @@ export default function ProfileView({
             <span className="text-[10px] text-muted">Data is stored locally only</span>
           </div>
           <AuthScreen
-            onMagicLink={onMagicLink}
+            onSendOTP={onSendOTP}
+            onVerifyOTP={onVerifyOTP}
             onSignUp={onSignUp}
             onSignInPassword={onSignInPassword}
           />

@@ -103,7 +103,7 @@ SnackOverflow uses a **multi-provider fallback strategy** — no single point of
 | **Animations** | Framer Motion 12, Lottie (`lottie-react`) |
 | **AI Vision** | Google Gemini 2.5/2.0 Flash, OpenAI gpt-4.1-nano/mini, Groq Llama 4 |
 | **Hindi TTS** | Sarvam AI Bulbul v3 |
-| **Auth & DB** | Supabase (Postgres JSONB + RLS + magic link auth) |
+| **Auth & DB** | Supabase (Postgres JSONB + RLS + email OTP auth) |
 | **State** | React hooks + localStorage (offline) + Supabase (cloud sync) |
 | **Icons** | Lucide React |
 | **Deploy** | Vercel |
@@ -165,7 +165,7 @@ src/
 │   │   ├── hindi-message/     # Hindi text generation
 │   │   ├── hindi-tts/         # Hindi audio generation
 │   │   └── capy-motivation/   # LLM motivation lines
-│   ├── auth/callback/         # Supabase magic link callback
+│   ├── auth/callback/         # Supabase password signup confirmation callback
 │   └── page.tsx               # Main app shell (5-tab router)
 ├── components/
 │   ├── HomeView.tsx           # Dashboard — intake ring, meals, Capy greeting

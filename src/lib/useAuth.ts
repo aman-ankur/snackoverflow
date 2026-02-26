@@ -53,39 +53,34 @@ export function useAuth() {
     };
   }, []);
 
-  const signInWithMagicLink = useCallback(async (email: string) => {
-    dlog(`magicLink: START email=${email}`);
+  const sendEmailOTP = useCallback(async (email: string) => {
+    dlog(`sendOTP: START email=${email}`);
     try {
-      dlog("magicLink: creating client");
+      dlog("sendOTP: creating client");
       const supabase = createClient();
-      const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || window.location.origin;
-      const redirectTo = `${siteUrl}/auth/callback`;
-      dlog(`magicLink: origin=${window.location.origin} siteUrl=${siteUrl} redirectTo=${redirectTo}`);
 
       // Network connectivity test — can the device reach Supabase at all?
       const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
-      dlog(`magicLink: testing connectivity to ${supabaseUrl}...`);
+      dlog(`sendOTP: testing connectivity to ${supabaseUrl}...`);
       try {
         const pingStart = Date.now();
         const pingRes = await Promise.race([
           fetch(`${supabaseUrl}/auth/v1/settings`, { method: "GET" }),
           new Promise<never>((_, rej) => setTimeout(() => rej(new Error("ping timeout 5s")), 5000)),
         ]);
-        dlog(`magicLink: ping OK status=${pingRes.status} in ${Date.now() - pingStart}ms`);
+        dlog(`sendOTP: ping OK status=${pingRes.status} in ${Date.now() - pingStart}ms`);
       } catch (pingErr) {
         const msg = pingErr instanceof Error ? pingErr.message : String(pingErr);
-        dlog(`magicLink: PING FAILED — ${msg}`);
+        dlog(`sendOTP: PING FAILED — ${msg}`);
         return { error: { message: "Can't connect to auth server. Try switching from WiFi to mobile data, or check if a DNS blocker or ad-blocker is active." } };
       }
 
-      dlog("magicLink: calling signInWithOtp...");
+      dlog("sendOTP: calling signInWithOtp...");
       const startMs = Date.now();
 
       // Race against a 12s timeout so the spinner never hangs forever
-      const otpPromise = supabase.auth.signInWithOtp({
-        email,
-        options: { emailRedirectTo: redirectTo },
-      });
+      // No emailRedirectTo — OTP is verified in-app, not via link
+      const otpPromise = supabase.auth.signInWithOtp({ email });
 
       const timeoutPromise = new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Request timed out. Try switching from WiFi to mobile data.")), 12000)
@@ -95,14 +90,46 @@ export function useAuth() {
       const elapsed = Date.now() - startMs;
 
       if (error) {
-        dlog(`magicLink: ERROR after ${elapsed}ms — ${error.message} (status=${(error as { status?: number }).status})`);
+        dlog(`sendOTP: ERROR after ${elapsed}ms — ${error.message} (status=${(error as { status?: number }).status})`);
       } else {
-        dlog(`magicLink: SUCCESS after ${elapsed}ms`);
+        dlog(`sendOTP: SUCCESS after ${elapsed}ms`);
       }
       return { error };
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
-      dlog(`magicLink: CATCH — ${msg}`);
+      dlog(`sendOTP: CATCH — ${msg}`);
+      return { error: { message: msg } };
+    }
+  }, []);
+
+  const verifyEmailOTP = useCallback(async (email: string, token: string) => {
+    dlog(`verifyOTP: START email=${email} token=${token}`);
+    try {
+      const supabase = createClient();
+      const startMs = Date.now();
+
+      const verifyPromise = supabase.auth.verifyOtp({
+        email,
+        token,
+        type: "email",
+      });
+
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Verification timed out. Please try again.")), 12000)
+      );
+
+      const { error } = await Promise.race([verifyPromise, timeoutPromise]);
+      const elapsed = Date.now() - startMs;
+
+      if (error) {
+        dlog(`verifyOTP: ERROR after ${elapsed}ms — ${error.message}`);
+      } else {
+        dlog(`verifyOTP: SUCCESS after ${elapsed}ms — session established`);
+      }
+      return { error };
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      dlog(`verifyOTP: CATCH — ${msg}`);
       return { error: { message: msg } };
     }
   }, []);
@@ -158,7 +185,8 @@ export function useAuth() {
 
   return {
     ...state,
-    signInWithMagicLink,
+    sendEmailOTP,
+    verifyEmailOTP,
     signUp,
     signInWithPassword,
     signOut,

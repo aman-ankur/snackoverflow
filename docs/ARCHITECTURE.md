@@ -13,7 +13,7 @@
 | **Hindi Text Gen** | Groq (meta-llama/llama-4-scout-17b-16e-instruct) |
 | **Hindi TTS** | Sarvam AI Bulbul v3 (speaker: "kabir", male North Indian) |
 | **On-Device Detection** | YOLOv8n via ONNX Runtime Web (WASM) |
-| **Auth** | Supabase Auth (email magic link + password) |
+| **Auth** | Supabase Auth (email OTP + password) |
 | **Database** | Supabase Postgres (JSONB, RLS) |
 | **State** | React hooks + localStorage (offline-first) + Supabase (cloud sync with merge) |
 | **Fonts** | DM Sans (400–900), JetBrains Mono (via next/font/google) |
@@ -117,7 +117,7 @@ snackoverflow/
 │       │   ├── server.ts                # Server Supabase client (for auth callback)
 │       │   └── sync.ts                  # Pull/push + debounced cloud sync
 │       │   └── merge.ts                 # Pure merge functions (mergeArrayById, mergeObject, mergeGarden)
-│       ├── useAuth.ts                   # Auth hook (magic link, password, sign out, network resilience)
+│       ├── useAuth.ts                   # Auth hook (email OTP, password, sign out, network resilience)
 │       └── debugLog.ts                  # In-memory debug log buffer (on-screen diagnostics, dev mode only)
 ├── .env.example                      # Template for API keys
 ├── .env.local                        # Actual API keys (gitignored)
@@ -133,9 +133,10 @@ User opens app → layout.tsx wraps with AuthProvider → page.tsx renders Botto
 
 Auth Flow:
   Guest mode (default): app works fully with localStorage only, no login required
-  Profile tab → AuthScreen → email magic link or password signup/login
+  Profile tab → AuthScreen → email OTP (6-digit code) or password signup/login
   → Pre-flight ping to Supabase auth API (5s timeout) — catches DNS/network blocks early
   → signInWithOtp wrapped in 12s timeout — prevents infinite spinner on network failures
+  → OTP code verified client-side via verifyOtp — no redirect/callback needed
   → User-friendly error messages for network issues ("Try switching from WiFi to mobile data")
   → On-screen debug panel (dev mode only) logs every auth step for mobile diagnostics
   → Supabase Auth → /auth/callback → session established
