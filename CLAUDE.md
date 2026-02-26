@@ -12,7 +12,7 @@ AI-powered nutrition tracking app for Indian food. Scan dishes or describe meals
 - **AI:** Multi-provider fallback — Gemini 2.5/2.0 Flash (primary), OpenAI gpt-4.1-nano/mini, Groq Llama 4 Scout, Sarvam AI (Hindi TTS), Anthropic Claude (health verdict fallback)
 - **On-Device ML:** YOLOv8n via ONNX Runtime Web (WASM) for real-time object detection
 - **3D:** Three.js + React Three Fiber + Drei (lazy-loaded capybara garden)
-- **Auth:** Supabase (magic link + password)
+- **Auth:** Supabase (email OTP + password)
 - **Animations:** Framer Motion 12 + Lottie
 - **Deploy:** Vercel | **Package manager:** npm
 
@@ -23,7 +23,7 @@ src/app/
   page.tsx                    — Main shell (5-tab client-side router)
   globals.css                 — Tailwind theme (Sage & Cream colors)
   layout.tsx                  — Root layout + DM Sans / JetBrains Mono fonts
-  auth/callback/              — Supabase magic link callback
+  auth/callback/              — Supabase password signup confirmation callback
   api/
     analyze/route.ts          — Fridge image → ingredients + 5 Indian recipes
     analyze-dish/route.ts     — Dish photo → per-dish nutrition
@@ -152,7 +152,7 @@ page.tsx (main shell)
 
 ### Supabase
 - Offline-first: app works fully with localStorage, cloud sync is optional
-- Auth: magic link + password via Supabase
+- Auth: email OTP + password via Supabase
 - Sync: pull/push with debouncing in `lib/supabase/sync.ts`; merge functions in `lib/supabase/merge.ts`
 - **Merge strategy**: on login, each hook merges local + cloud by ID/timestamp (not "cloud wins"). Array domains use `mergeArrayById`; object domains use `mergeObject`; garden uses `mergeGarden` with `max()` for monotonic counters. No data silently lost during offline→online.
 - RLS enabled on all tables

@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 
+// This callback is used for password signup email confirmation only.
+// Email OTP login verifies codes client-side via supabase.auth.verifyOtp()
+// and does not use this redirect flow.
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
