@@ -105,24 +105,33 @@ Optimized food scanning (dish nutrition analysis) to reduce latency by ~30-50% t
 
 ✅ **Build verification:** `npm run build` passes with no TypeScript errors
 
-**Functional Testing:**
-- [ ] Scan a complex Indian dish (biryani, thali) — check console for image size (~60-80KB)
-- [ ] Verify nutrition accuracy maintained (spot-check against known values)
-- [ ] Compare scan time before/after (expect ~2-4s vs. current ~5-10s)
-- [ ] Status badge shows "Analyzing with Gemini..." during scan
-- [ ] Status badge auto-hides on completion
-- [ ] Test with Gemini API key removed → should race OpenAI + Groq
-- [ ] Test dish correction flow → should show "Re-analyzing with correction..."
-- [ ] Simulate slow provider → verify 2s stagger trigger
-- [ ] Verify `_provider` field in console logs (debugging)
-- [ ] Run calorie accuracy benchmarks: `npx tsx scripts/benchmark-calories.ts`
+**Functional Testing (Mock Mode):**
+- ✅ Scan a complex dish (mock) — 3 dishes detected, 550 kcal total
+- ✅ Status badge shows "Analysis complete" after mock scan
+- ✅ Status badge auto-hides on completion
+- ✅ Alternative selection works (Dal Tadka → Dal Fry swap successful)
+- ✅ Portion scaling works (1.5× multiplier: 565 → 848 kcal)
+- ✅ Mode switching preserves state (Camera ↔ Describe)
+
+**Functional Testing (Live API - Pending):**
+- 🔄 Scan a complex Indian dish (biryani, thali) — check console for image size (~60-80KB)
+- 🔄 Verify nutrition accuracy maintained (spot-check against known values)
+- 🔄 Compare scan time before/after (expect ~2-4s vs. current ~5-10s)
+- 🔄 Status badge shows "Analyzing with Gemini..." during scan (live)
+- 🔄 Test with Gemini API key removed → should race OpenAI + Groq
+- 🔄 Test dish correction flow → should show "Re-analyzing with correction..."
+- 🔄 Simulate slow provider → verify 2s stagger trigger
+- 🔄 Verify `_provider` field in console logs (debugging)
+- 🔄 Run calorie accuracy benchmarks: `npx tsx scripts/benchmark-calories.ts`
   - Verify MAPE remains ~9% or better on core Indian meals
 
 **Regression Testing:**
-- [ ] Test alternative dish selection (ensure UI updates correctly)
-- [ ] Test calorie editing with proportional macro scaling
-- [ ] Test multiple dishes on one plate
-- [ ] Test meal logging with custom portions
+- ✅ Test alternative dish selection (ensure UI updates correctly)
+- ✅ Test portion scaling (1.5× multiplier accurate)
+- ✅ Test multiple dishes on one plate (3 dishes, correct total)
+- 🔄 Test meal logging with custom portions (pending)
+
+**Full Test Report:** See [SCAN-PERFORMANCE-TEST-REPORT.md](./SCAN-PERFORMANCE-TEST-REPORT.md)
 
 ## Trade-offs & Alternatives
 
