@@ -338,6 +338,29 @@ export function useDishScanner() {
   const analyzeImage = useCallback(async (base64: string) => {
     if (isAnalyzing) return;
 
+    if (mockMode) {
+      setIsAnalyzing(true);
+      setError(null);
+      setCapturedFrame(base64);
+      lastFrameRef.current = base64;
+      try {
+        const { getNextMockScenario, MOCK_ANALYSIS_DELAY_MS } = await import(
+          "@/lib/mockScanData"
+        );
+        const scenario = getNextMockScenario();
+        console.log(`[Mock Upload] Scenario: ${scenario.label}`);
+        await new Promise((resolve) => setTimeout(resolve, getDevMode() ? 400 : MOCK_ANALYSIS_DELAY_MS));
+        setAnalysis(scenario.data);
+        setLastAnalyzedAt(new Date());
+        setScanCount((count) => count + 1);
+      } catch {
+        setError("Mock upload scan failed");
+      } finally {
+        setIsAnalyzing(false);
+      }
+      return;
+    }
+
     setIsAnalyzing(true);
     setError(null);
     setScanStatus("Analyzing with Gemini...");
@@ -383,7 +406,7 @@ export function useDishScanner() {
     } finally {
       setIsAnalyzing(false);
     }
-  }, [isAnalyzing, mealType]);
+  }, [isAnalyzing, mealType, mockMode]);
 
   const clearAnalysis = useCallback(() => {
     setAnalysis(null);
