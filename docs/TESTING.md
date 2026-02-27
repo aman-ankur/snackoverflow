@@ -104,6 +104,61 @@ Tests cover:
 
 **Production safety:** Without `?mock=scan`, the mock data module is never imported (dynamic import). No camera permissions, API calls, or env vars needed for mock mode.
 
+### Upload Photo Mock Mode
+
+When `?mock=scan` or dev mode is active, `analyzeImage()` (used by the Upload tab) also returns mock data instead of calling the real API. The upload component compresses the image client-side, then passes it to `analyzeImage()` which returns `getNextMockScenario()` data after the standard mock delay.
+
+### Calorie Warning E2E Tests (`e2e/calorie-warning.spec.ts`)
+
+15 tests covering the calorie goal exceeded warning feature:
+
+```bash
+npx playwright test e2e/calorie-warning.spec.ts
+```
+
+**CalorieRing color thresholds:**
+| Test | Eaten/Goal | Expected Ring Color |
+|------|:----------:|:-------------------:|
+| Under goal (50%) | 1000/2000 | Green |
+| At goal (100%) | 2000/2000 | Green |
+| Slightly over (105%) | 2100/2000 | Amber |
+| At 109% | 2180/2000 | Amber |
+| At 111% | 2220/2000 | Red |
+| Way over (120%) | 2400/2000 | Red |
+| Massively over (200%) | 4000/2000 | Red |
+| No meals (0%) | 0/2000 | Green |
+
+**Other tests:**
+- "kcal over" text displayed when exceeding goal
+- 1 kcal over edge case (amber)
+- Exact over amount calculation (2388/2029 → 359)
+- Progress bar turns red when over goal
+
+**Capy message threshold bands:**
+| Test | Eaten % | Expected Message Band |
+|------|:-------:|:---------------------:|
+| 50% | on-track | Not goal-hit messages |
+| 98% | goal hit | "You did it!" etc. |
+| 115% | slightly over | "A bit over today" etc. |
+| 140% | over goal | "Big appetite" etc. |
+
+### Upload Photo E2E Tests (`e2e/upload-photo.spec.ts`)
+
+6 tests covering the upload photo scan mode:
+
+```bash
+npx playwright test e2e/upload-photo.spec.ts
+```
+
+| Test | What it verifies |
+|------|-----------------|
+| Tab visible + switchable | Upload button appears, click shows upload zone |
+| 3-way mode switching | Camera → Upload → Describe → Camera → Upload all work |
+| Upload zone hidden in camera mode | Only visible when Upload tab is active |
+| Upload zone hidden in describe mode | Only visible when Upload tab is active |
+| File input accepts images | `input[type="file"][accept="image/*"]` is present |
+| Photo upload triggers analysis | Setting a file on the input triggers the flow |
+
 ### Approach: Mock API Responses
 
 We intercept `fetch` calls in the browser to return deterministic mock data. This avoids AI API calls during testing, making tests fast, free, and repeatable.

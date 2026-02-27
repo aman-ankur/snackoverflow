@@ -154,6 +154,7 @@ Common Indian kitchen items with default days:
 | `stopCamera()` | function | Stop camera (no-op in mock mode) |
 | `flipCamera()` | function | Toggle front/rear camera |
 | `analyzeFrame()` | function | Capture frame and call `/api/analyze-dish` (uses mock data in mock mode) |
+| `analyzeImage(base64)` | function | Analyze a provided base64 image (used by upload mode; uses mock data in mock mode) |
 | `correctDish()` | function | Re-analyze with dish name correction |
 | `clearAnalysis()` | function | Reset analysis state and captured frame |
 
@@ -162,7 +163,7 @@ Common Indian kitchen items with default days:
 - Manual-scan-only pattern (no auto-scan interval)
 - Defensive normalization for malformed AI responses
 - **Frozen frame**: `capturedFrame` is set on analyze, displayed as thumbnail while analyzing/after results
-- **Mock mode** (`?mock=scan`): dynamic-imports `mockScanData.ts`, bypasses camera and API, returns fake results after 1.5s delay. Mock data module is never bundled in production.
+- **Mock mode** (`?mock=scan`): dynamic-imports `mockScanData.ts`, bypasses camera and API, returns fake results after 1.5s delay. Works for both `analyzeFrame()` and `analyzeImage()`. Mock data module is never bundled in production.
 
 ---
 

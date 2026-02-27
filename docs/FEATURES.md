@@ -422,3 +422,29 @@ Complete redesign of the Progress tab from information-heavy to insight-first la
 - Calorie Trend bg: `bg-gradient-to-br from-[#E8F5E0] to-[#DBEAFE]`
 - Stats row: gradient card backgrounds (accent-light, orange-light)
 - New CSS keyframe: `pulse-subtle` in `globals.css`
+
+## 23. Calorie Goal Exceeded Warning (NEW)
+- **CalorieRing dynamic color**: ring stroke changes based on how far over goal:
+  - ≤100%: sage green (`var(--color-accent)`)
+  - 100-110%: amber (`#F0A030`)
+  - >110%: red (`#E05050`)
+  - Ring stays visually capped at 100% fill but color indicates overflow
+- **"X kcal over" display**: when calories exceed goal, header shows negative remaining as "X kcal over" in red text instead of "0 kcal left"
+- **Progress bar color**: small progress bar in header turns red (`bg-red-500`) when over goal
+- **Capy message bands** updated with finer thresholds:
+  - 0-75%: on-track messages
+  - 75-95%: almost there
+  - 95-105%: goal hit (positive celebration)
+  - 105-130%: **new** slightly over — gentle nudge messages ("A bit over today, no stress! Balance tomorrow 🌿")
+  - >130%: over goal — concerned messages
+- Files: `HomeView.tsx` (CalorieRing, calRemaining), `capyLines.ts` (SLIGHTLY_OVER array)
+
+## 24. Upload Photo Mode for Scan (NEW)
+- **3-way mode toggle** on Scan tab: Camera / Describe / Upload
+- **UploadPhotoView component**: file input with drop zone UI, accepts `image/*`
+- **Client-side image compression**: same pipeline as camera (768px max width, JPEG 0.7 quality) via canvas
+- **Preview**: shows uploaded image with dismiss button while analyzing or after results
+- **Shared results**: upload mode shares the same status badge + results section as camera mode (accordion dish cards, health check, log bar)
+- **Mock mode**: in `?mock=scan` or dev mode, `analyzeImage()` returns mock data from `mockScanData.ts` (same as camera mock)
+- **Use case**: analyze food photos from gallery, screenshots, or shared images without live camera
+- Files: `UploadPhotoView.tsx` (new), `ScanView.tsx` (3-way toggle), `useDishScanner.ts` (`analyzeImage()` method)
