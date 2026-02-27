@@ -335,6 +335,56 @@ export function useDishScanner() {
     }
   }, [isAnalyzing, mealType]);
 
+  const analyzeImage = useCallback(async (base64: string) => {
+    if (isAnalyzing) return;
+
+    setIsAnalyzing(true);
+    setError(null);
+    setScanStatus("Analyzing with Gemini...");
+    setCapturedFrame(base64);
+    lastFrameRef.current = base64;
+
+    try {
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 15000);
+
+      const res = await fetch("/api/analyze-dish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ image: base64, mealType }),
+        signal: abortController.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      const data: unknown = await res.json();
+
+      if (!res.ok) {
+        const message =
+          data && typeof data === "object" && "error" in data && typeof data.error === "string"
+            ? data.error
+            : "Dish analysis failed";
+        throw new Error(message);
+      }
+
+      const result = normalizeResult(data);
+      setAnalysis(result);
+      setLastAnalyzedAt(new Date());
+      setScanCount((count) => count + 1);
+      setScanStatus(null);
+    } catch (err: unknown) {
+      if (err instanceof Error && err.name === "AbortError") {
+        setError("Analysis timed out. Please try again.");
+      } else {
+        const message = err instanceof Error ? err.message : "Dish analysis failed";
+        setError(message);
+      }
+      setScanStatus(null);
+    } finally {
+      setIsAnalyzing(false);
+    }
+  }, [isAnalyzing, mealType]);
+
   const clearAnalysis = useCallback(() => {
     setAnalysis(null);
     setLastAnalyzedAt(null);
@@ -370,6 +420,7 @@ export function useDishScanner() {
     stopCamera,
     flipCamera,
     analyzeFrame,
+    analyzeImage,
     correctDish,
     clearAnalysis,
   };

@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus, Camera, PenLine, RefreshCw, Brain } from "lucide-react";
+import { Sparkles, Pencil, X, Check, Loader2, Trash2, ChevronDown, ChevronUp, Minus, Plus, Camera, PenLine, RefreshCw, Brain, Upload } from "lucide-react";
 import GeminiCameraView from "@/components/GeminiCameraView";
 import CapyMascot from "@/components/CapyMascot";
 import DescribeMealView from "@/components/DescribeMealView";
+import UploadPhotoView from "@/components/UploadPhotoView";
 import CoachMark from "@/components/CoachMark";
 import { MealHealthBanner, HealthCheckButton, HealthProfilePrompt } from "@/components/HealthVerdictCard";
 import { DishAlternatives } from "@/components/DishAlternatives";
@@ -15,12 +16,14 @@ import { useHealthVerdict } from "@/lib/useHealthVerdict";
 import type { DishNutrition, MealType, MealTotals, LoggedMeal, ConfidenceLevel } from "@/lib/dishTypes";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
 
+type ScanMode = "camera" | "describe" | "upload";
+
 interface ScanViewProps {
   logMeal: (input: { mealType: MealType; servingsMultiplier: number; dishes: DishNutrition[]; totals: MealTotals }) => LoggedMeal;
   meals: LoggedMeal[];
   refreshStreak: () => void;
   onMealLogged?: () => void;
-  initialMode?: "camera" | "describe";
+  initialMode?: ScanMode;
   coachMarks?: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
   healthContextString?: string;
   hasHealthProfile?: boolean;
@@ -208,8 +211,6 @@ function ConfidenceDot({ level }: { level: ConfidenceLevel }) {
     <span title={title} className={`inline-block h-2 w-2 rounded-full ${color} shrink-0`} />
   );
 }
-
-type ScanMode = "camera" | "describe";
 
 export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, initialMode, coachMarks, healthContextString, hasHealthProfile, healthConditions, onSetupHealthProfile }: ScanViewProps) {
   const dish = useDishScanner();
@@ -482,6 +483,17 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
           <PenLine className="h-4 w-4" />
           Describe
         </button>
+        <button
+          onClick={() => { setMode("upload"); setCorrectionContext(undefined); }}
+          className={`flex-1 flex items-center justify-center gap-1.5 rounded-xl py-2.5 text-xs font-bold transition-all ${
+            mode === "upload"
+              ? "bg-accent-light text-accent-dim border border-accent/20"
+              : "text-muted border border-transparent hover:bg-card-hover"
+          }`}
+        >
+          <Upload className="h-4 w-4" />
+          Upload
+        </button>
       </div>
 
       </div>
@@ -506,8 +518,15 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
           healthConditions={healthConditions}
           onSetupHealthProfile={onSetupHealthProfile}
         />
+      ) : mode === "upload" ? (
+      <UploadPhotoView
+        isAnalyzing={dish.isAnalyzing}
+        capturedFrame={dish.capturedFrame}
+        hasResults={scaledDishes.length > 0}
+        onAnalyze={dish.analyzeImage}
+        onClear={dish.clearAnalysis}
+      />
       ) : (
-      <>
       <GeminiCameraView
         videoRef={dish.videoRef}
         canvasRef={dish.canvasRef}
@@ -530,6 +549,11 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
         hasResults={scaledDishes.length > 0}
         onScanAgain={() => { dish.clearAnalysis(); dish.startCamera(); }}
       />
+      )}
+
+      {/* Shared: Status badge + Results (for camera & upload modes) */}
+      {mode !== "describe" && (
+      <>
 
       {/* Status badge - shows provider being attempted */}
       <AnimatePresence>
