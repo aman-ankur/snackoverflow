@@ -45,10 +45,15 @@ const HEALTH_ICONS: Record<HealthRating, typeof ShieldCheck> = {
 };
 
 function CalorieRing({ eaten, goal }: { eaten: number; goal: number }) {
-  const percent = goal > 0 ? Math.min((eaten / goal) * 100, 100) : 0;
+  const rawPercent = goal > 0 ? (eaten / goal) * 100 : 0;
+  const percent = Math.min(rawPercent, 100);
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
   const strokeDashoffset = circumference - (percent / 100) * circumference;
+
+  // Color changes based on overflow
+  const strokeColor =
+    rawPercent > 110 ? "#E05050" : rawPercent > 100 ? "#F0A030" : "var(--color-accent)";
 
   return (
     <div className="relative flex items-center justify-center">
@@ -68,7 +73,7 @@ function CalorieRing({ eaten, goal }: { eaten: number; goal: number }) {
           cy="70"
           r={radius}
           fill="none"
-          stroke="var(--color-accent)"
+          stroke={strokeColor}
           strokeWidth="10"
           strokeLinecap="round"
           strokeDasharray={circumference}
@@ -155,8 +160,9 @@ export default function HomeView({
     }
   }, []);
 
-  const calRemaining = Math.max(0, Math.round(goals.calories - todayTotals.calories));
+  const calRemaining = Math.round(goals.calories - todayTotals.calories);
   const calPercent = goals.calories > 0 ? Math.min((todayTotals.calories / goals.calories) * 100, 100) : 0;
+  const isOverGoal = calRemaining < 0;
 
   const mealsByType = useMemo(() => {
     const grouped: Record<string, LoggedMeal[]> = {
@@ -194,11 +200,11 @@ export default function HomeView({
             </div>
           </div>
           <div className="text-right">
-            <p className="text-lg font-bold text-foreground">{calRemaining}</p>
-            <p className="text-[10px] text-muted -mt-0.5">kcal left</p>
+            <p className={`text-lg font-bold ${isOverGoal ? "text-red-500" : "text-foreground"}`}>{isOverGoal ? Math.abs(calRemaining) : calRemaining}</p>
+            <p className={`text-[10px] -mt-0.5 ${isOverGoal ? "text-red-500" : "text-muted"}`}>{isOverGoal ? "kcal over" : "kcal left"}</p>
             <div className="mt-1 h-1.5 w-20 rounded-full bg-border overflow-hidden">
               <motion.div
-                className="h-full rounded-full bg-accent"
+                className={`h-full rounded-full ${isOverGoal ? "bg-red-500" : "bg-accent"}`}
                 initial={{ width: 0 }}
                 animate={{ width: `${calPercent}%` }}
                 transition={{ duration: 0.8, ease: "easeOut" }}
