@@ -36,9 +36,9 @@ All components are in `src/components/`. All are `"use client"` components.
 - Refreshes streak on meal log
 
 ### `ScanView.tsx`
-**Scan tab — Camera/Describe toggle, camera analysis, dish editing, and meal logging.**
-- Props: `logMeal`, `meals`, `refreshStreak`, `onMealLogged?`, `initialMode?: "camera" | "describe"`, `healthContextString?`, `hasHealthProfile?`, `healthConditions?`, `onSetupHealthProfile?`
-- **Camera/Describe toggle** at top — pill-style switcher between camera scan and text describe modes
+**Scan tab — Camera/Describe/Upload toggle, camera analysis, photo upload, dish editing, and meal logging.**
+- Props: `logMeal`, `meals`, `refreshStreak`, `onMealLogged?`, `initialMode?: "camera" | "describe" | "upload"`, `healthContextString?`, `hasHealthProfile?`, `healthConditions?`, `onSetupHealthProfile?`
+- **Camera/Describe/Upload toggle** at top — pill-style switcher between camera scan, text describe, and photo upload modes
 - `initialMode` prop allows MealTypeSheet to open directly in Describe mode
 - Syncs mode when `initialMode` prop changes (e.g. navigating from MealTypeSheet)
 - Uses page-level `mealLog` and `userGoals` (passed as props, not internal hooks) so Home tab sees fresh data instantly
@@ -56,6 +56,7 @@ All components are in `src/components/`. All are `"use client"` components.
   - "Clear analysis & re-scan" link
   - After logging: 1.2s "Logged ✓" animation → clears analysis → calls `onMealLogged` (navigates to Home)
 - **Describe mode**: renders `DescribeMealView` component (see below)
+- **Upload mode**: renders `UploadPhotoView` component — file picker with drop zone, client-side compression (768px, JPEG 0.7), preview with dismiss, calls `dish.analyzeImage()`. Shares status badge + results section with camera mode.
 - **Alternative Selection Flow**:
   - When API returns alternatives, renders `DishAlternatives` component at top of expanded section
   - `handleAlternativeSelect()` performs instant swap (0s latency, no API call)

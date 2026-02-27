@@ -170,11 +170,14 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - **Goal**: More flexible and accurate portion estimation
 - **Context**: Users need finer control over portion sizes when describing meals via text
 
-### Upload Photo Mode for Scan
-- **Current**: Scan tab only supports live camera capture
-- **Improvement**: Add "Upload Photo" option alongside camera mode
-- **Use case**: Users want to analyze food photos from gallery (screenshots, shared images, etc.)
-- **Implementation**: File input picker → same analyze-dish API flow
+### ~~Upload Photo Mode for Scan~~ ✅ SHIPPED
+- ~~**Current**: Scan tab only supports live camera capture~~
+- ~~**Improvement**: Add "Upload Photo" option alongside camera mode~~
+- ~~**Use case**: Users want to analyze food photos from gallery (screenshots, shared images, etc.)~~
+- ~~**Implementation**: File input picker → same analyze-dish API flow~~
+- Shipped: 3-way mode toggle (Camera / Describe / Upload), `UploadPhotoView.tsx` component with drop zone + image compression (768px, JPEG 0.7), mock mode support in dev
+- New file: `UploadPhotoView.tsx`
+- Modified: `ScanView.tsx` (3-way toggle), `useDishScanner.ts` (`analyzeImage()` method)
 
 ### Extended Macro Tracking
 - **Current**: Tracks only Protein, Carbs, Fats, Calories
@@ -194,15 +197,16 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 - **UX**: Still allow manual override, but start with smart default
 - **Files**: Update `MealTypeSheet.tsx` and meal logging flows
 
-### Calorie Goal Exceeded Warning
-- **Current**: Shows green "Goal achieved" even when calories exceed target (e.g., 2388/2029 cal)
-- **Issue**: Misleading positive feedback when user has overeaten
-- **Fix**: 
-  - Ring color: Green (under goal) → Orange (5-10% over) → Red (>10% over)
-  - Message: "Daily goal complete!" → "Over goal by X cal" when exceeded
-  - Visual: Progress ring should show overflow state
-- **Files**: `HomeView.tsx` calorie ring logic, `capyMotivation.ts` message selection
-- **Screenshot reference**: User logged 2388/2029 cal but still saw green ring + positive message
+### ~~Calorie Goal Exceeded Warning~~ ✅ SHIPPED
+- ~~**Current**: Shows green "Goal achieved" even when calories exceed target (e.g., 2388/2029 cal)~~
+- ~~**Issue**: Misleading positive feedback when user has overeaten~~
+- ~~**Fix**:~~
+  - ~~Ring color: Green (under goal) → Orange (5-10% over) → Red (>10% over)~~
+  - ~~Message: "Daily goal complete!" → "Over goal by X cal" when exceeded~~
+  - ~~Visual: Progress ring should show overflow state~~
+- Shipped: CalorieRing dynamic color (green ≤100%, amber 100-110%, red >110%), "X kcal over" red text, progress bar turns red, new "slightly over" capy message band (105-130%)
+- Modified: `HomeView.tsx` (CalorieRing, calRemaining display), `capyLines.ts` (new SLIGHTLY_OVER band)
+- 21 E2E tests in `e2e/calorie-warning.spec.ts` + `e2e/upload-photo.spec.ts`
 
 ---
 
