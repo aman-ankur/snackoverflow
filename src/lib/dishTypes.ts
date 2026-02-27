@@ -116,6 +116,7 @@ export interface DescribedDish {
 
 export interface DescribeMealResult {
   dishes: DescribedDish[];
+  provider?: string;
 }
 
 /* ─── Health Personalization ─── */
