@@ -491,20 +491,20 @@ export async function POST(request: NextRequest) {
     const errors: string[] = [];
     const startTotal = Date.now();
 
-    // Tiered quality-first fallback strategy (optimized for accuracy + latency):
-    // Tier 1 (Best Accuracy): Gemini 2.5 Flash (6s timeout)
-    // Tier 2 (Reliable + Accurate): Gemini 2.0 Flash + OpenAI parallel race (6s timeout each)
-    // Tier 3 (Fast Fallback): Groq (5s timeout)
+    // Tiered quality-first fallback strategy (optimized for PAID Gemini):
+    // Tier 1 (Best Accuracy): Gemini 2.5 Flash (10s timeout - catches 99% of responses)
+    // Tier 2 (Reliable Fallback): OpenAI gpt-4o-mini (8s timeout)
+    // Tier 3 (Fast Last Resort): Groq (5s timeout)
 
     type ProviderResult = { result: DishAnalysisResult; provider: string; latencyMs: number };
 
     console.log("[Dish Scan] 🎯 Starting tiered quality-first fallback (Gemini → OpenAI → Groq)...\n");
 
-    // Tier 1: Gemini 2.5 Flash (best accuracy, 6s timeout for quality)
+    // Tier 1: Gemini 2.5 Flash (best accuracy, 10s timeout allows complex multi-dish analysis)
     const tier1Start = Date.now();
     try {
-      console.log(`[Dish Scan] 🚀 [Tier 1] Gemini 2.5 Flash (6s timeout)...`);
-      const hit = await withTimeout(tryGemini25Flash(base64Data, prompt), 6000);
+      console.log(`[Dish Scan] 🚀 [Tier 1] Gemini 2.5 Flash (10s timeout)...`);
+      const hit = await withTimeout(tryGemini25Flash(base64Data, prompt), 10000);
       if (hit) {
         const latencyMs = Date.now() - tier1Start;
         const totalMs = Date.now() - startTotal;
@@ -525,87 +525,31 @@ export async function POST(request: NextRequest) {
       errors.push(`Gemini 2.5 Flash: ${msg} (${failTime}ms)`);
     }
 
-    // Tier 2: Gemini 2.0 Flash + OpenAI parallel race (reliable + accurate)
-    console.log("\n[Dish Scan] 🔄 [Tier 2] Starting parallel race (Gemini 2.0 + OpenAI)...");
-    const tier2Runners: Promise<ProviderResult | null>[] = [];
-
-    // Gemini 2.0 Flash
-    if (process.env.GEMINI_API_KEY) {
-      tier2Runners.push(
-        (async () => {
-          const t0 = Date.now();
-          console.log(`[Dish Scan] 🚀 [Tier 2] Gemini 2.0 Flash (6s timeout)...`);
-          try {
-            const hit = await withTimeout(tryGemini20Flash(base64Data, prompt), 6000);
-            if (hit) {
-              const latencyMs = Date.now() - t0;
-              console.log(`[Dish Scan] ✅ [Tier 2] Gemini 2.0 Flash succeeded in ${latencyMs}ms (model: gemini-2.0-flash)`);
-              return { result: hit.result, provider: hit.provider, latencyMs };
-            }
-            const failTime = Date.now() - t0;
-            console.log(`[Dish Scan] ⚠️ [Tier 2] Gemini 2.0 Flash rate limited after ${failTime}ms`);
-            errors.push(`Gemini 2.0 Flash rate limited (${failTime}ms)`);
-          } catch (err: unknown) {
-            const failTime = Date.now() - t0;
-            const msg = err instanceof Error ? err.message : "failed";
-            const isTimeout = msg.includes("Timeout");
-            console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} [Tier 2] Gemini 2.0 Flash ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
-            errors.push(`Gemini 2.0 Flash: ${msg} (${failTime}ms)`);
-          }
-          return null;
-        })()
-      );
-    }
-
-    // OpenAI gpt-4o-mini
+    // Tier 2: OpenAI gpt-4o-mini (reliable fallback, 8s timeout)
     if (process.env.OPENAI_API_KEY) {
-      tier2Runners.push(
-        (async () => {
-          const t0 = Date.now();
-          console.log(`[Dish Scan] 🚀 [Tier 2] OpenAI gpt-4o-mini (6s timeout)...`);
-          try {
-            const hit = await withTimeout(tryOpenAI(base64Data, prompt), 6000);
-            if (hit) {
-              const latencyMs = Date.now() - t0;
-              console.log(`[Dish Scan] ✅ [Tier 2] OpenAI succeeded in ${latencyMs}ms (model: gpt-4o-mini)`);
-              return { result: hit.result, provider: hit.provider, latencyMs };
-            }
-            const failTime = Date.now() - t0;
-            console.log(`[Dish Scan] ⚠️ [Tier 2] OpenAI rate limited after ${failTime}ms`);
-            errors.push(`OpenAI rate limited (${failTime}ms)`);
-          } catch (err: unknown) {
-            const failTime = Date.now() - t0;
-            const msg = err instanceof Error ? err.message : "failed";
-            const isTimeout = msg.includes("Timeout");
-            console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} [Tier 2] OpenAI ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
-            errors.push(`OpenAI: ${msg} (${failTime}ms)`);
-          }
-          return null;
-        })()
-      );
-    }
-
-    // Tier 2: First-success race
-    if (tier2Runners.length > 0) {
-      const tier2Winner = await new Promise<ProviderResult | null>((resolve) => {
-        let pending = tier2Runners.length;
-        for (const runner of tier2Runners) {
-          runner.then((val) => {
-            if (val) resolve(val);
-            else if (--pending === 0) resolve(null);
-          }).catch(() => {
-            if (--pending === 0) resolve(null);
-          });
+      console.log("\n[Dish Scan] 🔄 [Tier 2] OpenAI fallback...");
+      const tier2Start = Date.now();
+      try {
+        console.log(`[Dish Scan] 🚀 [Tier 2] OpenAI gpt-4o-mini (8s timeout)...`);
+        const hit = await withTimeout(tryOpenAI(base64Data, prompt), 8000);
+        if (hit) {
+          const latencyMs = Date.now() - tier2Start;
+          const totalMs = Date.now() - startTotal;
+          console.log(`[Dish Scan] ✅ [Tier 2] OpenAI succeeded in ${latencyMs}ms (model: gpt-4o-mini)`);
+          console.log(`[Dish Scan] 🏆 WINNER: [Tier 2] ${hit.provider} in ${latencyMs}ms (total: ${totalMs}ms)\n`);
+          const data = { ...hit.result, _provider: hit.provider, _latencyMs: latencyMs };
+          setCachedResult(cacheKey, data);
+          return NextResponse.json(data);
         }
-      });
-
-      if (tier2Winner) {
-        const { result, provider, latencyMs } = tier2Winner;
-        const totalMs = Date.now() - startTotal;
-        console.log(`[Dish Scan] 🏆 WINNER: [Tier 2] ${provider} in ${latencyMs}ms (total: ${totalMs}ms)\n`);
-        const data = { ...result, _provider: provider, _latencyMs: latencyMs };
-        setCachedResult(cacheKey, data);
-        return NextResponse.json(data);
+        const failTime = Date.now() - tier2Start;
+        console.log(`[Dish Scan] ⚠️ [Tier 2] OpenAI rate limited after ${failTime}ms`);
+        errors.push(`OpenAI rate limited (${failTime}ms)`);
+      } catch (err: unknown) {
+        const failTime = Date.now() - tier2Start;
+        const msg = err instanceof Error ? err.message : "failed";
+        const isTimeout = msg.includes("Timeout");
+        console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} [Tier 2] OpenAI ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
+        errors.push(`OpenAI: ${msg} (${failTime}ms)`);
       }
     }
 
