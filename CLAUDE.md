@@ -86,14 +86,14 @@ public/model/                 — 3D models, animations, assets
 
 | Feature | Primary (Free) | Fallback 1 | Fallback 2 |
 |---------|---|---|---|
-| Dish Scan | Gemini 2.5 Flash | **Staggered parallel race** (OpenAI + Gemini 2.0 + Groq after 2s) | — |
+| Dish Scan | Gemini 2.5 Flash (6s) | **Tier 2 parallel race** (Gemini 2.0 + OpenAI, 6s each) | Groq (5s, last resort) |
 | Describe Meal | Gemini 2.0 Flash-Lite | OpenAI gpt-4.1-nano | Groq (parallel race) |
 | Eating Analysis | Gemini 2.5 Flash | OpenAI gpt-4.1-mini | Groq Llama 4 Scout |
 | Health Verdict | Gemini 2.5 Flash | Claude 3.5 Haiku | GPT-4.1-mini |
 | Fridge Scan | Gemini 2.0 Flash | Gemini 2.0 Flash-Lite | Groq Llama 4 Scout |
 | Hindi TTS | Sarvam AI Bulbul v3 | — | — |
 
-**Cost Controls:** Dish scan: 768px @ 0.7 JPEG + staggered parallel fallback (2s stagger, 4s per-provider timeout); Fridge scan: 512px @ 0.6; client-side pre-aggregation for eating analysis; in-memory caches (2 min dish scan, 5 min / 200 entries describe meal); smart report caching (no re-gen if no new meals); 15s client-side fetch timeout (safety net). Estimated cost: ₹0/month for daily personal use.
+**Cost Controls:** Dish scan: 768px @ 0.7 JPEG + tiered quality-first fallback (6s Gemini, 6s Tier 2 race, 5s Groq); Fridge scan: 512px @ 0.6; client-side pre-aggregation for eating analysis; in-memory caches (2 min dish scan, 5 min / 200 entries describe meal); smart report caching (no re-gen if no new meals); 15s client-side fetch timeout (safety net). **Quality optimized**: longer timeouts prioritize accuracy over speed. Estimated cost: ₹0/month for daily personal use.
 
 ## Component Hierarchy (5-Tab Router)
 
@@ -133,8 +133,11 @@ page.tsx (main shell)
   - **Fridge scan:** 512px @ 0.6 JPEG (~40-60KB) — proven standard
 - Client-side pre-aggregation reduces eating analysis tokens from ~4000 to ~400
 - In-memory caches prevent redundant AI calls on rapid re-scans
-- **Staggered parallel fallback** for dish scan: Gemini 2.5 Flash gets 2s head start, then parallel race with all providers (protects against 10 RPM rate limit)
-- Per-provider timeouts: 4s per provider (dish scan), 15s client-side fetch timeout (safety net)
+- **Tiered quality-first fallback** for dish scan (prioritizes accuracy + latency):
+  - **Tier 1** (0-6s): Gemini 2.5 Flash (best accuracy)
+  - **Tier 2** (6-12s): Gemini 2.0 Flash + OpenAI parallel race (reliable fallback)
+  - **Tier 3** (12-17s): Groq (fast last resort)
+- Longer timeouts (6s) prioritize quality over speed
 
 ### Calorie Accuracy
 - IFCT 2017 + USDA reference table injected into prompts for Indian food accuracy
