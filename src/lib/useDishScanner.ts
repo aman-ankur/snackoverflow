@@ -128,6 +128,7 @@ export function useDishScanner() {
   const [scanCount, setScanCount] = useState(0);
   const [mealType, setMealType] = useState<MealType>("lunch");
   const [capturedFrame, setCapturedFrame] = useState<string | null>(null);
+  const [scanStatus, setScanStatus] = useState<string | null>(null);
 
   useEffect(() => {
     captureCanvasRef.current = document.createElement("canvas");
@@ -201,7 +202,7 @@ export function useDishScanner() {
     const canvas = captureCanvasRef.current;
     if (!video || !canvas || video.readyState < 2) return null;
 
-    const maxWidth = 1024;
+    const maxWidth = 768;
     const scale = Math.min(maxWidth / video.videoWidth, 1);
     canvas.width = Math.round(video.videoWidth * scale);
     canvas.height = Math.round(video.videoHeight * scale);
@@ -210,7 +211,7 @@ export function useDishScanner() {
     if (!ctx) return null;
 
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/jpeg", 0.8);
+    return canvas.toDataURL("image/jpeg", 0.7);
   }, []);
 
   const analyzeFrame = useCallback(async () => {
@@ -247,15 +248,22 @@ export function useDishScanner() {
 
     setIsAnalyzing(true);
     setError(null);
+    setScanStatus("Analyzing with Gemini...");
     setCapturedFrame(frame);
     lastFrameRef.current = frame;
 
     try {
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 15000); // 15s client-side timeout
+
       const res = await fetch("/api/analyze-dish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ image: frame, mealType }),
+        signal: abortController.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const data: unknown = await res.json();
 
@@ -271,9 +279,15 @@ export function useDishScanner() {
       setAnalysis(result);
       setLastAnalyzedAt(new Date());
       setScanCount((count) => count + 1);
+      setScanStatus(null);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Dish analysis failed";
-      setError(message);
+      if (err instanceof Error && err.name === "AbortError") {
+        setError("Analysis timed out. Please try again.");
+      } else {
+        const message = err instanceof Error ? err.message : "Dish analysis failed";
+        setError(message);
+      }
+      setScanStatus(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -285,6 +299,7 @@ export function useDishScanner() {
 
     setIsAnalyzing(true);
     setError(null);
+    setScanStatus("Re-analyzing with correction...");
 
     try {
       const res = await fetch("/api/analyze-dish", {
@@ -310,9 +325,11 @@ export function useDishScanner() {
       const result = normalizeResult(data);
       setAnalysis(result);
       setLastAnalyzedAt(new Date());
+      setScanStatus(null);
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Correction failed";
       setError(message);
+      setScanStatus(null);
     } finally {
       setIsAnalyzing(false);
     }
@@ -348,6 +365,7 @@ export function useDishScanner() {
     scanCount,
     capturedFrame,
     mockMode,
+    scanStatus,
     startCamera,
     stopCamera,
     flipCamera,
