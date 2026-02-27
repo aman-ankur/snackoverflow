@@ -53,6 +53,12 @@ const OVER_GOAL = [
   "That's a lot! Tomorrow's a fresh start 💚",
 ];
 
+const SLIGHTLY_OVER = [
+  "A bit over today, no stress! Balance tomorrow 🌿",
+  "Slightly past the goal — just be mindful tonight 🍃",
+  "A little over, nothing major! Stay hydrated 💧",
+];
+
 const PROTEIN_CRUSHED = [
   "Protein goals crushed! Your muscles thank you 💪",
   "Look at that protein! Gains incoming 🏋️",
@@ -100,12 +106,17 @@ export function getCapyState(
     return { mood: "sleepy", line: name ? `Hey ${name}, no meals yet today. Let's scan something! 📸` : "No meals yet today. Let's scan something! 📸" };
   }
 
-  // Over goal
+  // Over goal (>130%)
   if (calPercent > 1.3) {
     return { mood: "concerned", line: pick(OVER_GOAL) };
   }
 
-  // Hit goal
+  // Slightly over (105-130%)
+  if (calPercent > 1.05) {
+    return { mood: "happy", line: pick(SLIGHTLY_OVER) };
+  }
+
+  // Hit goal (95-105%)
   if (calPercent >= 0.95) {
     return { mood: "excited", line: pick(GOAL_HIT) };
   }
