@@ -513,6 +513,23 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
         onScanAgain={() => { dish.clearAnalysis(); dish.startCamera(); }}
       />
 
+      {/* Status badge - shows provider being attempted */}
+      <AnimatePresence>
+        {dish.isAnalyzing && dish.scanStatus && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mt-3 mx-auto w-fit flex items-center gap-2 rounded-full bg-white/90 backdrop-blur-md px-4 py-2 border border-border shadow-sm"
+          >
+            <RefreshCw className="h-3.5 w-3.5 text-accent animate-spin" />
+            <span className="text-xs font-medium text-foreground">
+              {dish.scanStatus}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Results */}
       <div ref={resultsRef} />
       <AnimatePresence mode="popLayout">
