@@ -33,6 +33,24 @@ const MEAL_TYPE_OPTIONS: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
 
 /* ─── Helpers ─── */
 
+function getProviderDisplayName(providerCode: string): string {
+  const providerMap: Record<string, string> = {
+    "G25F": "Gemini 2.5 Flash",
+    "G20F": "Gemini 2.0 Flash",
+    "OAI4m": "OpenAI GPT-4o Mini",
+    "OAI41n": "OpenAI GPT-4.1 Nano",
+    "GRQM": "Groq Llama 4 Maverick",
+    "GRQS": "Groq Llama 4 Scout",
+    "gemini-2.5-flash": "Gemini 2.5 Flash",
+    "gemini-2.0-flash": "Gemini 2.0 Flash",
+    "gemini-2.0-flash-lite": "Gemini 2.0 Flash Lite",
+    "gpt-4o-mini": "OpenAI GPT-4o Mini",
+    "gpt-4.1-nano": "OpenAI GPT-4.1 Nano",
+  };
+
+  return providerMap[providerCode] || providerCode;
+}
+
 function getAutoMealType(): MealType {
   const hour = new Date().getHours();
   if (hour >= 5 && hour < 11) return "breakfast";
@@ -513,6 +531,23 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
         onScanAgain={() => { dish.clearAnalysis(); dish.startCamera(); }}
       />
 
+      {/* Status badge - shows provider being attempted */}
+      <AnimatePresence>
+        {dish.isAnalyzing && dish.scanStatus && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -10 }}
+            className="mt-3 mx-auto w-fit flex items-center gap-2 rounded-full bg-white/90 backdrop-blur-md px-4 py-2 border border-border shadow-sm"
+          >
+            <RefreshCw className="h-3.5 w-3.5 text-accent animate-spin" />
+            <span className="text-xs font-medium text-foreground">
+              {dish.scanStatus}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       {/* Results */}
       <div ref={resultsRef} />
       <AnimatePresence mode="popLayout">
@@ -927,7 +962,21 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
               </button>
             </div>
 
-            {/* G. Clear link */}
+            {/* G. Provider attribution badge */}
+            {dish.analysis?.provider && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.6 }}
+                className="flex items-center justify-center gap-1.5 py-2"
+              >
+                <span className="text-[10px] text-muted/60 font-medium tracking-wide">
+                  Analyzed by {getProviderDisplayName(dish.analysis.provider)}
+                </span>
+              </motion.div>
+            )}
+
+            {/* H. Clear link */}
             <button
               onClick={dish.clearAnalysis}
               className="w-full text-center py-2 text-xs text-muted hover:text-foreground transition-colors"
