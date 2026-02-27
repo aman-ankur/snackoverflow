@@ -84,16 +84,16 @@ public/model/                 — 3D models, animations, assets
 
 ## AI Provider Fallback Strategy
 
-| Feature | Primary (Free) | Fallback 1 | Fallback 2 |
+| Feature | Primary (Paid) | Fallback 1 | Fallback 2 |
 |---------|---|---|---|
-| Dish Scan | Gemini 2.5 Flash (6s) | **Tier 2 parallel race** (Gemini 2.0 + OpenAI, 6s each) | Groq (5s, last resort) |
+| Dish Scan | Gemini 2.5 Flash (10s) | OpenAI gpt-4o-mini (8s) | Groq (5s, last resort) |
 | Describe Meal | Gemini 2.0 Flash-Lite | OpenAI gpt-4.1-nano | Groq (parallel race) |
 | Eating Analysis | Gemini 2.5 Flash | OpenAI gpt-4.1-mini | Groq Llama 4 Scout |
 | Health Verdict | Gemini 2.5 Flash | Claude 3.5 Haiku | GPT-4.1-mini |
 | Fridge Scan | Gemini 2.0 Flash | Gemini 2.0 Flash-Lite | Groq Llama 4 Scout |
 | Hindi TTS | Sarvam AI Bulbul v3 | — | — |
 
-**Cost Controls:** Dish scan: 768px @ 0.7 JPEG + tiered quality-first fallback (6s Gemini, 6s Tier 2 race, 5s Groq); Fridge scan: 512px @ 0.6; client-side pre-aggregation for eating analysis; in-memory caches (2 min dish scan, 5 min / 200 entries describe meal); smart report caching (no re-gen if no new meals); 15s client-side fetch timeout (safety net). **Quality optimized**: longer timeouts prioritize accuracy over speed. Estimated cost: ₹0/month for daily personal use.
+**Cost Controls:** Dish scan: 768px @ 0.7 JPEG + sequential quality-first fallback (10s Gemini, 8s OpenAI, 5s Groq); Fridge scan: 512px @ 0.6; client-side pre-aggregation for eating analysis; in-memory caches (2 min dish scan, 5 min / 200 entries describe meal); smart report caching (no re-gen if no new meals); 15s client-side fetch timeout (safety net). **Quality optimized**: longer timeouts prioritize accuracy over speed. With paid Gemini billing enabled.
 
 ## Component Hierarchy (5-Tab Router)
 
