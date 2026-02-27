@@ -501,17 +501,23 @@ export async function POST(request: NextRequest) {
     // Primary provider: Gemini 2.5 Flash
     const gemini25Promise = (async (): Promise<ProviderResult | null> => {
       const t0 = Date.now();
+      console.log(`[Dish Scan] 🚀 Starting Gemini 2.5 Flash (primary, 4s timeout)...`);
       try {
         const hit = await withTimeout(tryGemini25Flash(base64Data, prompt), 4000);
         if (hit) {
           const latencyMs = Date.now() - t0;
-          console.log(`[Dish Scan] Gemini 2.5 Flash succeeded in ${latencyMs}ms`);
+          console.log(`[Dish Scan] ✅ Gemini 2.5 Flash succeeded in ${latencyMs}ms (model: gemini-2.5-flash)`);
           return { result: hit.result, provider: hit.provider, latencyMs };
         }
-        errors.push(`Gemini 2.5 Flash rate limited (${Date.now() - t0}ms)`);
+        const failTime = Date.now() - t0;
+        console.log(`[Dish Scan] ⚠️ Gemini 2.5 Flash rate limited after ${failTime}ms`);
+        errors.push(`Gemini 2.5 Flash rate limited (${failTime}ms)`);
       } catch (err: unknown) {
+        const failTime = Date.now() - t0;
         const msg = err instanceof Error ? err.message : "failed";
-        errors.push(`Gemini 2.5 Flash: ${msg} (${Date.now() - t0}ms)`);
+        const isTimeout = msg.includes("Timeout");
+        console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} Gemini 2.5 Flash ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
+        errors.push(`Gemini 2.5 Flash: ${msg} (${failTime}ms)`);
       }
       return null;
     })();
@@ -522,7 +528,7 @@ export async function POST(request: NextRequest) {
     // Parallel race with all other providers
     const parallelRace = (async (): Promise<ProviderResult | null> => {
       await staggerDelay; // Wait 2s before starting
-      console.log("[Dish Scan] Starting staggered parallel race (Gemini 2.5 still running)");
+      console.log("[Dish Scan] ⏳ 2s elapsed, starting staggered parallel race (Gemini 2.5 still running)...");
 
       const runners: Promise<ProviderResult | null>[] = [];
 
@@ -531,17 +537,23 @@ export async function POST(request: NextRequest) {
         runners.push(
           (async () => {
             const t0 = Date.now();
+            console.log(`[Dish Scan] 🚀 Starting OpenAI gpt-4o-mini (4s timeout)...`);
             try {
               const hit = await withTimeout(tryOpenAI(base64Data, prompt), 4000);
               if (hit) {
                 const latencyMs = Date.now() - t0;
-                console.log(`[Dish Scan] OpenAI succeeded in ${latencyMs}ms`);
+                console.log(`[Dish Scan] ✅ OpenAI succeeded in ${latencyMs}ms (model: gpt-4o-mini)`);
                 return { result: hit.result, provider: hit.provider, latencyMs };
               }
-              errors.push(`OpenAI rate limited (${Date.now() - t0}ms)`);
+              const failTime = Date.now() - t0;
+              console.log(`[Dish Scan] ⚠️ OpenAI rate limited after ${failTime}ms`);
+              errors.push(`OpenAI rate limited (${failTime}ms)`);
             } catch (err: unknown) {
+              const failTime = Date.now() - t0;
               const msg = err instanceof Error ? err.message : "failed";
-              errors.push(`OpenAI: ${msg} (${Date.now() - t0}ms)`);
+              const isTimeout = msg.includes("Timeout");
+              console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} OpenAI ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
+              errors.push(`OpenAI: ${msg} (${failTime}ms)`);
             }
             return null;
           })()
@@ -553,17 +565,23 @@ export async function POST(request: NextRequest) {
         runners.push(
           (async () => {
             const t0 = Date.now();
+            console.log(`[Dish Scan] 🚀 Starting Gemini 2.0 Flash (4s timeout)...`);
             try {
               const hit = await withTimeout(tryGemini20Flash(base64Data, prompt), 4000);
               if (hit) {
                 const latencyMs = Date.now() - t0;
-                console.log(`[Dish Scan] Gemini 2.0 Flash succeeded in ${latencyMs}ms`);
+                console.log(`[Dish Scan] ✅ Gemini 2.0 Flash succeeded in ${latencyMs}ms (model: gemini-2.0-flash)`);
                 return { result: hit.result, provider: hit.provider, latencyMs };
               }
-              errors.push(`Gemini 2.0 Flash rate limited (${Date.now() - t0}ms)`);
+              const failTime = Date.now() - t0;
+              console.log(`[Dish Scan] ⚠️ Gemini 2.0 Flash rate limited after ${failTime}ms`);
+              errors.push(`Gemini 2.0 Flash rate limited (${failTime}ms)`);
             } catch (err: unknown) {
+              const failTime = Date.now() - t0;
               const msg = err instanceof Error ? err.message : "failed";
-              errors.push(`Gemini 2.0 Flash: ${msg} (${Date.now() - t0}ms)`);
+              const isTimeout = msg.includes("Timeout");
+              console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} Gemini 2.0 Flash ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
+              errors.push(`Gemini 2.0 Flash: ${msg} (${failTime}ms)`);
             }
             return null;
           })()
@@ -575,17 +593,23 @@ export async function POST(request: NextRequest) {
         runners.push(
           (async () => {
             const t0 = Date.now();
+            console.log(`[Dish Scan] 🚀 Starting Groq Llama 4 Scout (4s timeout)...`);
             try {
               const hit = await withTimeout(tryGroq(base64Data, prompt), 4000);
               if (hit) {
                 const latencyMs = Date.now() - t0;
-                console.log(`[Dish Scan] Groq succeeded in ${latencyMs}ms`);
+                console.log(`[Dish Scan] ✅ Groq succeeded in ${latencyMs}ms (model: ${hit.provider})`);
                 return { result: hit.result, provider: hit.provider, latencyMs };
               }
-              errors.push(`Groq rate limited (${Date.now() - t0}ms)`);
+              const failTime = Date.now() - t0;
+              console.log(`[Dish Scan] ⚠️ Groq rate limited after ${failTime}ms`);
+              errors.push(`Groq rate limited (${failTime}ms)`);
             } catch (err: unknown) {
+              const failTime = Date.now() - t0;
               const msg = err instanceof Error ? err.message : "failed";
-              errors.push(`Groq: ${msg} (${Date.now() - t0}ms)`);
+              const isTimeout = msg.includes("Timeout");
+              console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} Groq ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
+              errors.push(`Groq: ${msg} (${failTime}ms)`);
             }
             return null;
           })()
@@ -625,7 +649,7 @@ export async function POST(request: NextRequest) {
     if (winner) {
       const { result, provider, latencyMs } = winner;
       const totalMs = Date.now() - startTotal;
-      console.log(`[Dish Scan] ${provider} won in ${latencyMs}ms (total ${totalMs}ms)`);
+      console.log(`\n[Dish Scan] 🏆 WINNER: ${provider} in ${latencyMs}ms (total request: ${totalMs}ms)\n`);
       const data = { ...result, _provider: provider, _latencyMs: latencyMs };
       setCachedResult(cacheKey, data);
       return NextResponse.json(data);
