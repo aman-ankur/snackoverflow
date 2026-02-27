@@ -190,6 +190,15 @@ function isRateLimitError(msg: string): boolean {
   );
 }
 
+function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((_, reject) =>
+      setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms`)), timeoutMs)
+    ),
+  ]);
+}
+
 function toNumber(value: unknown): number {
   if (typeof value === "number" && Number.isFinite(value)) return value;
   if (typeof value === "string") {
@@ -480,57 +489,146 @@ export async function POST(request: NextRequest) {
     }
 
     const errors: string[] = [];
+    const startTotal = Date.now();
 
-    // Tier 1: Gemini 2.5 Flash (free, best quality)
-    try {
-      const hit = await tryGemini25Flash(base64Data, prompt);
-      if (hit) {
-        const data = { ...hit.result, provider: hit.provider };
-        setCachedResult(cacheKey, data);
-        return NextResponse.json(data);
-      }
-      errors.push("Gemini 2.5 Flash rate limited");
-    } catch (err: unknown) {
-      errors.push(`Gemini 2.5 Flash: ${err instanceof Error ? err.message : "failed"}`);
-    }
+    // Staggered parallel fallback strategy:
+    // 1. Try Gemini 2.5 Flash first (4s timeout)
+    // 2. If no response after 2s, start parallel race with all other providers
+    // 3. First valid result from any provider wins
 
-    // Tier 2: OpenAI GPT-4o-mini (cheap, accurate)
-    try {
-      const hit = await tryOpenAI(base64Data, prompt);
-      if (hit) {
-        const data = { ...hit.result, provider: hit.provider };
-        setCachedResult(cacheKey, data);
-        return NextResponse.json(data);
-      }
-      errors.push("OpenAI rate limited or no key");
-    } catch (err: unknown) {
-      errors.push(`OpenAI: ${err instanceof Error ? err.message : "failed"}`);
-    }
+    type ProviderResult = { result: DishAnalysisResult; provider: string; latencyMs: number };
 
-    // Tier 3: Gemini 2.0 Flash (free fallback)
-    try {
-      const hit = await tryGemini20Flash(base64Data, prompt);
-      if (hit) {
-        const data = { ...hit.result, provider: hit.provider };
-        setCachedResult(cacheKey, data);
-        return NextResponse.json(data);
+    // Primary provider: Gemini 2.5 Flash
+    const gemini25Promise = (async (): Promise<ProviderResult | null> => {
+      const t0 = Date.now();
+      try {
+        const hit = await withTimeout(tryGemini25Flash(base64Data, prompt), 4000);
+        if (hit) {
+          const latencyMs = Date.now() - t0;
+          console.log(`[Dish Scan] Gemini 2.5 Flash succeeded in ${latencyMs}ms`);
+          return { result: hit.result, provider: hit.provider, latencyMs };
+        }
+        errors.push(`Gemini 2.5 Flash rate limited (${Date.now() - t0}ms)`);
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : "failed";
+        errors.push(`Gemini 2.5 Flash: ${msg} (${Date.now() - t0}ms)`);
       }
-      errors.push("Gemini 2.0 Flash rate limited");
-    } catch (err: unknown) {
-      errors.push(`Gemini 2.0 Flash: ${err instanceof Error ? err.message : "failed"}`);
-    }
+      return null;
+    })();
 
-    // Tier 4: Groq Llama (free, last resort)
-    try {
-      const hit = await tryGroq(base64Data, prompt);
-      if (hit) {
-        const data = { ...hit.result, provider: hit.provider };
-        setCachedResult(cacheKey, data);
-        return NextResponse.json(data);
+    // Stagger trigger: wait 2s before starting parallel race
+    const staggerDelay = new Promise<null>((resolve) => setTimeout(() => resolve(null), 2000));
+
+    // Parallel race with all other providers
+    const parallelRace = (async (): Promise<ProviderResult | null> => {
+      await staggerDelay; // Wait 2s before starting
+      console.log("[Dish Scan] Starting staggered parallel race (Gemini 2.5 still running)");
+
+      const runners: Promise<ProviderResult | null>[] = [];
+
+      // OpenAI
+      if (process.env.OPENAI_API_KEY) {
+        runners.push(
+          (async () => {
+            const t0 = Date.now();
+            try {
+              const hit = await withTimeout(tryOpenAI(base64Data, prompt), 4000);
+              if (hit) {
+                const latencyMs = Date.now() - t0;
+                console.log(`[Dish Scan] OpenAI succeeded in ${latencyMs}ms`);
+                return { result: hit.result, provider: hit.provider, latencyMs };
+              }
+              errors.push(`OpenAI rate limited (${Date.now() - t0}ms)`);
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : "failed";
+              errors.push(`OpenAI: ${msg} (${Date.now() - t0}ms)`);
+            }
+            return null;
+          })()
+        );
       }
-      errors.push("Groq rate limited or no key");
-    } catch (err: unknown) {
-      errors.push(`Groq: ${err instanceof Error ? err.message : "failed"}`);
+
+      // Gemini 2.0 Flash
+      if (process.env.GEMINI_API_KEY) {
+        runners.push(
+          (async () => {
+            const t0 = Date.now();
+            try {
+              const hit = await withTimeout(tryGemini20Flash(base64Data, prompt), 4000);
+              if (hit) {
+                const latencyMs = Date.now() - t0;
+                console.log(`[Dish Scan] Gemini 2.0 Flash succeeded in ${latencyMs}ms`);
+                return { result: hit.result, provider: hit.provider, latencyMs };
+              }
+              errors.push(`Gemini 2.0 Flash rate limited (${Date.now() - t0}ms)`);
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : "failed";
+              errors.push(`Gemini 2.0 Flash: ${msg} (${Date.now() - t0}ms)`);
+            }
+            return null;
+          })()
+        );
+      }
+
+      // Groq
+      if (process.env.GROQ_API_KEY) {
+        runners.push(
+          (async () => {
+            const t0 = Date.now();
+            try {
+              const hit = await withTimeout(tryGroq(base64Data, prompt), 4000);
+              if (hit) {
+                const latencyMs = Date.now() - t0;
+                console.log(`[Dish Scan] Groq succeeded in ${latencyMs}ms`);
+                return { result: hit.result, provider: hit.provider, latencyMs };
+              }
+              errors.push(`Groq rate limited (${Date.now() - t0}ms)`);
+            } catch (err: unknown) {
+              const msg = err instanceof Error ? err.message : "failed";
+              errors.push(`Groq: ${msg} (${Date.now() - t0}ms)`);
+            }
+            return null;
+          })()
+        );
+      }
+
+      if (runners.length === 0) return null;
+
+      // First-success race: resolve as soon as ANY provider returns valid data
+      return new Promise<ProviderResult | null>((resolve) => {
+        let pending = runners.length;
+        for (const runner of runners) {
+          runner.then((val) => {
+            if (val) resolve(val);
+            else if (--pending === 0) resolve(null);
+          }).catch(() => {
+            if (--pending === 0) resolve(null);
+          });
+        }
+      });
+    })();
+
+    // Race primary vs parallel race (primary still gets first chance)
+    const allProviders = [gemini25Promise, parallelRace];
+    const winner = await new Promise<ProviderResult | null>((resolve) => {
+      let pending = allProviders.length;
+      for (const runner of allProviders) {
+        runner.then((val) => {
+          if (val) resolve(val);
+          else if (--pending === 0) resolve(null);
+        }).catch(() => {
+          if (--pending === 0) resolve(null);
+        });
+      }
+    });
+
+    if (winner) {
+      const { result, provider, latencyMs } = winner;
+      const totalMs = Date.now() - startTotal;
+      console.log(`[Dish Scan] ${provider} won in ${latencyMs}ms (total ${totalMs}ms)`);
+      const data = { ...result, _provider: provider, _latencyMs: latencyMs };
+      setCachedResult(cacheKey, data);
+      return NextResponse.json(data);
     }
 
     const hasAnyKey = process.env.GEMINI_API_KEY || process.env.OPENAI_API_KEY || process.env.GROQ_API_KEY;
