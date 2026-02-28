@@ -19,6 +19,8 @@
     "@tensorflow-models/coco-ssd": "^2.2.3",
     "@tensorflow/tfjs": "^4.22.0",
     "@types/three": "^0.183.1",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.2",
     "framer-motion": "^12.34.2",
     "groq-sdk": "^0.37.0",
     "lottie-react": "^2.4.1",

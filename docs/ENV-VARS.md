@@ -61,6 +61,24 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
 
 ---
 
+## Rate Limiting (Vercel KV / Upstash Redis)
+
+### `KV_REST_API_URL` / `UPSTASH_REDIS_REST_URL`
+- **Purpose**: Persistent rate limiting across deploys
+- **Setup**: Vercel Dashboard → Storage → Create KV Store → link to project (auto-provisions `KV_REST_API_*` env vars). Or use Upstash directly with `UPSTASH_REDIS_REST_*` vars.
+- **Cost**: Free tier — 10K commands/day
+- **Used in**: `src/lib/rateLimit.ts` (shared by all API routes)
+- **Note**: Optional. Without this, rate limiting is skipped — all requests allowed.
+
+### `KV_REST_API_TOKEN` / `UPSTASH_REDIS_REST_TOKEN`
+- **Purpose**: Auth token for the Redis REST API
+- **Setup**: Auto-provisioned when linking Vercel KV store to project
+- **Used in**: `src/lib/rateLimit.ts`
+
+> **Rate limit tiers**: Heavy (10 req/60s) — image analysis routes. Medium (20 req/60s) — text analysis routes. Light (30 req/60s) — small generation routes. Uses sliding window algorithm. Supports both Vercel KV and direct Upstash env var names.
+
+---
+
 ## Optional
 
 ### `OPENAI_API_KEY`

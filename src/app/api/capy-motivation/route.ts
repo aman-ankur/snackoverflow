@@ -1,6 +1,7 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
 
 function buildPrompt(input: {
   streak: number;
@@ -71,6 +72,9 @@ async function tryGroq(prompt: string): Promise<{ message: string; mood: string 
 
 export async function POST(request: NextRequest) {
   try {
+    const blocked = await checkRateLimit(request, "light");
+    if (blocked) return blocked;
+
     const input = await request.json();
     const prompt = buildPrompt(input);
 

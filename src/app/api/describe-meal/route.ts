@@ -2,6 +2,7 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
 import type { ConfidenceLevel, DescribedDish, DescribeMealResult, PortionOption } from "@/lib/dishTypes";
 import { buildReferenceTable } from "@/lib/nutritionReference";
 
@@ -356,6 +357,9 @@ async function tryGroq(prompt: string): Promise<DescribeMealResult | null> {
 
 export async function POST(request: NextRequest) {
   try {
+    const blocked = await checkRateLimit(request, "medium");
+    if (blocked) return blocked;
+
     const body = await request.json();
     const description = typeof body.description === "string" ? body.description.trim() : "";
     const mealType = typeof body.mealType === "string" ? body.mealType.trim() : "unknown";

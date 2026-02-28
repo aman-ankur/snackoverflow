@@ -1,12 +1,20 @@
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { validateString } from "@/lib/validateInput";
 
 export async function POST(request: NextRequest) {
   try {
+    const blocked = await checkRateLimit(request, "light");
+    if (blocked) return blocked;
+
     const { text } = await request.json();
 
     if (!text) {
       return NextResponse.json({ error: "Text is required" }, { status: 400 });
     }
+
+    const textErr = validateString(text, 2000, "text");
+    if (textErr) return NextResponse.json({ error: textErr }, { status: 400 });
 
     const sarvamKey = process.env.SARVAM_API_KEY;
     if (!sarvamKey) {

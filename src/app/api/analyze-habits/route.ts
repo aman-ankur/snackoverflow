@@ -2,6 +2,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { validateString } from "@/lib/validateInput";
 import type {
   EatingReport,
   AnalysisScore,
@@ -365,12 +367,20 @@ async function tryGroq(prompt: string): Promise<EatingReport | null> {
 
 export async function POST(request: NextRequest) {
   try {
+    const blocked = await checkRateLimit(request, "medium");
+    if (blocked) return blocked;
+
     const body = (await request.json()) as AnalyzeRequest;
     const { aggregateSummary, healthContext, previousSummary } = body;
 
     if (!aggregateSummary || typeof aggregateSummary !== "string" || !aggregateSummary.trim()) {
       return NextResponse.json({ error: "aggregateSummary is required" }, { status: 400 });
     }
+
+    const summaryErr = validateString(aggregateSummary, 10_000, "aggregateSummary");
+    if (summaryErr) return NextResponse.json({ error: summaryErr }, { status: 400 });
+    const healthErr = validateString(healthContext, 5_000, "healthContext");
+    if (healthErr) return NextResponse.json({ error: healthErr }, { status: 400 });
 
     const prompt = buildPrompt({
       aggregateSummary,
