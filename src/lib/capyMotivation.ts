@@ -231,141 +231,112 @@ export function getContextualMotivation(
   const calPercent = calorieGoal > 0 ? todayCalories / calorieGoal : 0;
   const protPercent = proteinGoal > 0 ? todayProtein / proteinGoal : 0;
 
-  // Priority-based selection
-  let candidates: MotivationLine[] = [];
+  // Collect ALL matching candidates across conditions, then pick from the combined pool.
+  // Old approach: early-return per condition → tiny pools (often 1 line) → same message every time.
+  // New approach: gather all relevant lines → diverse random selection.
+  const candidates: MotivationLine[] = [];
 
-  // Streak milestones first
+  // Streak milestones
   if ([3, 5, 7, 10, 14, 21, 30].includes(streak)) {
-    candidates = STREAK_LINES.filter((l) => l.context === `streak-${streak}`);
-    const pick = pickUnseen(candidates);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...STREAK_LINES.filter((l) => l.context === `streak-${streak}`));
   }
 
   // Goal hit
   if (calPercent >= 0.8 && calPercent <= 1.2) {
-    candidates = GOAL_HIT_LINES;
-    const pick = pickUnseen(candidates);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...GOAL_HIT_LINES);
   }
 
   // Protein champion
   if (protPercent >= 0.9) {
-    candidates = PROTEIN_LINES;
-    const pick = pickUnseen(candidates);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...PROTEIN_LINES);
   }
 
   // Wilting garden
   if (garden.gardenHealth < 30) {
-    candidates = SAD_LINES;
-    const pick = pickUnseen(candidates);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...SAD_LINES);
   }
 
   // Comeback
   if (streak === 0 && garden.totalMealsLogged > 0) {
-    candidates = COMEBACK_LINES;
-    const pick = pickUnseen(candidates);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...COMEBACK_LINES);
   }
 
   // Garden-specific (if garden has notable elements)
   if (garden.flowers >= 5 || garden.treeLevel >= 2 || garden.pondLevel >= 1) {
-    candidates = GARDEN_LINES;
-    const pick = pickUnseen(candidates);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...GARDEN_LINES);
   }
 
-  // Celebration lines for recently unlocked items
+  // Celebration lines for unlocked items
   if (garden.butterflies > 0 && garden.butterflies <= 2) {
-    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-butterfly"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...CELEBRATE_LINES.filter(l => l.context === "celebrate-butterfly"));
   }
   if (garden.babyCapybaras === 1) {
-    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-baby"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...CELEBRATE_LINES.filter(l => l.context === "celebrate-baby"));
   } else if (garden.babyCapybaras === 2) {
-    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-baby2"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...CELEBRATE_LINES.filter(l => l.context === "celebrate-baby2"));
   } else if (garden.babyCapybaras >= 3) {
-    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-baby3"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...CELEBRATE_LINES.filter(l => l.context === "celebrate-baby3"));
   }
   if (garden.hasRainbow) {
-    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-rainbow"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...CELEBRATE_LINES.filter(l => l.context === "celebrate-rainbow"));
   }
   if (garden.hasCrown) {
-    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-hotspring"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...CELEBRATE_LINES.filter(l => l.context === "celebrate-hotspring"));
   }
   if (garden.homeLevel >= 1) {
-    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-home"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...CELEBRATE_LINES.filter(l => l.context === "celebrate-home"));
   }
   if (garden.treeLevel >= 1) {
-    const pick = pickUnseen(CELEBRATE_LINES.filter(l => l.context === "celebrate-tree"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...CELEBRATE_LINES.filter(l => l.context === "celebrate-tree"));
   }
 
   // Wish lines — Capy tells you what it wants next
   if (garden.butterflies === 0 && streak < 3) {
-    const pick = pickUnseen(WISH_BUTTERFLY_LINES);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...WISH_BUTTERFLY_LINES);
   }
   if (garden.babyCapybaras === 0 && streak < 5 && streak >= 1) {
-    const pick = pickUnseen(WISH_BABY_LINES);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...WISH_BABY_LINES);
   }
   if (!garden.hasRainbow && streak >= 5 && streak < 14) {
-    const pick = pickUnseen(WISH_RAINBOW_LINES);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...WISH_RAINBOW_LINES);
   }
   if (!garden.hasCrown && streak >= 14 && streak < 30) {
-    const pick = pickUnseen(WISH_HOTSPRING_LINES);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...WISH_HOTSPRING_LINES);
   }
   if (garden.flowers < 10) {
-    const pick = pickUnseen(WISH_FLOWERS_LINES);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...WISH_FLOWERS_LINES);
   }
   if (garden.treeLevel < 2) {
-    const pick = pickUnseen(WISH_TREE_LINES);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...WISH_TREE_LINES);
   }
   if (garden.homeLevel === 0) {
-    const pick = pickUnseen(WISH_HOME_LINES);
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...WISH_HOME_LINES);
   }
 
-  // Health-based nudges
+  // Health-based nudges (resolve {health} template)
   if (garden.gardenHealth >= 80) {
-    const pick = pickUnseen(HEALTH_NUDGE_LINES.filter(l => l.context === "health-great"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...HEALTH_NUDGE_LINES.filter(l => l.context === "health-great"));
   } else if (garden.gardenHealth >= 60) {
-    const pick = pickUnseen(HEALTH_NUDGE_LINES.filter(l => l.context === "health-almost"));
-    if (pick) { markSeen(pick.text); return pick; }
+    candidates.push(...HEALTH_NUDGE_LINES.filter(l => l.context === "health-almost"));
   } else if (garden.gardenHealth >= 40) {
     const line = HEALTH_NUDGE_LINES.find(l => l.context === "health-good");
-    if (line) {
-      const resolved = { ...line, text: line.text.replace("{health}", String(garden.gardenHealth)) };
-      markSeen(resolved.text); return resolved;
-    }
-  } else if (garden.gardenHealth < 40 && garden.gardenHealth > 10) {
+    if (line) candidates.push({ ...line, text: line.text.replace("{health}", String(garden.gardenHealth)) });
+  } else if (garden.gardenHealth > 10) {
     const line = HEALTH_NUDGE_LINES.find(l => l.context === "health-nudge");
-    if (line) {
-      const resolved = { ...line, text: line.text.replace("{health}", String(garden.gardenHealth)) };
-      markSeen(resolved.text); return resolved;
-    }
+    if (line) candidates.push({ ...line, text: line.text.replace("{health}", String(garden.gardenHealth)) });
   }
 
-  // Time-of-day
+  // Always include time-of-day + emotional lines for variety
   const timeLines = time === "morning" ? MORNING_LINES : time === "afternoon" ? AFTERNOON_LINES : EVENING_LINES;
-  candidates = [...timeLines, ...EMOTIONAL_LINES];
-  const pick = pickUnseen(candidates);
-  if (pick) { markSeen(pick.text); return pick; }
+  candidates.push(...timeLines, ...EMOTIONAL_LINES);
 
-  // Ultimate fallback
+  // Pick from the combined pool
+  if (candidates.length > 0) {
+    const pick = pickUnseen(candidates);
+    if (pick) { markSeen(pick.text); return pick; }
+  }
+
+  // Ultimate fallback — pick from ALL lines
   const fallback = pickUnseen(ALL_LINES);
   if (fallback) { markSeen(fallback.text); return fallback; }
 
