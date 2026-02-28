@@ -318,3 +318,40 @@ npx tsx scripts/benchmark-edge-cases.ts
 ```
 
 Compare MAPE against baseline snapshots in `scripts/benchmark-results-*.json`.
+
+---
+
+## 5. Test Account (Supabase)
+
+A pre-seeded test account exists in Supabase for manual QA of garden milestones, streak, and meal history features.
+
+| Field | Value |
+|-------|-------|
+| **Email** | `test@snackoverflow.dev` |
+| **Password** | `test1234` |
+| **Login method** | Password (use the password tab in the auth UI) |
+
+### Seeded Data
+
+- **Profile**: Male, 28 yrs, 175 cm, 72 kg, moderate activity, maintain weight
+- **Goals**: 2000 cal / 120g protein / 250g carbs / 55g fat
+- **Meals**: 7 days (Feb 22–28, 2026) of realistic Indian meals (26 meals total)
+  - Dishes include: Poha, Idli Sambar, Chole Bhature, Biryani, Paneer Butter Masala, Maggi, etc.
+  - 6 past days hit 80-120% calorie goal (Feb 22–27); today (Feb 28) is in-progress
+- **Streak**: 7-day current streak
+- **Garden**: Starts blank — recomputes on login to verify milestone logic end-to-end
+
+### Expected Garden State After Login
+
+| Reward | Expected | Why |
+|--------|----------|-----|
+| Sapling (treeLevel=1) | Yes | Streak ≥ 3 |
+| Flowers | 6 | 6 goal days hit |
+| Butterflies | 1 | Streak ≥ 5 |
+| Baby Capybara | 0 | Need 7 goal days (have 6) |
+| Rainbow | No | Need streak ≥ 14 |
+| Cozy Home | 0 | Need 15 goal days |
+
+### Refreshing Test Data
+
+The test account data can be updated via Supabase SQL editor or MCP tools. The user ID is `960449c1-6a39-40e6-8c9e-141794321fba`.
