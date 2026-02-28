@@ -2,9 +2,13 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
-// Graceful degradation: if Upstash not configured, allow all requests
-const redis = process.env.UPSTASH_REDIS_REST_URL
-  ? Redis.fromEnv()
+// Vercel KV uses KV_REST_API_URL/TOKEN; direct Upstash uses UPSTASH_REDIS_REST_URL/TOKEN
+// Support both — check Vercel KV first, fall back to direct Upstash env vars
+const redisUrl = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+const redisToken = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+
+const redis = redisUrl && redisToken
+  ? new Redis({ url: redisUrl, token: redisToken })
   : null;
 
 // Different tiers for different route costs

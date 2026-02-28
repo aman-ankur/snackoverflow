@@ -61,22 +61,21 @@ All keys go in `.env.local` (gitignored). See `.env.example` for template.
 
 ---
 
-## Rate Limiting (Upstash Redis)
+## Rate Limiting (Vercel KV / Upstash Redis)
 
-### `UPSTASH_REDIS_REST_URL`
-- **Purpose**: Persistent rate limiting across deploys via Upstash Redis
-- **Get it**: [console.upstash.com](https://console.upstash.com) → Create Redis database → REST API URL
+### `KV_REST_API_URL` / `UPSTASH_REDIS_REST_URL`
+- **Purpose**: Persistent rate limiting across deploys
+- **Setup**: Vercel Dashboard → Storage → Create KV Store → link to project (auto-provisions `KV_REST_API_*` env vars). Or use Upstash directly with `UPSTASH_REDIS_REST_*` vars.
 - **Cost**: Free tier — 10K commands/day
 - **Used in**: `src/lib/rateLimit.ts` (shared by all API routes)
 - **Note**: Optional. Without this, rate limiting is skipped — all requests allowed.
 
-### `UPSTASH_REDIS_REST_TOKEN`
-- **Purpose**: Auth token for Upstash Redis REST API
-- **Get it**: Same dashboard → REST API → Token
-- **Cost**: Free (included with database)
+### `KV_REST_API_TOKEN` / `UPSTASH_REDIS_REST_TOKEN`
+- **Purpose**: Auth token for the Redis REST API
+- **Setup**: Auto-provisioned when linking Vercel KV store to project
 - **Used in**: `src/lib/rateLimit.ts`
 
-> **Rate limit tiers**: Heavy (10 req/60s) — image analysis routes. Medium (20 req/60s) — text analysis routes. Light (30 req/60s) — small generation routes. Uses sliding window algorithm.
+> **Rate limit tiers**: Heavy (10 req/60s) — image analysis routes. Medium (20 req/60s) — text analysis routes. Light (30 req/60s) — small generation routes. Uses sliding window algorithm. Supports both Vercel KV and direct Upstash env var names.
 
 ---
 
