@@ -1,6 +1,8 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { validateBase64Image } from "@/lib/validateInput";
 
 function buildSystemPrompt(dietaryFilter?: string): string {
   const dietRule = dietaryFilter && dietaryFilter !== "all"
@@ -137,14 +139,13 @@ async function tryGroq(base64Data: string, prompt: string): Promise<object | nul
 
 export async function POST(request: NextRequest) {
   try {
+    const blocked = await checkRateLimit(request, "heavy");
+    if (blocked) return blocked;
+
     const { image, dietaryFilter } = await request.json();
 
-    if (!image) {
-      return NextResponse.json(
-        { error: "Image data is required" },
-        { status: 400 }
-      );
-    }
+    const imageErr = validateBase64Image(image);
+    if (imageErr) return NextResponse.json({ error: imageErr }, { status: 400 });
 
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
     const prompt = buildSystemPrompt(dietaryFilter);

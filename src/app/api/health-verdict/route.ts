@@ -2,6 +2,8 @@ import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { validateArray, validateString } from "@/lib/validateInput";
 import type { DishHealthVerdict, HealthVerdict, MealHealthAnalysis } from "@/lib/dishTypes";
 
 /* ─── Constants ─── */
@@ -285,12 +287,20 @@ async function tryOpenAI(prompt: string): Promise<MealHealthAnalysis | null> {
 
 export async function POST(request: NextRequest) {
   try {
+    const blocked = await checkRateLimit(request, "medium");
+    if (blocked) return blocked;
+
     const body = (await request.json()) as VerdictRequest;
     const { dishes, healthContextString } = body;
 
     if (!dishes || !Array.isArray(dishes) || dishes.length === 0) {
       return NextResponse.json({ error: "dishes array is required" }, { status: 400 });
     }
+
+    const dishesErr = validateArray(dishes, 20, "dishes");
+    if (dishesErr) return NextResponse.json({ error: dishesErr }, { status: 400 });
+    const ctxErr = validateString(healthContextString, 5_000, "healthContextString");
+    if (ctxErr) return NextResponse.json({ error: ctxErr }, { status: 400 });
 
     if (!healthContextString || typeof healthContextString !== "string" || !healthContextString.trim()) {
       return NextResponse.json({ error: "healthContextString is required" }, { status: 400 });

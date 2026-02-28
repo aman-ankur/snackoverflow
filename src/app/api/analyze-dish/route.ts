@@ -4,6 +4,8 @@ import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import type { ConfidenceLevel, DishAnalysisResult, DishNutrition } from "@/lib/dishTypes";
 import { buildReferenceTable } from "@/lib/nutritionReference";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { validateBase64Image } from "@/lib/validateInput";
 
 const CACHE_TTL_MS = 2 * 60 * 1000;
 const MAX_CACHE_ENTRIES = 50;
@@ -507,11 +509,13 @@ async function tryGroq(base64Data: string, prompt: string): Promise<{ result: Di
 
 export async function POST(request: NextRequest) {
   try {
+    const blocked = await checkRateLimit(request, "heavy");
+    if (blocked) return blocked;
+
     const { image, mealType, correction } = await request.json();
 
-    if (!image || typeof image !== "string") {
-      return NextResponse.json({ error: "Image data is required" }, { status: 400 });
-    }
+    const imageErr = validateBase64Image(image);
+    if (imageErr) return NextResponse.json({ error: imageErr }, { status: 400 });
 
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
     const correctionStr = typeof correction === "string" && correction.trim() ? correction.trim() : undefined;
