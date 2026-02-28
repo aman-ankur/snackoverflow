@@ -1,7 +1,7 @@
 /** Returns error message if invalid, null if OK */
 export function validateBase64Image(
   image: unknown,
-  maxBytes = 1_500_000,
+  maxBytes = 10_000_000,
 ): string | null {
   if (!image || typeof image !== "string") {
     return "Image data is required";

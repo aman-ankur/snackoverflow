@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     const { image, dietaryFilter } = await request.json();
 
-    const imageErr = validateBase64Image(image, 1_500_000);
+    const imageErr = validateBase64Image(image);
     if (imageErr) return NextResponse.json({ error: imageErr }, { status: 400 });
 
     const base64Data = image.replace(/^data:image\/\w+;base64,/, "");
