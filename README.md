@@ -86,7 +86,7 @@ SnackOverflow uses a **multi-provider fallback strategy** — no single point of
 - Eating analysis uses client-side pre-aggregation (~400 tokens vs ~4000 raw)
 - In-memory caches on dish scan (2 min) and describe meal (5 min, 200 entries)
 - Smart report caching — no re-generation if no new meals logged
-- Per-provider timeouts (6s scan, 15s analysis) prevent slow providers from blocking
+- Per-provider timeouts (15s/10s/5s scan tiers, 15s analysis) prevent slow providers from blocking
 
 **Estimated cost for daily personal use: ₹0/month** (all primary providers have generous free tiers)
 

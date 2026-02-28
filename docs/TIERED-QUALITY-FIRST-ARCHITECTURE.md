@@ -11,12 +11,12 @@
 
 Restructured the dish scan API (`/api/analyze-dish`) to **prioritize accuracy and latency** with paid Gemini billing. The optimized **tiered quality-first fallback** system ensures:
 
-1. ✅ **Best model with adequate timeout** (Gemini 2.5 Flash, 10s)
-2. ✅ **Reliable OpenAI fallback** (gpt-4o-mini, 8s)
+1. ✅ **Best model with adequate timeout** (Gemini 2.5 Flash, 15s)
+2. ✅ **Reliable OpenAI fallback** (gpt-4o-mini, 10s)
 3. ✅ **Sequential tiers** (simpler than parallel racing)
 4. ✅ **Groq as last resort** (fast but less accurate)
 
-**Key Optimization:** Increased Tier 1 timeout from 6s → 10s to catch 99% of Gemini responses, including complex multi-dish thalis.
+**Key Optimization:** Increased Tier 1 timeout from 6s → 15s to catch 99%+ of Gemini responses, including complex multi-dish thalis with thinking enabled.
 
 ---
 
@@ -26,22 +26,22 @@ Restructured the dish scan API (`/api/analyze-dish`) to **prioritize accuracy an
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│ Tier 1: Gemini 2.5 Flash (0-10s)                       │
+│ Tier 1: Gemini 2.5 Flash (0-15s)                       │
 │ ▸ Best accuracy (paid billing enabled)                 │
-│ ▸ 10s timeout (catches 99% of responses)               │
-│ ▸ Typical: 2-4s simple, 5-8s complex thalis            │
+│ ▸ 15s timeout (catches 99%+ of responses)              │
+│ ▸ Typical: 2-4s simple, 5-12s complex thalis           │
 └─────────────────────────────────────────────────────────┘
                          ↓ (if timeout/fails)
 ┌─────────────────────────────────────────────────────────┐
-│ Tier 2: OpenAI gpt-4o-mini (10-18s)                    │
+│ Tier 2: OpenAI gpt-4o-mini (15-25s)                    │
 │ ▸ Reliable fallback                                     │
-│ ▸ 8s timeout                                            │
+│ ▸ 10s timeout                                           │
 │ ▸ Good quality, consistent                             │
 │ ▸ Typical: 4-6s response                               │
 └─────────────────────────────────────────────────────────┘
                          ↓ (if timeout/fails)
 ┌─────────────────────────────────────────────────────────┐
-│ Tier 3: Groq Llama 4 (18-23s)                          │
+│ Tier 3: Groq Llama 4 (25-30s)                          │
 │ ▸ Fast fallback, last resort                           │
 │ ▸ 5s timeout                                            │
 │ ▸ Less accurate but available                          │
@@ -60,7 +60,7 @@ Restructured the dish scan API (`/api/analyze-dish`) to **prioritize accuracy an
 1. ✅ **Gemini first** (2.5 Flash only - 2.0 not available on billing plan)
 2. ✅ **OpenAI second** (gpt-4o-mini sequential fallback)
 3. ✅ **Groq last** (Tier 3, only as fallback)
-4. ✅ **Quality prioritized** (10s timeout allows complex dishes)
+4. ✅ **Quality prioritized** (15s timeout allows complex dishes)
 5. ✅ **Cost irrelevant** (longer timeouts, paid Gemini billing)
 
 ### Why Remove Gemini 2.0 Flash?
@@ -82,15 +82,16 @@ generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
 ❌ gemini-2.0-flash-lite: NOT AVAILABLE
 ```
 
-### Why 10s Tier 1 Timeout?
+### Why 15s Tier 1 Timeout?
 
 **Problem with 6s timeout:**
 - Complex multi-dish thalis take 5-8s for Gemini 2.5 to analyze
 - User's test: Gemini succeeded in 12.4s (soft-throttled), but would finish in ~7-8s normally
 - 6s timeout was **abandoning successful responses prematurely**
+- With 10s timeout, Gemini completed at 10.17s (168ms over cutoff), result discarded, wasting 7.8s on OpenAI fallback
 
 **Solution:**
-- 10s timeout catches 99% of Gemini 2.5 responses
+- 15s timeout catches 99%+ of Gemini 2.5 responses (including thinking-enabled)
 - Reduces unnecessary fallbacks to OpenAI
 - Better quality (Gemini 2.5 > OpenAI for food vision)
 
@@ -101,7 +102,7 @@ generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
 ### Tier 1: Gemini 2.5 Flash
 
 **Model:** `gemini-2.5-flash`
-**Timeout:** 10 seconds (increased from 6s)
+**Timeout:** 15 seconds (increased from 10s)
 **Paid Tier:** 1000+ RPM (vs 10 RPM free)
 
 **Why First:**
@@ -111,14 +112,14 @@ generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
 - ✅ **Available** (only Gemini model on user's billing plan)
 
 **When It Fails:**
-- ⏱️ Timeout (>10s response - very rare with paid tier)
+- ⏱️ Timeout (>15s response - very rare with paid tier)
 - ❌ Network error
 - ⚠️ Rate limited (unlikely with paid tier)
 
 **Log Example:**
 ```
 [Dish Scan] 🎯 Starting tiered quality-first fallback...
-[Dish Scan] 🚀 [Tier 1] Gemini 2.5 Flash (10s timeout)...
+[Dish Scan] 🚀 [Tier 1] Gemini 2.5 Flash (15s timeout)...
 [Dish Scan] ✅ [Tier 1] Gemini 2.5 Flash succeeded in 3245ms
 [Dish Scan] 🏆 WINNER: Gemini 2.5 Flash in 3245ms (total: 3400ms)
 ```
@@ -128,7 +129,7 @@ generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
 ### Tier 2: OpenAI gpt-4o-mini
 
 **Model:** `gpt-4o-mini`
-**Timeout:** 8 seconds (increased from 6s)
+**Timeout:** 10 seconds (increased from 8s)
 **Strategy:** Sequential (starts only if Tier 1 fails)
 
 **Why Second:**
@@ -138,14 +139,14 @@ generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
 - ⚡ **Typically fast** (4-6s response)
 
 **When It Fails:**
-- ⏱️ Timeout (>8s response - rare)
+- ⏱️ Timeout (>10s response - rare)
 - ❌ Network error
 - ⚠️ Rate limited (unlikely with paid tier)
 
 **Log Example:**
 ```
 [Dish Scan] 🔄 [Tier 2] OpenAI fallback...
-[Dish Scan] 🚀 [Tier 2] OpenAI gpt-4o-mini (8s timeout)...
+[Dish Scan] 🚀 [Tier 2] OpenAI gpt-4o-mini (10s timeout)...
 [Dish Scan] ✅ [Tier 2] OpenAI succeeded in 4567ms
 [Dish Scan] 🏆 WINNER: [Tier 2] OAI4m in 4567ms (total: 15000ms)
 ```
@@ -215,7 +216,7 @@ Total: ~7.5s
 **When This Happens:**
 - Multi-dish thali (3-5 items)
 - Gemini takes longer for detailed analysis
-- Still within 10s timeout
+- Still within 15s timeout
 
 **Probability:** ~25%
 
@@ -226,12 +227,12 @@ Total: ~7.5s
 **Timeline:**
 ```
 0s    → Start Gemini 2.5 Flash
-10s   → ⏱️ Tier 1 timeout
-10s   → Start OpenAI gpt-4o-mini
-14.5s → ✅ OpenAI responds
-15s   → Return result
+15s   → ⏱️ Tier 1 timeout
+15s   → Start OpenAI gpt-4o-mini
+19.5s → ✅ OpenAI responds
+20s   → Return result
 
-Total: ~15-18s
+Total: ~20-25s
 ```
 
 **When This Happens:**
@@ -247,14 +248,14 @@ Total: ~15-18s
 **Timeline:**
 ```
 0s    → Start Gemini 2.5 Flash
-10s   → ⏱️ Tier 1 timeout
-10s   → Start OpenAI
-18s   → ⏱️ Tier 2 timeout
-18s   → Start Groq
-20.5s → ✅ Groq responds
-21s   → Return result
+15s   → ⏱️ Tier 1 timeout
+15s   → Start OpenAI
+25s   → ⏱️ Tier 2 timeout
+25s   → Start Groq
+27.5s → ✅ Groq responds
+28s   → Return result
 
-Total: ~21-23s
+Total: ~28-30s
 ```
 
 **When This Happens:**
@@ -290,14 +291,14 @@ Worst: ~17s (Groq fallback)
 ### New (Optimized Sequential with 10s Tier 1)
 
 ```
-Tier 1: Gemini 2.5 Flash (10s timeout)
-Tier 2: OpenAI gpt-4o-mini (8s timeout)
+Tier 1: Gemini 2.5 Flash (15s timeout)
+Tier 2: OpenAI gpt-4o-mini (10s timeout)
 Tier 3: Groq (5s timeout)
 
 Best case: ~3s (simple dish)
 Good case: ~7.5s (complex thali)
-Fallback: ~15-18s (OpenAI)
-Worst: ~21-23s (Groq)
+Fallback: ~20-25s (OpenAI)
+Worst: ~28-30s (Groq)
 Typical:   ~4.5s (OpenAI wins after stagger)
 Worst:     ~6s (all timeout at 4s)
 ```
@@ -340,17 +341,17 @@ Worst:     ~17s (Tier 3)
 
 **What "Accuracy" Means:**
 - ✅ **Best model** (Gemini 2.5 Flash, only available model)
-- ✅ **Adequate timeout** (10s allows complex multi-dish analysis)
+- ✅ **Adequate timeout** (15s allows complex multi-dish analysis with thinking)
 - ✅ **Quality over speed** (willing to wait for best result)
 
 **What "Latency" Means:**
 - ✅ **Avoid unnecessary waits** (sequential = start next tier immediately)
 - ✅ **Fast when it matters** (~95% of scans finish in Tier 1)
-- ✅ **Acceptable worst case** (23s max is rare, ~1% of requests)
+- ✅ **Acceptable worst case** (30s max is rare, ~1% of requests)
 
 **What "Paid Billing" Enables:**
 - ✅ **Higher quota** (1000+ RPM vs 10 RPM)
-- ✅ **Longer timeouts** (10s/8s vs 6s)
+- ✅ **Longer timeouts** (15s/10s vs 6s)
 - ✅ **Quality-first** (rarely fall back to lower-quality models)
 
 ---
@@ -362,10 +363,10 @@ Worst:     ~17s (Tier 3)
 **Tier 1 (Gemini 2.5 Flash):**
 - ✅ **Thinking budget** enabled (better reasoning)
 - ✅ **Latest Gemini model** (most training data)
-- ✅ **10s timeout** (plenty of time for complex dishes)
+- ✅ **15s timeout** (plenty of time for complex dishes)
 - ✅ **Only available model** (removed Gemini 2.0 - not on plan)
 
-**Expected:** ~95% of requests use best model (vs ~70% with 6s timeout)
+**Expected:** ~95% of requests use best model (vs ~70% with 6s timeout, ~90% with 10s timeout)
 
 ---
 
@@ -448,7 +449,7 @@ grep "WINNER" server.log | grep -oP 'total: \K[0-9]+' | sort -n
 **Expected:**
 - p50: ~3-5s (Tier 1 typical)
 - p90: ~10-12s (Tier 2 typical)
-- p99: ~15-17s (Tier 3 or slow Tier 2)
+- p99: ~20-25s (Tier 3 or slow Tier 2)
 
 ---
 
@@ -550,7 +551,7 @@ if (similar) return similar.nutrition;
 **Trade-offs:**
 - ✅ **Better quality** (+5-10% accuracy expected)
 - ⚠️ **Slower typical case** (~10s vs 4.5s)
-- ✅ **Acceptable latency** (2-10s typical, <17s worst)
+- ✅ **Acceptable latency** (2-10s typical, <30s worst)
 
 **Result:** **Quality-optimized architecture** aligned with user priorities
 

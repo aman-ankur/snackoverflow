@@ -493,18 +493,18 @@ export async function POST(request: NextRequest) {
 
     // Tiered quality-first fallback strategy (optimized for PAID Gemini):
     // Tier 1 (Best Accuracy): Gemini 2.5 Flash (10s timeout - catches 99% of responses)
-    // Tier 2 (Reliable Fallback): OpenAI gpt-4o-mini (8s timeout)
+    // Tier 2 (Reliable Fallback): OpenAI gpt-4o-mini (10s timeout)
     // Tier 3 (Fast Last Resort): Groq (5s timeout)
 
     type ProviderResult = { result: DishAnalysisResult; provider: string; latencyMs: number };
 
     console.log("[Dish Scan] 🎯 Starting tiered quality-first fallback (Gemini → OpenAI → Groq)...\n");
 
-    // Tier 1: Gemini 2.5 Flash (best accuracy, 10s timeout allows complex multi-dish analysis)
+    // Tier 1: Gemini 2.5 Flash (best accuracy, 15s timeout allows complex multi-dish analysis)
     const tier1Start = Date.now();
     try {
-      console.log(`[Dish Scan] 🚀 [Tier 1] Gemini 2.5 Flash (10s timeout)...`);
-      const hit = await withTimeout(tryGemini25Flash(base64Data, prompt), 10000);
+      console.log(`[Dish Scan] 🚀 [Tier 1] Gemini 2.5 Flash (15s timeout)...`);
+      const hit = await withTimeout(tryGemini25Flash(base64Data, prompt), 15000);
       if (hit) {
         const latencyMs = Date.now() - tier1Start;
         const totalMs = Date.now() - startTotal;
@@ -525,13 +525,13 @@ export async function POST(request: NextRequest) {
       errors.push(`Gemini 2.5 Flash: ${msg} (${failTime}ms)`);
     }
 
-    // Tier 2: OpenAI gpt-4o-mini (reliable fallback, 8s timeout)
+    // Tier 2: OpenAI gpt-4o-mini (reliable fallback, 10s timeout)
     if (process.env.OPENAI_API_KEY) {
       console.log("\n[Dish Scan] 🔄 [Tier 2] OpenAI fallback...");
       const tier2Start = Date.now();
       try {
-        console.log(`[Dish Scan] 🚀 [Tier 2] OpenAI gpt-4o-mini (8s timeout)...`);
-        const hit = await withTimeout(tryOpenAI(base64Data, prompt), 8000);
+        console.log(`[Dish Scan] 🚀 [Tier 2] OpenAI gpt-4o-mini (10s timeout)...`);
+        const hit = await withTimeout(tryOpenAI(base64Data, prompt), 10000);
         if (hit) {
           const latencyMs = Date.now() - tier2Start;
           const totalMs = Date.now() - startTotal;
