@@ -356,8 +356,13 @@ interface GardenState {
 | Function | Description |
 |---|---|
 | `computeGarden(prev, streak, todayTotals, goals)` | Computes new GardenState from 2 inputs: `streak.currentStreak` + `daysGoalHit`. Maps to Three.js props. |
+| `countAllGoalDays(calorieGoal)` | Scans full meal history in localStorage, groups by date, counts past days where calories were 80-120% of goal. Reads `m.totals.calories` (with fallback to `m.calories` for legacy entries). |
+| `getCaloriesForDate(date)` | Sums calories for a single date from meal log. Reads `m.totals.calories` (with fallback to `m.calories`). |
 | `getNextUnlock(state, streak)` | Returns next milestone in exact 8-milestone order with current/target progress |
 | `useGardenState(streak, todayTotals, goals)` | React hook — loads from localStorage, recomputes on input change, persists |
+
+### Known Bug Fix (PR #41)
+`countAllGoalDays()` and `getCaloriesForDate()` originally read `m.calories` from each meal entry, but `LoggedMeal` stores calories at `m.totals.calories`. This caused `daysGoalHit` to always remain 0, preventing flowers, baby capybaras, cozy home, and full garden from ever unlocking. Fixed to read `m.totals?.calories || m.calories || 0`.
 
 ### Garden Health Formula
 - Base 50 + streak bonuses (1d: +10, 3d: +10, 7d: +10, 14d: +5, 30d: +5) + goal bonuses (3 goals: +5, 15 goals: +5)
