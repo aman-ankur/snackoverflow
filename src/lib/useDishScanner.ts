@@ -254,7 +254,7 @@ export function useDishScanner() {
 
     try {
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 15000); // 15s client-side timeout
+      const timeoutId = setTimeout(() => abortController.abort(), 30000); // 30s client-side timeout (server worst-case: 15+8+5=28s)
 
       const res = await fetch("/api/analyze-dish", {
         method: "POST",
@@ -302,6 +302,9 @@ export function useDishScanner() {
     setScanStatus("Re-analyzing with correction...");
 
     try {
+      const abortController = new AbortController();
+      const timeoutId = setTimeout(() => abortController.abort(), 30000); // 30s client-side timeout
+
       const res = await fetch("/api/analyze-dish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -310,7 +313,10 @@ export function useDishScanner() {
           mealType,
           correction: `Dish #${dishIndex + 1} is actually "${correctedName}". Re-analyze with this correction.`,
         }),
+        signal: abortController.signal,
       });
+
+      clearTimeout(timeoutId);
 
       const data: unknown = await res.json();
 
@@ -327,8 +333,12 @@ export function useDishScanner() {
       setLastAnalyzedAt(new Date());
       setScanStatus(null);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Correction failed";
-      setError(message);
+      if (err instanceof Error && err.name === "AbortError") {
+        setError("Correction timed out. Please try again.");
+      } else {
+        const message = err instanceof Error ? err.message : "Correction failed";
+        setError(message);
+      }
       setScanStatus(null);
     } finally {
       setIsAnalyzing(false);
@@ -369,7 +379,7 @@ export function useDishScanner() {
 
     try {
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 15000);
+      const timeoutId = setTimeout(() => abortController.abort(), 30000); // 30s client-side timeout
 
       const res = await fetch("/api/analyze-dish", {
         method: "POST",
