@@ -2,6 +2,23 @@
 
 All routes are Next.js App Router API routes in `src/app/api/`.
 
+## Rate Limiting & Input Validation
+
+All routes are protected by:
+- **Rate limiting** via Upstash Redis (`src/lib/rateLimit.ts`) — sliding window, 3 tiers (heavy/medium/light). Gracefully skipped if `UPSTASH_REDIS_REST_URL` not configured.
+- **Input size validation** (`src/lib/validateInput.ts`) — base64 image size, string length, array length checks. Always active.
+
+| Route | Rate Limit Tier | Input Guards |
+|-------|----------------|--------------|
+| `/api/analyze-dish` | Heavy (10/60s) | Image max 1.5MB |
+| `/api/analyze` | Heavy (10/60s) | Image max 1.5MB |
+| `/api/analyze-habits` | Medium (20/60s) | aggregateSummary max 10KB, healthContext max 5KB |
+| `/api/health-verdict` | Medium (20/60s) | dishes max 20 items, healthContextString max 5KB |
+| `/api/describe-meal` | Medium (20/60s) | description max 200 chars (pre-existing) |
+| `/api/hindi-tts` | Light (30/60s) | text max 2000 chars |
+| `/api/hindi-message` | Light (30/60s) | recipeName max 200 chars, ingredients max 50 items |
+| `/api/capy-motivation` | Light (30/60s) | — |
+
 ---
 
 ## POST `/api/analyze`

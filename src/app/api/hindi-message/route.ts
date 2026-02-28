@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { checkRateLimit } from "@/lib/rateLimit";
+import { validateString, validateArray } from "@/lib/validateInput";
 
 function buildHindiPrompt(servings: number): string {
   const servingHint = servings === 1
@@ -24,11 +26,19 @@ Respond with ONLY the Hindi message text, nothing else. No quotes, no explanatio
 
 export async function POST(request: NextRequest) {
   try {
+    const blocked = await checkRateLimit(request, "light");
+    if (blocked) return blocked;
+
     const { recipeName, recipeHindi, ingredientsUsed, servings = 2 } = await request.json();
 
     if (!recipeName) {
       return NextResponse.json({ error: "Recipe name required" }, { status: 400 });
     }
+
+    const nameErr = validateString(recipeName, 200, "recipeName");
+    if (nameErr) return NextResponse.json({ error: nameErr }, { status: 400 });
+    const ingErr = validateArray(ingredientsUsed, 50, "ingredientsUsed");
+    if (ingErr) return NextResponse.json({ error: ingErr }, { status: 400 });
 
     const userMsg = `Dish: ${recipeName} (${recipeHindi || ""}). For ${servings} people. Ingredients available: ${ingredientsUsed?.join(", ") || "various items"}`;
 
