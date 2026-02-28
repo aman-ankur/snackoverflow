@@ -105,9 +105,9 @@ function getCaloriesForDate(date: string): number {
     const meals = JSON.parse(raw);
     if (!Array.isArray(meals)) return 0;
     let total = 0;
-    meals.forEach((m: { loggedAt?: string; calories?: number }) => {
+    meals.forEach((m: { loggedAt?: string; calories?: number; totals?: { calories?: number } }) => {
       if (typeof m.loggedAt === "string" && m.loggedAt.slice(0, 10) === date) {
-        total += m.calories || 0;
+        total += m.totals?.calories || m.calories || 0;
       }
     });
     return total;
@@ -125,10 +125,10 @@ function countAllGoalDays(calorieGoal: number): number {
     const meals = JSON.parse(raw);
     if (!Array.isArray(meals)) return 0;
     const dailyTotals = new Map<string, number>();
-    meals.forEach((m: { loggedAt?: string; calories?: number }) => {
+    meals.forEach((m: { loggedAt?: string; calories?: number; totals?: { calories?: number } }) => {
       if (typeof m.loggedAt === "string") {
         const date = m.loggedAt.slice(0, 10);
-        dailyTotals.set(date, (dailyTotals.get(date) || 0) + (m.calories || 0));
+        dailyTotals.set(date, (dailyTotals.get(date) || 0) + (m.totals?.calories || m.calories || 0));
       }
     });
     // Don't count today — it's still in progress
