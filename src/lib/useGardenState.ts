@@ -96,6 +96,55 @@ function countMealDates(): Set<string> {
   }
 }
 
+/** Sum calories for a specific date from the meal log */
+function getCaloriesForDate(date: string): number {
+  if (typeof window === "undefined") return 0;
+  try {
+    const raw = localStorage.getItem(MEAL_LOG_KEY);
+    if (!raw) return 0;
+    const meals = JSON.parse(raw);
+    if (!Array.isArray(meals)) return 0;
+    let total = 0;
+    meals.forEach((m: { loggedAt?: string; calories?: number }) => {
+      if (typeof m.loggedAt === "string" && m.loggedAt.slice(0, 10) === date) {
+        total += m.calories || 0;
+      }
+    });
+    return total;
+  } catch {
+    return 0;
+  }
+}
+
+/** Count how many past days hit the 80-120% calorie goal from the full meal history */
+function countAllGoalDays(calorieGoal: number): number {
+  if (typeof window === "undefined" || calorieGoal <= 0) return 0;
+  try {
+    const raw = localStorage.getItem(MEAL_LOG_KEY);
+    if (!raw) return 0;
+    const meals = JSON.parse(raw);
+    if (!Array.isArray(meals)) return 0;
+    const dailyTotals = new Map<string, number>();
+    meals.forEach((m: { loggedAt?: string; calories?: number }) => {
+      if (typeof m.loggedAt === "string") {
+        const date = m.loggedAt.slice(0, 10);
+        dailyTotals.set(date, (dailyTotals.get(date) || 0) + (m.calories || 0));
+      }
+    });
+    // Don't count today — it's still in progress
+    const today = todayKey();
+    let count = 0;
+    dailyTotals.forEach((cals, date) => {
+      if (date === today) return;
+      const pct = cals / calorieGoal;
+      if (pct >= 0.8 && pct <= 1.2) count++;
+    });
+    return count;
+  } catch {
+    return 0;
+  }
+}
+
 function countTotalMeals(): number {
   if (typeof window === "undefined") return 0;
   try {
@@ -123,11 +172,12 @@ export function computeGarden(
   const s = streak.currentStreak;
 
   // ── Calorie goal days (permanent, never decreases) ──
+  // Backfill: scan full history to recover missed goal days (one-time migration)
   let daysGoalHit = prev.daysGoalHit;
-  if (goals.calories > 0 && prev.lastComputedDate !== today) {
-    const todayPercent = todayTotals.calories / goals.calories;
-    if (todayPercent >= 0.8 && todayPercent <= 1.2) {
-      daysGoalHit = prev.daysGoalHit + 1;
+  if (goals.calories > 0) {
+    const historicalCount = countAllGoalDays(goals.calories);
+    if (historicalCount > daysGoalHit) {
+      daysGoalHit = historicalCount;
     }
   }
 
