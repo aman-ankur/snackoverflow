@@ -174,10 +174,50 @@ Rules:
 - Keep numeric values as numbers, not strings.`;
 }
 
+function repairTruncatedJson(json: string): string {
+  // Trim trailing incomplete string values (e.g. `"reasoning": "some text...`)
+  let repaired = json.replace(/,\s*"[^"]*":\s*"[^"]*$/, "");
+  // Also trim trailing incomplete key (e.g. `"reas`)
+  repaired = repaired.replace(/,\s*"[^"]*$/, "");
+  // Trim trailing comma
+  repaired = repaired.replace(/,\s*$/, "");
+
+  // Count unclosed brackets/braces and close them
+  let openBraces = 0;
+  let openBrackets = 0;
+  let inString = false;
+  let escaped = false;
+  for (const ch of repaired) {
+    if (escaped) { escaped = false; continue; }
+    if (ch === "\\") { escaped = true; continue; }
+    if (ch === '"') { inString = !inString; continue; }
+    if (inString) continue;
+    if (ch === "{") openBraces++;
+    else if (ch === "}") openBraces--;
+    else if (ch === "[") openBrackets++;
+    else if (ch === "]") openBrackets--;
+  }
+
+  // Close unclosed strings if we ended inside one
+  if (inString) repaired += '"';
+
+  for (let i = 0; i < openBrackets; i++) repaired += "]";
+  for (let i = 0; i < openBraces; i++) repaired += "}";
+
+  return repaired;
+}
+
 function parseJsonResponse(text: string) {
   const jsonMatch = text.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("No JSON found in AI response");
-  return JSON.parse(jsonMatch[0]);
+  try {
+    return JSON.parse(jsonMatch[0]);
+  } catch {
+    // Attempt to repair truncated JSON
+    const repaired = repairTruncatedJson(jsonMatch[0]);
+    console.log("[JSON Repair] Attempting to salvage truncated response");
+    return JSON.parse(repaired);
+  }
 }
 
 function isRateLimitError(msg: string): boolean {
@@ -332,7 +372,7 @@ async function tryGemini25Flash(base64Data: string, prompt: string): Promise<{ r
       model: "gemini-2.5-flash",
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 2560,
+        maxOutputTokens: 4096,
         thinkingConfig: { thinkingBudget: 1024 },
       } as Record<string, unknown>,
     });
@@ -363,7 +403,7 @@ async function tryGemini20Flash(base64Data: string, prompt: string): Promise<{ r
       model: "gemini-2.0-flash",
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 2560,
+        maxOutputTokens: 4096,
       } as Record<string, unknown>,
     });
     const result = await model.generateContent([prompt, imageContent]);
