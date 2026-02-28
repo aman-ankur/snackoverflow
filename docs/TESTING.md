@@ -318,3 +318,30 @@ npx tsx scripts/benchmark-edge-cases.ts
 ```
 
 Compare MAPE against baseline snapshots in `scripts/benchmark-results-*.json`.
+
+---
+
+## 5. QA Test Account (Supabase)
+
+A pre-seeded test account exists in Supabase for manual QA of garden milestones, streak, and meal history features. Credentials are stored privately — ask the project owner.
+
+### Seeded Data
+
+- **Profile**: Male, 28 yrs, 175 cm, 72 kg, moderate activity, maintain weight
+- **Goals**: 2000 cal / 120g protein / 250g carbs / 55g fat
+- **Meals**: 7 days of realistic Indian meals (26 meals total)
+  - Dishes include: Poha, Idli Sambar, Chole Bhature, Biryani, Paneer Butter Masala, Maggi, etc.
+  - 6 past days hit 80-120% calorie goal
+- **Streak**: 7-day current streak
+- **Garden**: Starts blank — recomputes on login to verify milestone logic end-to-end
+
+### Expected Garden State After Login
+
+| Reward | Expected | Why |
+|--------|----------|-----|
+| Sapling (treeLevel=1) | Yes | Streak ≥ 3 |
+| Flowers | 6 | 6 goal days hit |
+| Butterflies | 1 | Streak ≥ 5 |
+| Baby Capybara | 0 | Need 7 goal days (have 6) |
+| Rainbow | No | Need streak ≥ 14 |
+| Cozy Home | 0 | Need 15 goal days |

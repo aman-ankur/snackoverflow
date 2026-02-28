@@ -162,6 +162,7 @@
   - **Calorie goal track** (permanent — rewards nutrition quality):
     - 🌸 First Flower (3 goal days) → 🐾 Baby Capy (7d) → 🏡 Cozy Home (15d) → 🌻 Full Garden (30d)
 - Calorie goal = eating within 80–120% of daily calorie target
+- Goal days counted by `countAllGoalDays()` which scans full meal history and reads `m.totals.calories` (fixed in PR #41 — previously read non-existent `m.calories`, causing goal days to always be 0)
 - Thresholds are monotonically increasing — later milestones can never unlock before earlier ones
 - **Your Journey** roadmap: horizontal scrollable milestone strip with check marks and "Next" hint
 - **How does this work?** expandable section explains both tracks with milestone-to-unlock mapping
