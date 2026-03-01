@@ -32,6 +32,9 @@
 - No special build commands needed — `next build` handles everything
 - HTTPS is automatic on Vercel (required for camera access)
 
+### Serverless Function Timeouts
+All AI-powered API routes (`analyze-dish`, `analyze-habits`, `health-verdict`, `analyze`, `describe-meal`) export `maxDuration = 30` to allow the tiered fallback chain (15s + 10s + 5s) to complete. Vercel Hobby plan defaults to 10s without this — causing 504s even when the AI provider responds successfully.
+
 ---
 
 ## Local Development

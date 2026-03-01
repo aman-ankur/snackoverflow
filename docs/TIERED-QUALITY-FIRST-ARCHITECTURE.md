@@ -1,9 +1,11 @@
 # Tiered Quality-First Fallback Architecture
 
-**Date:** 2026-02-27 (Updated)
+**Date:** 2026-03-01 (Updated)
 **Branch:** `perf/optimize-paid-gemini-timeouts`
 **Commit:** `8c2f515`
 **Priority:** ✅ **Accuracy + Latency** (optimized for paid Gemini billing)
+
+> **Vercel Deployment Note:** All AI-powered API routes export `maxDuration = 30` to override Vercel's default 10s function timeout (Hobby plan supports up to 60s). Without this, Vercel kills the function before the tiered fallback can complete — the server logs "success" but the client receives a 504.
 
 ---
 
