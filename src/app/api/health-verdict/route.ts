@@ -3,6 +3,8 @@ import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
+
+export const maxDuration = 30;
 import { validateArray, validateString } from "@/lib/validateInput";
 import type { DishHealthVerdict, HealthVerdict, MealHealthAnalysis } from "@/lib/dishTypes";
 

@@ -3,6 +3,8 @@ import OpenAI from "openai";
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
+
+export const maxDuration = 30;
 import { validateString } from "@/lib/validateInput";
 import type {
   EatingReport,
