@@ -254,7 +254,7 @@ export function useDishScanner() {
 
     try {
       const abortController = new AbortController();
-      const timeoutId = setTimeout(() => abortController.abort(), 30000); // 30s client-side timeout (server worst-case: 15+8+5=28s)
+      const timeoutId = setTimeout(() => abortController.abort(), 30000); // 30s client-side timeout (server worst-case: 15+10+5=30s, Vercel maxDuration=30)
 
       const res = await fetch("/api/analyze-dish", {
         method: "POST",

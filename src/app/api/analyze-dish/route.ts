@@ -3,6 +3,8 @@ import Groq from "groq-sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import type { ConfidenceLevel, DishAnalysisResult, DishNutrition } from "@/lib/dishTypes";
+
+export const maxDuration = 30;
 import { buildReferenceTable } from "@/lib/nutritionReference";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { validateBase64Image } from "@/lib/validateInput";

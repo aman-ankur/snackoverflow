@@ -4,6 +4,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { validateBase64Image } from "@/lib/validateInput";
 
+export const maxDuration = 30;
+
 function buildSystemPrompt(dietaryFilter?: string): string {
   const dietRule = dietaryFilter && dietaryFilter !== "all"
     ? `\n- IMPORTANT: Only suggest ${dietaryFilter} recipes. ${dietaryFilter === "vegetarian" ? "No meat, fish, or eggs." : dietaryFilter === "vegan" ? "No meat, fish, eggs, dairy, or honey." : dietaryFilter === "jain" ? "No meat, fish, eggs, onion, garlic, or root vegetables." : dietaryFilter === "eggetarian" ? "Vegetarian + eggs allowed. No meat or fish." : ""}`
