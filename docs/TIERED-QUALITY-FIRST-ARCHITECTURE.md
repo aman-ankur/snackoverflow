@@ -158,8 +158,7 @@ generate_content_free_tier_requests, limit: 0, model: gemini-2.0-flash
 ### Tier 3: Groq (Last Resort)
 
 **Models:**
-- `llama-4-maverick-17b-128e-instruct`
-- `llama-4-scout-17b-16e-instruct`
+- `llama-4-scout-17b-16e-instruct` (only Groq model with vision support; Maverick decommissioned March 2026)
 
 **Timeout:** 5 seconds (faster fallback)
 **Free Tier:** 30 RPM (higher than Gemini)

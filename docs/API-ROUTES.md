@@ -159,7 +159,7 @@ All routes are protected by:
 - **Token cost**: ~2600 tokens per scan (vs 1600 without alternatives), still FREE within Gemini limits
 - **Client-side handling**: Instant swap between options (0s latency, no re-analysis)
 
-**Provider chain**: Gemini 2.5 Flash → OpenAI gpt-4o-mini → Gemini 2.0 Flash → Groq Llama 4 Maverick/Scout
+**Provider chain**: Gemini 2.5 Flash → OpenAI gpt-4o-mini → Groq Llama 4 Scout
 **Safety/normalization**: Strict JSON parsing + numeric normalization + confidence/tag fallback defaults + recursive alternatives normalization
 **Cost control**: 2-minute in-memory response cache for repeated near-identical dish scans
 **Rate limit handling**: Returns 429 with friendly message when providers are exhausted

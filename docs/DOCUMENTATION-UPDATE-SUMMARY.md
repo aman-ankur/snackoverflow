@@ -58,7 +58,7 @@ Comprehensive documentation update to reflect the current state of SnackOverflow
 **New model IDs documented:**
 - `gemini-2.5-flash` (Dish Scan Tier 1)
 - `gpt-4o-mini` (Dish Scan Tier 2)
-- `llama-4-scout` + `llama-4-maverick` (Dish Scan Tier 3)
+- `llama-4-scout` (Dish Scan Tier 3)
 - `gemini-2.0-flash-lite` (Describe Meal)
 - `gpt-4.1-nano` (Describe Meal fallback)
 - `gpt-4.1-mini` (Eating Analysis + Health Verdict fallback)
@@ -188,8 +188,7 @@ Comprehensive documentation update to reflect the current state of SnackOverflow
 - **claude-3-5-haiku-20241022** — Health verdict Tier 2 (8s timeout)
 
 ### Groq Models
-- **meta-llama/llama-4-scout-17b-16e-instruct** — Dish scan Tier 3, Describe meal race, Eating analysis Tier 3, Fridge scan Tier 3, Hindi text
-- **meta-llama/llama-4-maverick-17b-128e-instruct** — Dish scan Tier 3 fallback
+- **meta-llama/llama-4-scout-17b-16e-instruct** — Dish scan Tier 3, Describe meal race, Eating analysis Tier 3, Fridge scan Tier 3, Hindi text (only Groq vision model; Maverick decommissioned March 2026)
 - **meta-llama/llama-3.1-8b** — Capy motivation fallback
 
 ### Sarvam AI

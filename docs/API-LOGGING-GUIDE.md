@@ -170,7 +170,6 @@ POST /api/describe-meal 200 in 5.1s
 | **Gemini 2.5 Flash** | gemini-2.5-flash | G25F | 10 RPM | 4s |
 | **Gemini 2.0 Flash** | gemini-2.0-flash | G20F | 10 RPM | 4s |
 | **OpenAI** | gpt-4o-mini | OAI4m | Unknown | 4s |
-| **Groq Maverick** | llama-4-maverick-17b | GRQM | 30 RPM | 4s |
 | **Groq Scout** | llama-4-scout-17b | GRQS | 30 RPM | 4s |
 
 ### Fallback Strategy (Dish Scan)
@@ -184,7 +183,7 @@ POST /api/describe-meal 200 in 5.1s
 **Parallel Race (2s-6s):**
 - OpenAI gpt-4o-mini (4s timeout)
 - Gemini 2.0 Flash (4s timeout)
-- Groq Llama 4 Scout/Maverick (4s timeout)
+- Groq Llama 4 Scout (4s timeout)
 
 **Winner:** First valid response
 

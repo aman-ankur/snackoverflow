@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "postinstall": "cp node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded* public/ 2>/dev/null || true"
+    "postinstall": "cp node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded* public/ 2>/dev/null || true",
+    "test:groq": "tsx scripts/test-groq-fallback.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

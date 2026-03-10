@@ -239,8 +239,7 @@ A **mood-reactive capybara mascot** with:
 - **OpenAI gpt-4.1-mini**: `gpt-4.1-mini`
 - **OpenAI gpt-4.1-nano**: `gpt-4.1-nano`
 - **Claude 3.5 Haiku**: `claude-3-5-haiku-20241022`
-- **Groq Llama 4 Scout**: `meta-llama/llama-4-scout-17b-16e-instruct`
-- **Groq Llama 4 Maverick**: `meta-llama/llama-4-maverick-17b-128e-instruct` (dish scan fallback)
+- **Groq Llama 4 Scout**: `meta-llama/llama-4-scout-17b-16e-instruct` (only Groq model with vision support)
 
 ### Cost Controls
 

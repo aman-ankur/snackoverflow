@@ -56,7 +56,7 @@ public/model/                 — 3D models, animations, assets
 ### POST `/api/analyze-dish` — Dish nutrition scan
 **Input:** `{ image: string, mealType: string }` (base64, compressed to 768px JPEG 0.7)
 **Output:** Per-dish nutrition + confidence level + alternative dishes (for ambiguous items)
-**Providers:** Gemini 2.5 Flash (15s) → OpenAI gpt-4o-mini (10s) → Groq Llama 4 Scout + Maverick (5s)
+**Providers:** Gemini 2.5 Flash (15s) → OpenAI gpt-4o-mini (10s) → Groq Llama 4 Scout (5s)
 
 ### POST `/api/describe-meal` — Text to nutrition
 **Input:** `{ description: string, mealType: string }` (Hindi-English mix + fractional quantities supported)
@@ -86,7 +86,7 @@ public/model/                 — 3D models, animations, assets
 
 | Feature | Primary (Tier 1) | Fallback 1 (Tier 2) | Fallback 2 (Tier 3) |
 |---------|------------------|---------------------|---------------------|
-| **Dish Scan** | `gemini-2.5-flash` (15s) | `gpt-4o-mini` (10s) | `llama-4-scout` + `llama-4-maverick` (5s) |
+| **Dish Scan** | `gemini-2.5-flash` (15s) | `gpt-4o-mini` (10s) | `llama-4-scout` (5s) |
 | **Describe Meal** | `gemini-2.0-flash-lite` (6s) | `gpt-4.1-nano` + `llama-4-scout` (parallel race, 6s each) | — |
 | **Eating Analysis** | `gemini-2.5-flash` (15s) | `gpt-4.1-mini` (15s) | `llama-4-scout` (15s) |
 | **Health Verdict** | `gemini-2.5-flash` (8s) | `claude-3-5-haiku-20241022` (8s) | `gpt-4.1-mini` (8s) |

@@ -2,10 +2,11 @@
 
 ## Overview
 
-Testing is split into two categories:
+Testing is split into three categories:
 
 1. **Calorie Accuracy Benchmarks** — automated scripts that measure AI estimation error against ground truth
-2. **UI Feature Tests** — Playwright MCP-driven browser tests with mocked API responses
+2. **AI Provider Tests** — scripts that verify AI model fallbacks and provider availability
+3. **UI Feature Tests** — Playwright MCP-driven browser tests with mocked API responses
 
 ---
 
@@ -64,7 +65,26 @@ BENCHMARK_URL=https://your-deployment.vercel.app npx tsx scripts/benchmark-calor
 
 ---
 
-## 2. UI Feature Tests (Playwright MCP)
+## 2. AI Provider Tests
+
+### Groq Model Tests
+
+Script to verify the Groq Tier 3 fallback is healthy. After Maverick was decommissioned (March 2026), Scout is the only Groq model with vision support.
+
+```bash
+# Requires GROQ_API_KEY in environment
+export $(cat .env.local | grep GROQ_API_KEY | xargs) && npx tsx scripts/test-groq-fallback.ts
+```
+
+**What it tests:**
+- Calls Groq API with Scout model using a vision (image) request
+- Validates JSON response structure and required nutrition fields
+- Confirms Maverick is decommissioned (negative test)
+- Measures latency
+
+---
+
+## 3. UI Feature Tests (Playwright MCP)
 
 ### Mock Scan Mode (`?mock=scan`)
 
@@ -264,7 +284,7 @@ const result = scaleDish(dish, ratio);
 
 ---
 
-## 3. Test Results — Calorie Editing Feature
+## 4. Test Results — Calorie Editing Feature
 
 **Date:** 2026-02-23
 **Tool:** Playwright MCP (headless Chromium)
@@ -295,7 +315,7 @@ Camera flow uses the same `CalorieEditor` component and identical `calorieOverri
 
 ---
 
-## 4. Running Tests Manually
+## 5. Running Tests Manually
 
 ### Describe Flow E2E (Playwright MCP)
 
@@ -321,7 +341,7 @@ Compare MAPE against baseline snapshots in `scripts/benchmark-results-*.json`.
 
 ---
 
-## 5. QA Test Account (Supabase)
+## 6. QA Test Account (Supabase)
 
 A pre-seeded test account exists in Supabase for manual QA of garden milestones, streak, and meal history features. Credentials are stored privately — ask the project owner.
 
