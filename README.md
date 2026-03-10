@@ -432,7 +432,6 @@ SnackOverflow uses **5 types** of animations:
 **See also:**
 - [ANIMATIONS-AND-ASSETS-GUIDE.md](./docs/ANIMATIONS-AND-ASSETS-GUIDE.md) — Comprehensive technical guide
 - [VISUAL-ASSETS-INVENTORY.md](./docs/VISUAL-ASSETS-INVENTORY.md) — Asset inventory and usage
-- [ANIMATION-QUICK-START-FOR-FRIENDS.md](./docs/ANIMATION-QUICK-START-FOR-FRIENDS.md) — Beginner-friendly guide
 
 ---
 

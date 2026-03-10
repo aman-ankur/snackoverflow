@@ -92,18 +92,6 @@ Comprehensive documentation update to reflect the current state of SnackOverflow
 - File size budget table
 - Adding new assets checklist
 
-#### C. ANIMATION-QUICK-START-FOR-FRIENDS.md (9 KB)
-**Beginner-friendly guide** with:
-- The 3 types friends need to know (CSS, Framer Motion, Lottie)
-- Decision tree for choosing animation types
-- Installation guide
-- Common mistakes to avoid
-- Free resources with direct links
-- Performance tips (Do's & Don'ts)
-- 30-minute starter project walkthrough
-- When NOT to animate
-- Common questions from beginners
-- Summary with copy-paste examples
 
 ---
 
@@ -138,8 +126,8 @@ Comprehensive documentation update to reflect the current state of SnackOverflow
 |--------|--------|-------|--------|
 | **README size** | 7.8 KB | 21.5 KB | +175% |
 | **CLAUDE.md updates** | 11 KB | 11.5 KB | +5% (targeted) |
-| **Total docs** | 17 files | 20 files | +3 files |
-| **Animation docs** | 0 | 3 | New category |
+| **Total docs** | 17 files | 19 files | +2 files |
+| **Animation docs** | 0 | 2 | New category |
 | **Model IDs** | Generic | 12 exact IDs | Fully specified |
 | **Component count** | ~48 (est.) | 52 (actual) | Verified |
 | **Lib count** | ~30 (est.) | 34 (actual) | Verified |
