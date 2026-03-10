@@ -467,8 +467,8 @@ async function tryGroq(base64Data: string, prompt: string): Promise<{ result: Di
 
   const groq = new Groq({ apiKey });
 
+  // Only Scout supports vision on Groq (Maverick decommissioned March 2026, GPT OSS 120B is text-only)
   const groqModels: Array<{ model: string; tag: string }> = [
-    { model: "meta-llama/llama-4-maverick-17b-128e-instruct", tag: "GRQM" },
     { model: "meta-llama/llama-4-scout-17b-16e-instruct", tag: "GRQS" },
   ];
 

@@ -53,7 +53,6 @@ function getProviderDisplayName(providerCode: string): string {
     "G20F": "Gemini 2.0 Flash",
     "OAI4m": "OpenAI GPT-4o Mini",
     "OAI41n": "OpenAI GPT-4.1 Nano",
-    "GRQM": "Groq Llama 4 Maverick",
     "GRQS": "Groq Llama 4 Scout",
     "gemini-2.5-flash": "Gemini 2.5 Flash",
     "gemini-2.0-flash": "Gemini 2.0 Flash",
