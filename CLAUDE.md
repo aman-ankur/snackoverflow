@@ -33,8 +33,8 @@ src/app/
     hindi-message/route.ts    — Recipe → casual Hindi WhatsApp message
     hindi-tts/route.ts        — Hindi text → MP3 audio (Sarvam Bulbul v3)
     capy-motivation/route.ts  — Context-aware motivational lines
-src/components/               — ~48 React components
-src/lib/                      — ~30 TypeScript utilities + custom hooks
+src/components/               — 52 React components
+src/lib/                      — 34 TypeScript utilities + custom hooks
   supabase/                   — client.ts, server.ts, sync.ts (pull/push), merge.ts (offline→online merge)
   mealAggregator.ts           — Client-side pre-aggregation (~400 vs ~4000 raw tokens)
   tdeeCalculator.ts           — TDEE + BMR (Mifflin-St Jeor formula)
@@ -46,7 +46,7 @@ src/lib/                      — ~30 TypeScript utilities + custom hooks
   yoloInference.ts            — ONNX Runtime YOLO inference
 scripts/                      — Calorie accuracy benchmark scripts
 e2e/                          — Playwright E2E test seeds
-docs/                         — 15+ documentation files
+docs/                         — 20+ documentation files (incl. animations & assets guides)
 certs/                        — SSL certs for local HTTPS (mobile camera testing)
 public/model/                 — 3D models, animations, assets
 ```
@@ -54,44 +54,46 @@ public/model/                 — 3D models, animations, assets
 ## API Architecture
 
 ### POST `/api/analyze-dish` — Dish nutrition scan
-**Input:** `{ image: string, mealType: string }` (base64, compressed to 512px JPEG 0.6)
-**Output:** Per-dish nutrition + confidence level
-**Providers:** Gemini 2.5 Flash → Gemini 2.0 Flash → OpenAI → Groq
+**Input:** `{ image: string, mealType: string }` (base64, compressed to 768px JPEG 0.7)
+**Output:** Per-dish nutrition + confidence level + alternative dishes (for ambiguous items)
+**Providers:** Gemini 2.5 Flash (15s) → OpenAI gpt-4o-mini (10s) → Groq Llama 4 Scout + Maverick (5s)
 
 ### POST `/api/describe-meal` — Text to nutrition
-**Input:** `{ description: string, mealType: string }` (Hindi-English mix supported)
-**Output:** Structured nutrition with 3 portion options
-**Providers:** Gemini 2.0 Flash-Lite → OpenAI + Groq (parallel race)
+**Input:** `{ description: string, mealType: string }` (Hindi-English mix + fractional quantities supported)
+**Output:** Structured nutrition with 3 food-specific portion options per dish
+**Providers:** Gemini 2.0 Flash-Lite (6s) → OpenAI gpt-4.1-nano + Groq Llama 4 Scout (parallel race, 6s each)
 
 ### POST `/api/analyze-habits` — Eating analysis
-**Input:** Meal log + time window + health profile (client pre-aggregated)
-**Output:** Score + trends + insights + action items
-**Providers:** Gemini 2.5 Flash → OpenAI gpt-4.1-mini → Groq
+**Input:** Meal log + time window + health profile (client pre-aggregated ~400 tokens)
+**Output:** Structured report (score + trends + 5-7 insights + health notes + 3-5 action items)
+**Providers:** Gemini 2.5 Flash (15s) → OpenAI gpt-4.1-mini (15s) → Groq Llama 4 Scout (15s)
 
 ### POST `/api/health-verdict` — Per-dish health check
-**Input:** Dish nutrition + health conditions + lab values
-**Output:** Verdict (Good/Caution/Avoid) + swap suggestions
-**Providers:** Gemini 2.5 Flash → Claude 3.5 Haiku → GPT-4.1-mini
+**Input:** Dish nutrition + health conditions + lab values (deterministic health context)
+**Output:** Per-dish verdict (Good/Caution/Avoid) + condition-specific reasoning + swap suggestions
+**Providers:** Gemini 2.5 Flash (8s) → Claude 3.5 Haiku (8s) → OpenAI gpt-4.1-mini (8s)
 
 ### POST `/api/analyze` — Fridge scanner
-**Input:** `{ image: string, dietaryFilter: string }` (base64)
-**Output:** Detected items + 5 Indian recipes
-**Providers:** Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq
+**Input:** `{ image: string, dietaryFilter: string }` (base64, 512px @ 0.6 JPEG)
+**Output:** Detected items (with Hindi names + confidence) + exactly 5 Indian recipes
+**Providers:** Gemini 2.0 Flash (10s) → Gemini 2.0 Flash-Lite (10s) → Groq Llama 4 Scout (10s)
 
 ### POST `/api/hindi-message` — Hindi text for WhatsApp
 ### POST `/api/hindi-tts` — Hindi audio (Sarvam AI)
 ### POST `/api/capy-motivation` — Motivational lines
 
-## AI Provider Fallback Strategy
+## AI Provider Fallback Strategy (Exact Model IDs)
 
-| Feature | Primary (Paid) | Fallback 1 | Fallback 2 |
-|---------|---|---|---|
-| Dish Scan | Gemini 2.5 Flash (15s) | OpenAI gpt-4o-mini (10s) | Groq (5s, last resort) |
-| Describe Meal | Gemini 2.0 Flash-Lite | OpenAI gpt-4.1-nano | Groq (parallel race) |
-| Eating Analysis | Gemini 2.5 Flash | OpenAI gpt-4.1-mini | Groq Llama 4 Scout |
-| Health Verdict | Gemini 2.5 Flash | Claude 3.5 Haiku | GPT-4.1-mini |
-| Fridge Scan | Gemini 2.0 Flash | Gemini 2.0 Flash-Lite | Groq Llama 4 Scout |
-| Hindi TTS | Sarvam AI Bulbul v3 | — | — |
+| Feature | Primary (Tier 1) | Fallback 1 (Tier 2) | Fallback 2 (Tier 3) |
+|---------|------------------|---------------------|---------------------|
+| **Dish Scan** | `gemini-2.5-flash` (15s) | `gpt-4o-mini` (10s) | `llama-4-scout` + `llama-4-maverick` (5s) |
+| **Describe Meal** | `gemini-2.0-flash-lite` (6s) | `gpt-4.1-nano` + `llama-4-scout` (parallel race, 6s each) | — |
+| **Eating Analysis** | `gemini-2.5-flash` (15s) | `gpt-4.1-mini` (15s) | `llama-4-scout` (15s) |
+| **Health Verdict** | `gemini-2.5-flash` (8s) | `claude-3-5-haiku-20241022` (8s) | `gpt-4.1-mini` (8s) |
+| **Fridge Scan** | `gemini-2.0-flash` (10s) | `gemini-2.0-flash-lite` (10s) | `llama-4-scout` (10s) |
+| **Hindi Text** | `llama-4-scout` | — | — |
+| **Hindi Audio** | Sarvam AI Bulbul v3 | — | — |
+| **Capy Motivation** | `gemini-2.0-flash-lite` | `llama-3.1-8b` | — |
 
 **Cost Controls:** Dish scan: 768px @ 0.7 JPEG + sequential quality-first fallback (15s Gemini, 10s OpenAI, 5s Groq); Fridge scan: 512px @ 0.6; client-side pre-aggregation for eating analysis; in-memory caches (2 min dish scan, 5 min / 200 entries describe meal); smart report caching (no re-gen if no new meals); 30s client-side fetch timeout (safety net, covers 15+10+5=30s server worst-case). **Quality optimized**: longer timeouts prioritize accuracy over speed. With paid Gemini billing enabled.
 
@@ -121,7 +123,9 @@ page.tsx (main shell)
 | `SARVAM_API_KEY` | Hindi TTS | Yes |
 | `NEXT_PUBLIC_SUPABASE_URL` | Auth + DB | For cloud sync |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public key | For cloud sync |
-| `ANTHROPIC_API_KEY` | Health verdict fallback | Optional |
+| `ANTHROPIC_API_KEY` | Health verdict fallback (Claude 3.5 Haiku) | Optional |
+| `UPSTASH_REDIS_REST_URL` | Rate limiting (Upstash Redis) | Optional |
+| `UPSTASH_REDIS_REST_TOKEN` | Rate limiting token | Optional |
 | `DISABLE_NUTRITION_REF` | Kill switch for IFCT/USDA table injection | Optional |
 
 ## Learnings & Gotchas
@@ -226,15 +230,56 @@ npm run dev       # Dev server (localhost:3000, Turbopack)
 npm run build     # Production build
 npm run start     # Start production server
 npm run lint      # ESLint (Next.js core web vitals + TypeScript)
+npx playwright test  # E2E tests (start dev server first)
+npx tsx scripts/benchmark-calories.ts  # Calorie accuracy benchmarks
 ```
+
+## Documentation
+
+All documentation lives in [`docs/`](./docs/) — 20+ comprehensive guides:
+
+### Core Documentation
+- [`ARCHITECTURE.md`](./docs/ARCHITECTURE.md) — System design, data flow, component hierarchy
+- [`FEATURES.md`](./docs/FEATURES.md) — Complete feature list with implementation details (~30 KB)
+- [`API-ROUTES.md`](./docs/API-ROUTES.md) — All server endpoints with schemas, provider chains, timeouts
+- [`COMPONENTS.md`](./docs/COMPONENTS.md) — Every React component with props, state, behavior (~31 KB)
+- [`HOOKS.md`](./docs/HOOKS.md) — Custom React hooks with APIs and examples (~24 KB)
+
+### Design & Assets
+- [`DESIGN-SYSTEM.md`](./docs/DESIGN-SYSTEM.md) — Colors, typography, spacing, component patterns
+- [`ANIMATIONS-AND-ASSETS-GUIDE.md`](./docs/ANIMATIONS-AND-ASSETS-GUIDE.md) — How images, Lottie, Framer Motion, CSS, Three.js are used (~14 KB)
+- [`VISUAL-ASSETS-INVENTORY.md`](./docs/VISUAL-ASSETS-INVENTORY.md) — Asset inventory, file sizes, loading strategy
+- [`ANIMATION-QUICK-START-FOR-FRIENDS.md`](./docs/ANIMATION-QUICK-START-FOR-FRIENDS.md) — Beginner guide to animations for sharing
+
+### Deployment & Configuration
+- [`ENV-VARS.md`](./docs/ENV-VARS.md) — Environment variables, API keys, configuration
+- [`DEPLOYMENT.md`](./docs/DEPLOYMENT.md) — Vercel + Supabase setup guide
+- [`TESTING.md`](./docs/TESTING.md) — Calorie benchmarks + Playwright E2E tests
+
+### Feature Deep-Dives
+- [`ALTERNATIVE-DISH-SELECTION.md`](./docs/ALTERNATIVE-DISH-SELECTION.md) — How ambiguous dish detection works (~24 KB)
+- [`API-LOGGING-GUIDE.md`](./docs/API-LOGGING-GUIDE.md) — Debug logging strategy for AI routes
+- [`SCAN-PERFORMANCE-OPTIMIZATION.md`](./docs/SCAN-PERFORMANCE-OPTIMIZATION.md) — Tiered fallback strategy
+- [`BACKLOG.md`](./docs/BACKLOG.md) — Shipped features and future ideas
+
+### Test Reports
+- [`LIVE-API-TEST-REPORT.md`](./docs/LIVE-API-TEST-REPORT.md) — Live AI provider performance tests
+- [`SCAN-PERFORMANCE-TEST-REPORT.md`](./docs/SCAN-PERFORMANCE-TEST-REPORT.md) — Dish scan latency benchmarks
+- [`TEST-RESULTS.md`](./docs/TEST-RESULTS.md) — E2E test results
 
 ## Key Rules
 
 - Never hardcode API keys — use env vars
-- All AI routes must implement multi-provider fallback
-- Compress images client-side before upload (512px, JPEG 0.6)
+- All AI routes must implement multi-provider fallback with per-provider timeouts
+- Compress images client-side before upload:
+  - **Dish scan:** 768px @ 0.7 JPEG (~60-80KB)
+  - **Fridge scan:** 512px @ 0.6 JPEG (~40-60KB)
 - Offline-first: localStorage is the source of truth, cloud sync is optional
-- Keep bundle small — 3D garden is lazy-loaded, ONNX WASM loaded on demand
+- Keep bundle small — 3D garden is lazy-loaded (~150 KB), ONNX WASM loaded on demand (~2 MB)
 - Indian food focus: Hindi names, culturally relevant portions, IFCT 2017 reference data
+- Client-side pre-aggregation for eating analysis (~400 tokens vs ~4000 raw)
+- Rate limiting on all API routes (10-15 req/min per IP via Upstash Redis)
+- Input validation on all API routes (base64 images, string lengths, array sizes)
+- All server routes have `maxDuration = 30` to prevent Vercel 504 timeouts
 - Backlog tracked in `docs/BACKLOG.md`
-- Documentation lives in `docs/` (15+ files covering architecture, features, API routes, components, hooks, design system, deployment, testing)
+- Documentation lives in `docs/` (20+ files covering architecture, features, API routes, components, hooks, design system, animations, assets, deployment, testing)
