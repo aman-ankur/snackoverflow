@@ -19,7 +19,7 @@ import type { CoachMarkId } from "@/lib/useCoachMarks";
 type ScanMode = "camera" | "describe" | "upload";
 
 interface ScanViewProps {
-  logMeal: (input: { mealType: MealType; servingsMultiplier: number; dishes: DishNutrition[]; totals: MealTotals }) => LoggedMeal;
+  logMeal: (input: { mealType: MealType; servingsMultiplier: number; dishes: DishNutrition[]; totals: MealTotals; photoDataUrl?: string | null }) => Promise<LoggedMeal>;
   meals: LoggedMeal[];
   refreshStreak: () => void;
   onMealLogged?: () => void;
@@ -429,13 +429,14 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
     });
   }, [dish]);
 
-  const handleLogMeal = () => {
+  const handleLogMeal = async () => {
     if (scaledDishes.length === 0) return;
-    logMeal({
+    await logMeal({
       mealType: logMealType,
       servingsMultiplier,
       dishes: scaledDishes,
       totals: scaledTotals,
+      photoDataUrl: dish.capturedFrame,
     });
     setLogSuccess(true);
     refreshStreak();
@@ -455,6 +456,7 @@ export default function ScanView({ logMeal, meals, refreshStreak, onMealLogged, 
 
   return (
     <div className="space-y-4">
+      <p className="px-1 text-[10px] leading-relaxed text-muted">Successful camera and upload logs automatically retain a small private thumbnail. Text-described meals stay image-free.</p>
       {/* Mode Toggle */}
       <div className="relative">
       <div className="flex gap-1 rounded-2xl bg-card border border-border p-1">

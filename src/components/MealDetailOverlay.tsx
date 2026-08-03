@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, Trash2, Camera, Check, Minus, Plus, UtensilsCrossed, StickyNote, ShieldCheck } from "lucide-react";
 import type { LoggedMeal, MealType, DishNutrition } from "@/lib/dishTypes";
 import { getMealHealthRating } from "@/lib/healthRating";
+import { getMealThumbnail } from "@/lib/mealThumbnails";
 
 const MEAL_TYPE_OPTIONS: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
 const SERVING_OPTIONS = [0.5, 1, 1.5, 2];
@@ -134,6 +135,7 @@ export default function MealDetailOverlay({
       </div>
 
       <div className="mx-auto max-w-lg px-4 py-4 pb-24 space-y-4">
+        {meal.photo && <DetailMealPhoto photoId={meal.photo.id} />}
         {/* Meal type selector */}
         <div className="rounded-2xl border border-border bg-card p-4">
           <h4 className="text-xs font-extrabold text-foreground mb-3 flex items-center gap-1.5">
@@ -236,6 +238,12 @@ export default function MealDetailOverlay({
       </div>
     </motion.div>
   );
+}
+
+function DetailMealPhoto({ photoId }: { photoId: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => { let objectUrl: string | null = null; getMealThumbnail(photoId).then((item) => { if (item) { objectUrl = URL.createObjectURL(item.blob); setUrl(objectUrl); } }).catch(() => {}); return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); }; }, [photoId]);
+  return url ? <img src={url} alt="Retained meal thumbnail" className="h-52 w-full rounded-2xl object-cover border border-border" /> : <div className="h-52 w-full rounded-2xl bg-accent-light border border-border" aria-label="Meal photo unavailable" />;
 }
 
 /* ── Per-dish edit card ─────────────────────────────────────────────── */

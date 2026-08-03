@@ -3,8 +3,10 @@
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import type { DishNutrition, LoggedMeal, MealTotals, MealType } from "@/lib/dishTypes";
 import { useAuthContext } from "@/components/AuthProvider";
-import { pullUserData, pushUserData } from "@/lib/supabase/sync";
+import { pullUserData, pushUserData, syncMealThumbnails, cacheRemoteMealThumbnails } from "@/lib/supabase/sync";
 import { mergeArrayById } from "@/lib/supabase/merge";
+import { makeMealThumbnail } from "@/lib/mealPhoto";
+import { installationOwnerId, putMealThumbnail, deleteMealThumbnail, clearMealThumbnails } from "@/lib/mealThumbnails";
 
 const STORAGE_KEY = "snackoverflow-meal-log-v1";
 const FRIDGE_SCAN_HISTORY_KEY = "snackoverflow-fridge-scan-history";
@@ -92,6 +94,7 @@ function normalizeMeal(raw: unknown): LoggedMeal | null {
       typeof raw.loggedAt === "string" && raw.loggedAt.trim()
         ? raw.loggedAt
         : new Date().toISOString(),
+    updatedAt: typeof raw.updatedAt === "string" && raw.updatedAt.trim() ? raw.updatedAt : (typeof raw.loggedAt === "string" ? raw.loggedAt : new Date().toISOString()),
     servingsMultiplier: Math.max(0.5, toNumber(raw.servingsMultiplier) || 1),
     dishes,
     totals: {
@@ -103,6 +106,9 @@ function normalizeMeal(raw: unknown): LoggedMeal | null {
     },
     fridgeLink,
     notes: typeof raw.notes === "string" ? raw.notes : undefined,
+    photo: isObject(raw.photo) && typeof raw.photo.id === "string" && raw.photo.mimeType === "image/jpeg"
+      ? { id: raw.photo.id, storagePath: typeof raw.photo.storagePath === "string" ? raw.photo.storagePath : undefined, mimeType: "image/jpeg", width: Math.max(1, toNumber(raw.photo.width)), height: Math.max(1, toNumber(raw.photo.height)), byteSize: Math.max(0, toNumber(raw.photo.byteSize)) }
+      : undefined,
   };
 }
 
@@ -192,7 +198,11 @@ export function useMealLog() {
   useEffect(() => {
     if (!isLoggedIn || !user || hasPulledCloud.current) return;
     hasPulledCloud.current = true;
-    pullUserData(user.id).then((cloud) => {
+    syncMealThumbnails(user.id).then((paths) => {
+      if (Object.keys(paths).length === 0) return;
+      setMeals((prev) => prev.map((meal) => paths[meal.id] && meal.photo ? { ...meal, photo: { ...meal.photo, storagePath: paths[meal.id] }, updatedAt: new Date().toISOString() } : meal));
+    }).catch(() => {});
+    pullUserData(user.id).then(async (cloud) => {
       if (!cloud) return;
       const cloudMeals = cloud.meals;
       if (Array.isArray(cloudMeals) && cloudMeals.length > 0) {
@@ -200,12 +210,13 @@ export function useMealLog() {
           .map(normalizeMeal)
           .filter((m): m is LoggedMeal => Boolean(m));
         if (normalized.length > 0) {
+          await cacheRemoteMealThumbnails(user.id, normalized).catch(() => {});
           setMeals((prev) =>
             mergeArrayById(
               prev,
               normalized,
               (m) => m.id,
-              (m) => m.loggedAt
+              (m) => m.updatedAt
             ).sort((a, b) => (a.loggedAt < b.loggedAt ? 1 : -1))
           );
         }
@@ -223,30 +234,41 @@ export function useMealLog() {
   }, [meals, isLoggedIn, user]);
 
   const logMeal = useCallback(
-    (input: {
+    async (input: {
       mealType: MealType;
       servingsMultiplier: number;
       dishes: DishNutrition[];
       totals: MealTotals;
-    }) => {
+      photoDataUrl?: string | null;
+    }): Promise<LoggedMeal> => {
+      const now = new Date().toISOString();
+      const id = `meal-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
       const nextMeal: LoggedMeal = {
-        id: `meal-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+        id,
         mealType: input.mealType,
-        loggedAt: new Date().toISOString(),
+        loggedAt: now, updatedAt: now,
         servingsMultiplier: input.servingsMultiplier,
         dishes: input.dishes,
         totals: input.totals,
         fridgeLink: findFridgeLink(input.dishes),
       };
-
+      if (input.photoDataUrl) {
+        try {
+          const ownerId = isLoggedIn && user ? user.id : installationOwnerId();
+          const thumbnail = await makeMealThumbnail(input.photoDataUrl, id);
+          await putMealThumbnail({ ...thumbnail.ref, mealId: id, ownerId, blob: thumbnail.blob, syncState: "local" });
+          nextMeal.photo = thumbnail.ref;
+        } catch { /* meal remains valid; photo can be retried by a later scan */ }
+      }
       setMeals((prev) => [nextMeal, ...prev]);
       return nextMeal;
     },
-    []
+    [isLoggedIn, user]
   );
 
   const removeMeal = useCallback((mealId: string) => {
     setMeals((prev) => prev.filter((meal) => meal.id !== mealId));
+    deleteMealThumbnail(mealId).catch(() => {});
   }, []);
 
   const updateMeal = useCallback(
@@ -254,7 +276,7 @@ export function useMealLog() {
       setMeals((prev) =>
         prev.map((meal) => {
           if (meal.id !== mealId) return meal;
-          return { ...meal, ...updates };
+          return { ...meal, ...updates, updatedAt: new Date().toISOString() };
         })
       );
     },
@@ -279,7 +301,7 @@ export function useMealLog() {
             }),
             { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
           );
-          return { ...meal, dishes: newDishes, totals };
+          return { ...meal, dishes: newDishes, totals, updatedAt: new Date().toISOString() };
         })
       );
     },
@@ -296,7 +318,7 @@ export function useMealLog() {
             continue;
           }
           const newDishes = meal.dishes.filter((_, i) => i !== dishIndex);
-          if (newDishes.length === 0) continue; // remove entire meal
+          if (newDishes.length === 0) { deleteMealThumbnail(meal.id).catch(() => {}); continue; } // remove entire meal
           const totals = newDishes.reduce(
             (acc, d) => ({
               calories: acc.calories + d.calories,
@@ -307,7 +329,7 @@ export function useMealLog() {
             }),
             { calories: 0, protein: 0, carbs: 0, fat: 0, fiber: 0 }
           );
-          result.push({ ...meal, dishes: newDishes, totals });
+          result.push({ ...meal, dishes: newDishes, totals, updatedAt: new Date().toISOString() });
         }
         return result;
       });
@@ -320,7 +342,7 @@ export function useMealLog() {
       setMeals((prev) =>
         prev.map((meal) => {
           if (meal.id !== mealId) return meal;
-          return { ...meal, mealType: newMealType };
+          return { ...meal, mealType: newMealType, updatedAt: new Date().toISOString() };
         })
       );
     },
@@ -330,6 +352,7 @@ export function useMealLog() {
   const clearAllMeals = useCallback(() => {
     setMeals([]);
     localStorage.removeItem(STORAGE_KEY);
+    clearMealThumbnails().catch(() => {});
   }, []);
 
   const todayDateKey = getDateKey(new Date().toISOString());

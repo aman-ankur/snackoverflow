@@ -42,6 +42,7 @@ export interface LoggedMeal {
   id: string;
   mealType: MealType;
   loggedAt: string;
+  updatedAt: string;
   servingsMultiplier: number;
   dishes: DishNutrition[];
   totals: MealTotals;
@@ -50,6 +51,26 @@ export interface LoggedMeal {
     matchedItems: string[];
   };
   notes?: string;
+  photo?: MealPhotoRef;
+}
+
+export interface MealPhotoRef {
+  id: string;
+  storagePath?: string;
+  mimeType: "image/jpeg";
+  width: number;
+  height: number;
+  byteSize: number;
+}
+
+export interface MealRecommendation {
+  id: string;
+  kind: "familiar" | "healthier";
+  title: string;
+  reason: string;
+  adjustments: string[];
+  basedOnMealIds: string[];
+  representativeMealId?: string;
 }
 
 export type Gender = "male" | "female" | "other";

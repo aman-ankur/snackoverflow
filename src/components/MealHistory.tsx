@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { History, ChevronDown, ChevronUp, Link2 } from "lucide-react";
 import type { LoggedMeal } from "@/lib/dishTypes";
@@ -100,12 +100,15 @@ export default function MealHistory({ meals, weeklyByDate, repeatedDishes }: Mea
                           const ago = daysAgo(meal.loggedAt);
 
                           return (
-                            <div key={meal.id} className="rounded-lg border border-border px-2.5 py-2">
+                              <div key={meal.id} className="rounded-lg border border-border px-2.5 py-2 flex gap-2">
+                                {meal.photo && <HistoryThumbnail photoId={meal.photo.id} />}
+                                <div className="min-w-0">
                               <div className="flex items-center justify-between gap-2">
                                 <p className="text-xs font-medium text-foreground">{mainDish}</p>
                                 <span className="text-[10px] text-muted">
                                   {ago === 0 ? "Today" : `${ago}d ago`}
                                 </span>
+                                </div>
                               </div>
                               <p className="text-[10px] text-muted mt-1">
                                 {meal.totals.calories} kcal • P {meal.totals.protein}g • C {meal.totals.carbs}g • F {meal.totals.fat}g
@@ -130,4 +133,10 @@ export default function MealHistory({ meals, weeklyByDate, repeatedDishes }: Mea
       </AnimatePresence>
     </div>
   );
+}
+
+function HistoryThumbnail({ photoId }: { photoId: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => { let u: string | null = null; import("@/lib/mealThumbnails").then(({ getMealThumbnail }) => getMealThumbnail(photoId)).then((x) => { if (x) { u = URL.createObjectURL(x.blob); setUrl(u); } }).catch(() => {}); return () => { if (u) URL.revokeObjectURL(u); }; }, [photoId]);
+  return url ? <img src={url} alt="Meal thumbnail" className="h-12 w-12 rounded-lg object-cover shrink-0" /> : <div className="h-12 w-12 rounded-lg bg-accent-light shrink-0" />;
 }

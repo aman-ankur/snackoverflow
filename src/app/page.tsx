@@ -136,6 +136,7 @@ export default function Home() {
             >
               <HomeView
                 todayMeals={mealLog.todayMeals}
+                allMeals={mealLog.meals}
                 todayTotals={mealLog.todayTotals}
                 goals={userGoals.goals}
                 streak={userGoals.streak}
@@ -148,6 +149,8 @@ export default function Home() {
                 coachMarks={coachMarks}
                 latestAnalysis={eatingAnalysis.getLatest()}
                 onViewAnalysis={() => setActiveTab("progress")}
+                dietPreference={healthProfile.healthProfile?.dietPreference}
+                healthContextString={healthProfile.healthContextString}
               />
             </motion.div>
           )}

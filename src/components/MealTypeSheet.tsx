@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Trash2, ChevronRight, Clock, Coffee, Sun, Sunset, Moon, Camera, Minus, PenLine } from "lucide-react";
 import type { LoggedMeal, MealType } from "@/lib/dishTypes";
@@ -183,6 +183,7 @@ function MealSection({
     <div className="border-t border-border">
       {/* Time header */}
       <div className="flex items-center px-4 pt-3 pb-1.5">
+        {meal.photo && <MealThumbnail photoId={meal.photo.id} className="mr-2 h-10 w-10 rounded-lg" />}
         <div className="flex items-center gap-1.5 text-[11px] font-bold text-muted-light">
           <Clock className="h-3 w-3 opacity-50" />
           {time}
@@ -295,4 +296,16 @@ function MealSection({
       </div>
     </div>
   );
+}
+
+function MealThumbnail({ photoId, className }: { photoId: string; className: string }) {
+  const [url, setUrl] = useState<string | null>(null);
+  useEffect(() => {
+    let objectUrl: string | null = null;
+    import("@/lib/mealThumbnails").then(({ getMealThumbnail }) => getMealThumbnail(photoId)).then((item) => {
+      if (!item) return; objectUrl = URL.createObjectURL(item.blob); setUrl(objectUrl);
+    }).catch(() => {});
+    return () => { if (objectUrl) URL.revokeObjectURL(objectUrl); };
+  }, [photoId]);
+  return url ? <img src={url} alt="Meal thumbnail" className={`${className} object-cover shrink-0`} /> : <div className={`${className} shrink-0 rounded-lg bg-accent-light`} aria-label="Meal photo unavailable" />;
 }
