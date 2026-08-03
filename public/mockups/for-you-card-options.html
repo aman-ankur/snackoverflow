@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>For You card — compact options</title>
+  <style>
+    :root {
+      --cream: #f5f2eb;
+      --ink: #0d0d0d;
+      --muted: #4a4540;
+      --line: #ddd8cc;
+      --green: #5aac5a;
+      --green-dark: #489848;
+      --green-pale: #e8f5e0;
+      --lavender: #f4f0ff;
+      --orange: #f08c42;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; color: var(--ink); background: #e8e4dc; }
+    header { max-width: 1180px; margin: 0 auto; padding: 42px 28px 22px; }
+    .eyebrow { color: var(--green-dark); font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 8px 0 6px; font-size: clamp(28px, 4vw, 46px); letter-spacing: -.04em; }
+    header p { max-width: 650px; margin: 0; color: var(--muted); font-size: 16px; line-height: 1.5; }
+    main { max-width: 1180px; margin: 0 auto; padding: 0 28px 52px; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 28px; }
+    .option { padding: 18px; border: 1px solid #d5d0c5; border-radius: 28px; background: #f8f6f1; box-shadow: 0 12px 30px #514a3e12; }
+    .option-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-bottom: 14px; }
+    .option h2 { margin: 0; font-size: 17px; letter-spacing: -.02em; }
+    .option-head span { color: var(--green-dark); font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .08em; }
+    .phone { max-width: 390px; min-height: 305px; margin: 0 auto; padding: 28px 16px 20px; border-radius: 23px; background: var(--cream); overflow: hidden; }
+    .greeting { display: flex; align-items: center; justify-content: space-between; margin: 0 2px 18px; }
+    .greeting strong { font-size: 17px; }
+    .kcal { text-align: right; color: var(--muted); font-size: 11px; line-height: 1.15; }
+    .kcal b { display: block; color: var(--ink); font-size: 20px; }
+    .preview { height: 118px; margin-top: 16px; border-radius: 21px; background: linear-gradient(135deg, #e8f5e0, #fff 72%); border: 1px solid #cae8c7; }
+    .preview h3 { margin: 0; padding: 18px 18px 0; font-size: 20px; }
+    .preview p { margin: 5px 18px; color: var(--muted); font-size: 12px; }
+    .what { display: flex; align-items: center; gap: 13px; padding: 17px 16px; border-radius: 21px; border: 1px solid #cae8c7; background: linear-gradient(135deg, #e8f5e0, #fff 75%); }
+    .spark { display: grid; place-items: center; flex: 0 0 auto; width: 43px; height: 43px; border-radius: 50%; background: #fff; color: var(--green); font-size: 23px; box-shadow: 0 2px 7px #48984818; }
+    .what-copy { min-width: 0; flex: 1; }
+    .what-copy h3 { margin: 0; font-size: 18px; }
+    .what-copy p { margin: 3px 0 0; color: var(--muted); font-size: 12px; line-height: 1.3; }
+    .button { border: 0; border-radius: 99px; padding: 11px 15px; color: #fff; background: var(--green); font: inherit; font-size: 12px; font-weight: 800; white-space: nowrap; }
+    .button.secondary { color: var(--green-dark); background: #fff; border: 1px solid #cce5c8; }
+    .button.small { padding: 8px 12px; font-size: 11px; }
+    .inline-card { display: flex; align-items: center; gap: 12px; padding: 13px 14px; border-radius: 20px; border: 1px solid #cae8c7; background: linear-gradient(135deg, #e8f5e0, #fff 78%); }
+    .inline-card .copy { min-width: 0; flex: 1; }
+    .inline-card h3 { margin: 0; font-size: 15px; }
+    .inline-card p { margin: 3px 0 0; color: var(--muted); font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .actions { display: flex; gap: 6px; margin-top: 9px; }
+    .actions .button { flex: 1; text-align: center; }
+    .split-card { padding: 15px; border-radius: 21px; border: 1px solid #cae8c7; background: linear-gradient(135deg, #e8f5e0, #fff 78%); }
+    .split-top { display: flex; align-items: center; gap: 11px; }
+    .split-top .copy { flex: 1; min-width: 0; }
+    .split-card h3 { margin: 0; font-size: 17px; }
+    .split-card p { margin: 3px 0 0; color: var(--muted); font-size: 11px; }
+    .split-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 14px; }
+    .split-actions .button { width: 100%; }
+    .minimal { display: flex; align-items: center; gap: 10px; padding: 13px 14px; border-radius: 18px; border: 1px solid #cae8c7; background: #fff; }
+    .minimal .copy { flex: 1; min-width: 0; }
+    .minimal h3 { margin: 0; font-size: 14px; }
+    .minimal p { margin: 2px 0 0; color: var(--muted); font-size: 10px; }
+    .mini-actions { display: flex; gap: 5px; }
+    .mini-actions .button { padding: 8px 9px; font-size: 10px; }
+    .paired-cards { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; }
+    .paired-card { min-height: 118px; padding: 13px; border-radius: 19px; border: 1px solid #cae8c7; background: linear-gradient(150deg, #e8f5e0, #fff 80%); }
+    .paired-card.playbook { border-color: #e4dafa; background: linear-gradient(150deg, #f4f0ff, #fff 80%); }
+    .paired-card .card-icon { display: grid; place-items: center; width: 31px; height: 31px; margin-bottom: 14px; border-radius: 11px; background: #fff; color: var(--green); font-size: 17px; box-shadow: 0 2px 6px #48984818; }
+    .paired-card.playbook .card-icon { color: #8b5cf6; }
+    .paired-card h3 { margin: 0; font-size: 13px; line-height: 1.15; }
+    .paired-card p { margin: 4px 0 0; color: var(--muted); font-size: 10px; line-height: 1.25; }
+    .paired-card .arrow { display: block; margin-top: 10px; color: var(--green-dark); font-size: 15px; font-weight: 800; }
+    .paired-card.playbook .arrow { color: #8b5cf6; }
+    .note { margin-top: 12px; color: #756f66; font-size: 11px; line-height: 1.4; }
+    @media (max-width: 760px) { main { grid-template-columns: 1fr; padding: 0 16px 36px; } header { padding: 30px 16px 20px; } }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="eyebrow">SnackOverflow · Home exploration</div>
+    <h1>Compact “For You” card options</h1>
+    <p>Same cream, sage, and soft-lavender feel as the current home screen. Each direction removes the separate “For You / Today” header row and keeps the useful actions close at hand.</p>
+  </header>
+  <main>
+    <section class="option">
+      <div class="option-head"><h2>Option A · Clean recommendation</h2><span>Closest to Image #1</span></div>
+      <div class="phone">
+        <div class="greeting"><strong>Good evening, Aman!</strong><div class="kcal"><b>1654</b>kcal left</div></div>
+        <div class="what"><div class="spark">✦</div><div class="what-copy"><h3>What should I eat?</h3><p>Personalized ideas from your meal memory</p></div><button class="button">Show ideas</button></div>
+        <div class="preview"><h3>Daily Intake</h3><p>Keep the rest of the home screen exactly as it is.</p></div>
+      </div>
+      <p class="note">The most direct continuation of the screenshot you liked. Health Playbook stays accessible from Progress.</p>
+    </section>
+
+    <section class="option">
+      <div class="option-head"><h2>Option B · For You + two CTAs</h2><span>Recommended</span></div>
+      <div class="phone">
+        <div class="greeting"><strong>Good evening, Aman!</strong><div class="kcal"><b>1654</b>kcal left</div></div>
+        <div class="inline-card"><div class="spark">✦</div><div class="copy"><h3>For You</h3><p>A thoughtful next step from your meals</p><div class="actions"><button class="button small">Meal ideas</button><button class="button secondary small">Health Playbook</button></div></div></div>
+        <div class="preview"><h3>Daily Intake</h3><p>One compact card, with both destinations visible.</p></div>
+      </div>
+      <p class="note">Keeps the “For You” framing, but makes it one compact content block rather than a header plus list.</p>
+    </section>
+
+    <section class="option">
+      <div class="option-head"><h2>Option C · Split action rail</h2><span>Most scannable</span></div>
+      <div class="phone">
+        <div class="greeting"><strong>Good evening, Aman!</strong><div class="kcal"><b>1654</b>kcal left</div></div>
+        <div class="split-card"><div class="split-top"><div class="spark">✦</div><div class="copy"><h3>What should I do next?</h3><p>Based on what you’ve logged today</p></div></div><div class="split-actions"><button class="button">Meal ideas</button><button class="button secondary">Health Playbook</button></div></div>
+        <div class="preview"><h3>Daily Intake</h3><p>Actions read as a deliberate pair.</p></div>
+      </div>
+      <p class="note">Best if you want both actions to have equal weight. Slightly taller than Option B, but still much more compact than the current design.</p>
+    </section>
+
+    <section class="option">
+      <div class="option-head"><h2>Option D · Minimal action row</h2><span>Smallest footprint</span></div>
+      <div class="phone">
+        <div class="greeting"><strong>Good evening, Aman!</strong><div class="kcal"><b>1654</b>kcal left</div></div>
+        <div class="minimal"><div class="spark" style="width:36px;height:36px;font-size:19px">✦</div><div class="copy"><h3>For You</h3><p>Ready for dinner · 2 next steps</p></div><div class="mini-actions"><button class="button">Ideas</button><button class="button secondary">Playbook</button></div></div>
+        <div class="preview"><h3>Daily Intake</h3><p>Maximum room for the content below.</p></div>
+      </div>
+      <p class="note">A tight utility row for a denser home screen. Use this if Daily Intake should move up noticeably.</p>
+    </section>
+
+    <section class="option">
+      <div class="option-head"><h2>Option E · Two small cards</h2><span>Paired destinations</span></div>
+      <div class="phone">
+        <div class="greeting"><strong>Good evening, Aman!</strong><div class="kcal"><b>1654</b>kcal left</div></div>
+        <div class="paired-cards">
+          <button class="paired-card" aria-label="Open meal ideas"><span class="card-icon">✦</span><h3>What should I eat?</h3><p>Personalized ideas for dinner</p><span class="arrow">→</span></button>
+          <button class="paired-card playbook" aria-label="Open Health Playbook"><span class="card-icon">♡</span><h3>Health Playbook</h3><p>See what your meals are teaching us</p><span class="arrow">→</span></button>
+        </div>
+        <div class="preview"><h3>Daily Intake</h3><p>Two destinations, no extra header row.</p></div>
+      </div>
+      <p class="note">Makes the two actions feel equally important and gives each one its own visual identity. The tradeoff is slightly less room for descriptive copy.</p>
+    </section>
+  </main>
+</body>
+</html>
