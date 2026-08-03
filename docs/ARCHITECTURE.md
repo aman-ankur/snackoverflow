@@ -202,7 +202,9 @@ Health Personalization (HealthProfileWizard.tsx):
   → "both" status generates ELEVATED RISK note in prompt
 
 Progress Tab (ProgressView.tsx):
-  CalendarProgressView (top) — weekly row with Apple Fitness rings (expandable to month)
+  Overview — compact stats, CalendarProgressView, and calorie trend
+  Insights — Health Playbook and Eating Analysis launcher entries
+  History — meal history accordion
   → Rings per day: calories (green), protein (orange), carbs (blue)
   → Tap day → bottom sheet with full macro breakdown
   → Total progress bar (% of calorie goal)

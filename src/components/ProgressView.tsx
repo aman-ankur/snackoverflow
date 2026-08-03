@@ -2,11 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { TrendingUp, Clock, ChevronDown, ChevronRight } from "lucide-react";
+import { TrendingUp, Clock, ChevronDown, ChevronRight, HeartPulse } from "lucide-react";
 import CapyLottie from "@/components/CapyLottie";
 import CalendarProgressView from "@/components/CalendarProgressView";
 import CoachMark from "@/components/CoachMark";
 import EatingAnalysisCard from "@/components/EatingAnalysisCard";
+import { buildHealthPlaybook } from "@/lib/healthPlaybook";
 import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, HealthProfile, EatingAnalysis } from "@/lib/dishTypes";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
 
@@ -36,7 +37,13 @@ interface ProgressViewProps {
   hasHealthProfile: boolean;
   eatingAnalysis: EatingAnalysisHook;
   onViewAnalysisReport: (analysis: EatingAnalysis, windowLabel: string) => void;
+  onOpenHealthPlaybook: () => void;
+  initialSection?: ProgressSection;
+  onSectionChange?: (section: ProgressSection) => void;
+  openAnalysisLauncher?: boolean;
 }
+
+export type ProgressSection = "overview" | "insights" | "history";
 
 /* ─── helpers ─── */
 
@@ -399,7 +406,12 @@ export default function ProgressView({
   hasHealthProfile,
   eatingAnalysis,
   onViewAnalysisReport,
+  onOpenHealthPlaybook,
+  initialSection = "overview",
+  onSectionChange,
+  openAnalysisLauncher = false,
 }: ProgressViewProps) {
+  const [section, setSection] = useState<ProgressSection>(initialSection);
   const [expandedDate, setExpandedDate] = useState<string | null>(() => {
     const todayKey = new Date().toISOString().slice(0, 10);
     return todayKey;
@@ -426,6 +438,8 @@ export default function ProgressView({
   const visibleHistory = showAllHistory ? groupedByDate : groupedByDate.slice(0, 5);
   const kcalToGo = Math.max(0, Math.round(goals.calories - todayTotals.calories));
 
+  const selectSection = (next: ProgressSection) => { setSection(next); onSectionChange?.(next); };
+
   return (
     <div className="space-y-3">
       {/* Header */}
@@ -437,33 +451,14 @@ export default function ProgressView({
         <CapyLottie src="/model/cute-cat.json" size={48} />
       </div>
 
-      {/* 1. AI Eating Analysis (hero) */}
-      <EatingAnalysisCard
-        meals={meals}
-        goals={goals}
-        healthProfile={healthProfile}
-        hasHealthProfile={hasHealthProfile}
-        latestAnalysis={eatingAnalysis.getLatest()}
-        isGenerating={eatingAnalysis.isGenerating}
-        error={eatingAnalysis.error}
-        isCacheFresh={eatingAnalysis.isCacheFresh}
-        onGenerate={eatingAnalysis.generate}
-        onViewReport={onViewAnalysisReport}
-      />
+      <div className="grid grid-cols-3 rounded-xl border border-border bg-card p-1" role="tablist" aria-label="Progress sections">
+        {(["overview", "insights", "history"] as const).map((item) => (
+          <button key={item} role="tab" aria-selected={section === item} onClick={() => selectSection(item)} className={`rounded-lg px-2 py-2 text-[11px] font-bold capitalize transition-colors ${section === item ? "bg-foreground text-white" : "text-muted hover:bg-background"}`}>{item}</button>
+        ))}
+      </div>
 
-      {/* 2. Activity Calendar + Top Dishes */}
-      <CalendarProgressView meals={meals} goals={goals} />
-      {coachMarks?.shouldShow("progress-rings") && (
-        <CoachMark
-          id="progress-rings"
-          text="Each ring shows your daily calories, protein, and carbs"
-          visible={true}
-          onDismiss={coachMarks.dismiss}
-        />
-      )}
-
-      {/* 3. Quick Stats */}
-      <div className="rounded-2xl bg-card border border-border p-3 flex items-center">
+      {section === "overview" && <>
+        <div className="rounded-2xl bg-card border border-border p-3 flex items-center">
         <div className="flex-1 text-center">
           <p className="text-[10px] font-semibold text-muted uppercase tracking-wide">Remaining</p>
           <p className="text-xl font-extrabold text-foreground mt-0.5">{kcalToGo.toLocaleString()}</p>
@@ -481,13 +476,19 @@ export default function ProgressView({
           <p className="text-xl font-extrabold text-foreground mt-0.5">{weeklyAvgCalories.toLocaleString()}</p>
           <p className="text-[10px] text-orange font-bold">kcal/day</p>
         </div>
-      </div>
+        </div>
+        <CalendarProgressView meals={meals} goals={goals} />
+        {coachMarks?.shouldShow("progress-rings") && <CoachMark id="progress-rings" text="Each ring shows your daily calories, protein, and carbs" visible={true} onDismiss={coachMarks.dismiss} />}
+        <CalorieTrendCard meals={meals} weeklyByDate={weeklyByDate} goals={goals} />
+      </>}
 
-      {/* 4. Calorie Trend */}
-      <CalorieTrendCard meals={meals} weeklyByDate={weeklyByDate} goals={goals} />
+      {section === "insights" && <div className="space-y-2" data-testid="progress-insights">
+        {(() => { const snapshot = buildHealthPlaybook(meals, healthProfile); return <button onClick={onOpenHealthPlaybook} className="flex w-full items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-left hover:bg-card-hover" data-testid="progress-health-playbook-entry"><HeartPulse className="h-4 w-4 text-accent-dim" /><span className="min-w-0 flex-1"><span className="block text-xs font-bold text-foreground">Health Playbook</span><span className="block text-[10px] text-muted">{snapshot.status === "unlocked" ? "Ready" : snapshot.status === "learning" ? "Learning" : snapshot.status === "sparse" ? "Limited edition" : "Early preview"} · {snapshot.daysLogged}/7 days · {snapshot.evidence.length ? `${snapshot.evidence.length} evidence signal${snapshot.evidence.length === 1 ? "" : "s"}` : snapshot.nextStep}</span></span><ChevronRight className="h-4 w-4 text-muted-light" /></button>; })()}
+        <EatingAnalysisCard meals={meals} goals={goals} healthProfile={healthProfile} hasHealthProfile={hasHealthProfile} latestAnalysis={eatingAnalysis.getLatest()} isGenerating={eatingAnalysis.isGenerating} error={eatingAnalysis.error} isCacheFresh={eatingAnalysis.isCacheFresh} onGenerate={eatingAnalysis.generate} onViewReport={onViewAnalysisReport} compact openLauncher={openAnalysisLauncher} />
+      </div>}
 
       {/* 5. Meal History Accordion */}
-      <div>
+      {section === "history" && <div>
         <div className="flex items-center gap-1.5 mb-2">
           <Clock className="h-4 w-4 text-accent" />
           <span className="text-[13px] font-extrabold text-foreground">Meal History</span>
@@ -560,7 +561,7 @@ export default function ProgressView({
             )}
           </div>
         )}
-      </div>
+      </div>}
     </div>
   );
 }
