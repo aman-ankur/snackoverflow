@@ -9,7 +9,7 @@ AI-powered nutrition tracking app for Indian food. Scan dishes or describe meals
 - **Framework:** Next.js 16, App Router, TypeScript (strict), React 19
 - **Styling:** Tailwind CSS 4 (@theme inline syntax, Sage & Cream palette)
 - **State:** React hooks + localStorage (offline-first) + Supabase (optional cloud sync)
-- **AI:** Multi-provider fallback — Gemini 2.5/2.0 Flash (primary), OpenAI gpt-4.1-nano/mini, Groq Llama 4 Scout, Sarvam AI (Hindi TTS), Anthropic Claude (health verdict fallback)
+- **AI:** Multi-provider fallback — Gemini 3.6 Flash/3.5 Flash-Lite (primary), OpenAI gpt-4o-mini/gpt-4.1-nano/GPT-5.6 Luna, Groq Qwen 3.6/GPT-OSS 20B, Sarvam AI (Hindi TTS), Anthropic Claude Haiku 4.5
 - **On-Device ML:** YOLOv8n via ONNX Runtime Web (WASM) for real-time object detection
 - **3D:** Three.js + React Three Fiber + Drei (lazy-loaded capybara garden)
 - **Auth:** Supabase (email OTP + password)
@@ -56,27 +56,27 @@ public/model/                 — 3D models, animations, assets
 ### POST `/api/analyze-dish` — Dish nutrition scan
 **Input:** `{ image: string, mealType: string }` (base64, compressed to 768px JPEG 0.7)
 **Output:** Per-dish nutrition + confidence level + alternative dishes (for ambiguous items)
-**Providers:** Gemini 2.5 Flash (15s) → OpenAI gpt-4o-mini (10s) → Groq Llama 4 Scout (5s)
+**Providers:** Gemini 3.6 Flash (15s, low thinking) → OpenAI gpt-4o-mini (10s) → Groq Qwen 3.6 (5s, reasoning off)
 
 ### POST `/api/describe-meal` — Text to nutrition
 **Input:** `{ description: string, mealType: string }` (Hindi-English mix + fractional quantities supported)
 **Output:** Structured nutrition with 3 food-specific portion options per dish
-**Providers:** Gemini 2.0 Flash-Lite (6s) → OpenAI gpt-4.1-nano + Groq Llama 4 Scout (parallel race, 6s each)
+**Providers:** Gemini 3.5 Flash-Lite (6s, low thinking) → OpenAI gpt-4.1-nano + Groq GPT-OSS 20B (parallel race, 6s each)
 
 ### POST `/api/analyze-habits` — Eating analysis
 **Input:** Meal log + time window + health profile (client pre-aggregated ~400 tokens)
 **Output:** Structured report (score + trends + 5-7 insights + health notes + 3-5 action items)
-**Providers:** Gemini 2.5 Flash (15s) → OpenAI gpt-4.1-mini (15s) → Groq Llama 4 Scout (15s)
+**Providers:** Gemini 3.5 Flash-Lite (15s, low thinking) → OpenAI GPT-5.6 Luna (15s, reasoning off) → Groq GPT-OSS 20B (15s, low reasoning)
 
 ### POST `/api/health-verdict` — Per-dish health check
 **Input:** Dish nutrition + health conditions + lab values (deterministic health context)
 **Output:** Per-dish verdict (Good/Caution/Avoid) + condition-specific reasoning + swap suggestions
-**Providers:** Gemini 2.5 Flash (8s) → Claude 3.5 Haiku (8s) → OpenAI gpt-4.1-mini (8s)
+**Providers:** Gemini 3.5 Flash-Lite (8s, low thinking) → Claude Haiku 4.5 (8s) → OpenAI GPT-5.6 Luna (8s, reasoning off)
 
 ### POST `/api/analyze` — Fridge scanner
 **Input:** `{ image: string, dietaryFilter: string }` (base64, 512px @ 0.6 JPEG)
 **Output:** Detected items (with Hindi names + confidence) + exactly 5 Indian recipes
-**Providers:** Gemini 2.0 Flash (10s) → Gemini 2.0 Flash-Lite (10s) → Groq Llama 4 Scout (10s)
+**Providers:** Gemini 3.5 Flash-Lite (10s, low thinking) → Groq Qwen 3.6 (10s, reasoning off)
 
 ### POST `/api/hindi-message` — Hindi text for WhatsApp
 ### POST `/api/hindi-tts` — Hindi audio (Sarvam AI)
@@ -86,14 +86,14 @@ public/model/                 — 3D models, animations, assets
 
 | Feature | Primary (Tier 1) | Fallback 1 (Tier 2) | Fallback 2 (Tier 3) |
 |---------|------------------|---------------------|---------------------|
-| **Dish Scan** | `gemini-2.5-flash` (15s) | `gpt-4o-mini` (10s) | `llama-4-scout` (5s) |
-| **Describe Meal** | `gemini-2.0-flash-lite` (6s) | `gpt-4.1-nano` + `llama-4-scout` (parallel race, 6s each) | — |
-| **Eating Analysis** | `gemini-2.5-flash` (15s) | `gpt-4.1-mini` (15s) | `llama-4-scout` (15s) |
-| **Health Verdict** | `gemini-2.5-flash` (8s) | `claude-3-5-haiku-20241022` (8s) | `gpt-4.1-mini` (8s) |
-| **Fridge Scan** | `gemini-2.0-flash` (10s) | `gemini-2.0-flash-lite` (10s) | `llama-4-scout` (10s) |
-| **Hindi Text** | `llama-4-scout` | — | — |
+| **Dish Scan** | `gemini-3.6-flash` (15s) | `gpt-4o-mini` (10s) | `qwen/qwen3.6-27b` (5s) |
+| **Describe Meal** | `gemini-3.5-flash-lite` (6s) | `gpt-4.1-nano` + `openai/gpt-oss-20b` (parallel race, 6s each) | — |
+| **Eating Analysis** | `gemini-3.5-flash-lite` (15s) | `gpt-5.6-luna` (15s) | `openai/gpt-oss-20b` (15s) |
+| **Health Verdict** | `gemini-3.5-flash-lite` (8s) | `claude-haiku-4-5-20251001` (8s) | `gpt-5.6-luna` (8s) |
+| **Fridge Scan** | `gemini-3.5-flash-lite` (10s) | `qwen/qwen3.6-27b` (10s) | — |
+| **Hindi Text** | `openai/gpt-oss-20b` | — | — |
 | **Hindi Audio** | Sarvam AI Bulbul v3 | — | — |
-| **Capy Motivation** | `gemini-2.0-flash-lite` | `llama-3.1-8b` | — |
+| **Capy Motivation** | `gemini-3.5-flash-lite` | `openai/gpt-oss-20b` | — |
 
 **Cost Controls:** Dish scan: 768px @ 0.7 JPEG + sequential quality-first fallback (15s Gemini, 10s OpenAI, 5s Groq); Fridge scan: 512px @ 0.6; client-side pre-aggregation for eating analysis; in-memory caches (2 min dish scan, 5 min / 200 entries describe meal); smart report caching (no re-gen if no new meals); 30s client-side fetch timeout (safety net, covers 15+10+5=30s server worst-case). **Quality optimized**: longer timeouts prioritize accuracy over speed. With paid Gemini billing enabled.
 
@@ -123,7 +123,7 @@ page.tsx (main shell)
 | `SARVAM_API_KEY` | Hindi TTS | Yes |
 | `NEXT_PUBLIC_SUPABASE_URL` | Auth + DB | For cloud sync |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase public key | For cloud sync |
-| `ANTHROPIC_API_KEY` | Health verdict fallback (Claude 3.5 Haiku) | Optional |
+| `ANTHROPIC_API_KEY` | Health verdict fallback (Claude Haiku 4.5) | Optional |
 | `UPSTASH_REDIS_REST_URL` | Rate limiting (Upstash Redis) | Optional |
 | `UPSTASH_REDIS_REST_TOKEN` | Rate limiting token | Optional |
 | `DISABLE_NUTRITION_REF` | Kill switch for IFCT/USDA table injection | Optional |
@@ -138,7 +138,7 @@ page.tsx (main shell)
 - Client-side pre-aggregation reduces eating analysis tokens from ~4000 to ~400
 - In-memory caches prevent redundant AI calls on rapid re-scans
 - **Tiered quality-first fallback** for dish scan (prioritizes accuracy + latency):
-  - **Tier 1** (0-15s): Gemini 2.5 Flash (best accuracy)
+  - **Tier 1** (0-15s): Gemini 3.6 Flash (best accuracy)
   - **Tier 2** (15-25s): OpenAI gpt-4o-mini (reliable fallback)
   - **Tier 3** (25-30s): Groq (fast last resort)
 - Longer timeouts (15s Gemini, 10s OpenAI) prioritize quality over speed

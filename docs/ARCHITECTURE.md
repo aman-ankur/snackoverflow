@@ -9,8 +9,8 @@
 | **UI** | React 19.2.3, Tailwind CSS 4, Framer Motion 12 |
 | **3D Graphics** | Three.js, React Three Fiber, Drei (lazy-loaded, Capy tab only) |
 | **Icons** | Lucide React |
-| **AI Vision** | Google Gemini 2.5 Flash (dish scan, eating analysis), Gemini 2.0 Flash-Lite (describe), OpenAI gpt-4.1-nano/mini, Groq Llama 4 Scout (fallbacks) |
-| **Hindi Text Gen** | Groq (meta-llama/llama-4-scout-17b-16e-instruct) |
+| **AI Vision** | Gemini 3.6 Flash (dish photos), Gemini 3.5 Flash-Lite (routine multimodal/text), OpenAI gpt-4o-mini/gpt-4.1-nano/GPT-5.6 Luna, Groq Qwen 3.6/GPT-OSS 20B |
+| **Hindi Text Gen** | Groq (`openai/gpt-oss-20b`, low reasoning) |
 | **Hindi TTS** | Sarvam AI Bulbul v3 (speaker: "kabir", male North Indian) |
 | **On-Device Detection** | YOLOv8n via ONNX Runtime Web (WASM) |
 | **Auth** | Supabase Auth (email OTP + password) |
@@ -215,7 +215,7 @@ Progress Tab (ProgressView.tsx):
       1. Client-side: mealAggregator.ts computes compact summary (~400 tokens)
       2. Cache check: if same window + no new meals → show cached report
       3. API call: POST /api/analyze-habits with aggregate + health context
-      4. Provider chain: Gemini 2.5 Flash → gpt-4.1-mini → Groq Llama 4 Scout
+      4. Provider chain: Gemini 3.5 Flash-Lite → GPT-5.6 Luna → Groq GPT-OSS 20B
       5. Response stored in localStorage + Supabase (last 10 analyses)
     → Opens EatingAnalysisSheet (tabbed bottom sheet):
       Tab 1 — Summary: score badge, trend pills, comparison card

@@ -67,19 +67,27 @@ BENCHMARK_URL=https://your-deployment.vercel.app npx tsx scripts/benchmark-calor
 
 ## 2. AI Provider Tests
 
-### Groq Model Tests
-
-Script to verify the Groq Tier 3 fallback is healthy. After Maverick was decommissioned (March 2026), Scout is the only Groq model with vision support.
+### Model Configuration Guard
 
 ```bash
-# Requires GROQ_API_KEY in environment
-export $(cat .env.local | grep GROQ_API_KEY | xargs) && npx tsx scripts/test-groq-fallback.ts
+npm run test:models
+```
+
+This offline check validates the centralized role-to-model mapping, rejects retired models, ensures the maintained Gemini SDK is installed, and prevents the higher-cost dish-vision model from being used by routine routes.
+
+### Groq Model Tests
+
+Script to verify the Groq Tier 3 vision fallback is healthy after Llama 4 Scout's retirement.
+
+```bash
+# Loads GROQ_API_KEY from .env.local
+npm run test:groq
 ```
 
 **What it tests:**
-- Calls Groq API with Scout model using a vision (image) request
+- Calls Groq API with Qwen 3.6 using a vision (image) request with reasoning disabled
 - Validates JSON response structure and required nutrition fields
-- Confirms Maverick is decommissioned (negative test)
+- Confirms retired Llama 4 Scout is no longer used (negative test)
 - Measures latency
 
 ---

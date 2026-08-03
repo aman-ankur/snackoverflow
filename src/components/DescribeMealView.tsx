@@ -49,14 +49,12 @@ const MEAL_TYPE_OPTIONS: MealType[] = ["breakfast", "lunch", "snack", "dinner"];
 
 function getProviderDisplayName(providerCode: string): string {
   const providerMap: Record<string, string> = {
-    "G25F": "Gemini 2.5 Flash",
-    "G20F": "Gemini 2.0 Flash",
+    "G36F": "Gemini 3.6 Flash",
     "OAI4m": "OpenAI GPT-4o Mini",
     "OAI41n": "OpenAI GPT-4.1 Nano",
-    "GRQS": "Groq Llama 4 Scout",
-    "gemini-2.5-flash": "Gemini 2.5 Flash",
-    "gemini-2.0-flash": "Gemini 2.0 Flash",
-    "gemini-2.0-flash-lite": "Gemini 2.0 Flash Lite",
+    "GRQ36": "Groq Qwen 3.6",
+    "gemini-3.6-flash": "Gemini 3.6 Flash",
+    "gemini-3.5-flash-lite": "Gemini 3.5 Flash-Lite",
     "gpt-4o-mini": "OpenAI GPT-4o Mini",
     "gpt-4.1-nano": "OpenAI GPT-4.1 Nano",
   };

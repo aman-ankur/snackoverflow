@@ -1,7 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import Anthropic from "@anthropic-ai/sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
+import { AI_MODELS } from "@/lib/aiModels";
+import { generateGeminiContent, ThinkingLevel } from "@/lib/gemini";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 export const maxDuration = 30;
@@ -170,28 +171,29 @@ function normalizeResult(raw: unknown): MealHealthAnalysis | null {
   };
 }
 
-/* ─── Provider: Gemini 2.5 Flash ─── */
+/* ─── Provider: Gemini Flash-Lite ─── */
 
 async function tryGemini(prompt: string): Promise<MealHealthAnalysis | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-
   try {
-    console.log("[HealthVerdict/Gemini] Trying gemini-2.5-flash...");
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1500 },
+    console.log(`[HealthVerdict/Gemini] Trying ${AI_MODELS.gemini.fastText}...`);
+    const resultPromise = generateGeminiContent({
+      apiKey,
+      model: AI_MODELS.gemini.fastText,
+      prompt,
+      maxOutputTokens: 1500,
+      thinkingLevel: ThinkingLevel.LOW,
+      json: true,
     });
-    const resultPromise = model.generateContent([prompt]);
     const result = await Promise.race([
       resultPromise,
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Gemini timeout")), PROVIDER_TIMEOUT_MS)
       ),
     ]);
-    const parsed = parseJsonResponse(result.response.text());
+    const parsed = parseJsonResponse(result);
     const normalized = normalizeResult(parsed);
     if (normalized) {
       console.log("[HealthVerdict/Gemini] Success");
@@ -207,17 +209,17 @@ async function tryGemini(prompt: string): Promise<MealHealthAnalysis | null> {
   }
 }
 
-/* ─── Provider: Claude 3.5 Haiku ─── */
+/* ─── Provider: Claude Haiku ─── */
 
 async function tryClaude(prompt: string): Promise<MealHealthAnalysis | null> {
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) return null;
 
   try {
-    console.log("[HealthVerdict/Claude] Trying claude-3-5-haiku...");
+    console.log(`[HealthVerdict/Claude] Trying ${AI_MODELS.anthropic.fastTextFallback}...`);
     const anthropic = new Anthropic({ apiKey });
     const resultPromise = anthropic.messages.create({
-      model: "claude-3-5-haiku-20241022",
+      model: AI_MODELS.anthropic.fastTextFallback,
       max_tokens: 1500,
       messages: [{ role: "user", content: prompt }],
     });
@@ -245,21 +247,21 @@ async function tryClaude(prompt: string): Promise<MealHealthAnalysis | null> {
   }
 }
 
-/* ─── Provider: OpenAI GPT-4.1-mini ─── */
+/* ─── Provider: OpenAI balanced fallback ─── */
 
 async function tryOpenAI(prompt: string): Promise<MealHealthAnalysis | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
   try {
-    console.log("[HealthVerdict/OpenAI] Trying gpt-4.1-mini...");
+    console.log(`[HealthVerdict/OpenAI] Trying ${AI_MODELS.openai.balancedTextFallback}...`);
     const openai = new OpenAI({ apiKey });
     const resultPromise = openai.chat.completions.create({
-      model: "gpt-4.1-mini",
+      model: AI_MODELS.openai.balancedTextFallback,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
-      temperature: 0.3,
-      max_tokens: 1500,
+      reasoning_effort: "none",
+      max_completion_tokens: 1500,
     });
     const result = await Promise.race([
       resultPromise,
@@ -312,7 +314,7 @@ export async function POST(request: NextRequest) {
     const errors: string[] = [];
     const startTotal = Date.now();
 
-    // Tier 1: Gemini 2.5 Flash
+    // Tier 1: Gemini Flash-Lite
     try {
       const t0 = Date.now();
       const result = await tryGemini(prompt);
@@ -326,7 +328,7 @@ export async function POST(request: NextRequest) {
       errors.push(`Gemini: ${err instanceof Error ? err.message : "failed"}`);
     }
 
-    // Tier 2: Claude 3.5 Haiku
+    // Tier 2: Claude Haiku
     try {
       const t0 = Date.now();
       const result = await tryClaude(prompt);
@@ -340,7 +342,7 @@ export async function POST(request: NextRequest) {
       errors.push(`Claude: ${err instanceof Error ? err.message : "failed"}`);
     }
 
-    // Tier 3: OpenAI GPT-4.1-mini
+    // Tier 3: OpenAI balanced fallback
     try {
       const t0 = Date.now();
       const result = await tryOpenAI(prompt);

@@ -109,12 +109,12 @@
 - Experimental/demo mode — Cloud AI is the primary mode
 
 ## 11. Multi-Provider AI Fallback
-- Fridge analysis: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout
-- Dish camera scan: Gemini 2.5 Flash → Gemini 2.0 Flash → Groq Llama 4 Scout
-- Describe meal: Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq Llama 4 Scout (parallel race)
-- Eating habits analysis: Gemini 2.5 Flash → OpenAI gpt-4.1-mini → Groq Llama 4 Scout
+- Fridge analysis: Gemini 3.5 Flash-Lite → Groq Qwen 3.6
+- Dish camera scan: Gemini 3.6 Flash → OpenAI gpt-4o-mini → Groq Qwen 3.6
+- Describe meal: Gemini 3.5 Flash-Lite → OpenAI gpt-4.1-nano + Groq GPT-OSS 20B (parallel race)
+- Eating habits analysis: Gemini 3.5 Flash-Lite → OpenAI GPT-5.6 Luna → Groq GPT-OSS 20B
 - If all rate-limited, shows friendly "wait 30s" message and stops auto-scan
-- Hindi text: Groq only (free, fast)
+- Hindi text: Groq GPT-OSS 20B only (low reasoning)
 - Hindi TTS: Sarvam AI only (native Hindi voice)
 
 ## 12. Cost Controls
@@ -122,7 +122,7 @@
 - Dish scan endpoint includes short-lived in-memory cache for repeated near-identical scans
 - Describe-meal endpoint includes 5-minute in-memory cache (200 entries max)
 - Manual-scan-only dish mode avoids uncontrolled background token usage
-- Describe-meal uses Gemini 2.0 Flash-Lite (separate 15 RPM quota from camera scanner's 2.5 Flash)
+- Routine routes use Gemini 3.5 Flash-Lite; Gemini 3.6 Flash is reserved for quality-critical dish photos
 - OpenAI + Groq raced in parallel (first valid response wins, no sequential waiting)
 - 6-second per-provider timeout prevents slow providers from blocking the pipeline
 - **Eating analysis**: client-side pre-aggregation reduces AI input from ~3000-5000 tokens (raw meals) to ~400 tokens (compact summary). 95%+ of calls use Gemini free tier ($0.00). Smart caching avoids re-generation when no new meals logged.
@@ -376,17 +376,16 @@ Report displayed in a bottom sheet (consistent with MealTypeSheet pattern) with 
 - "New meals logged" indicator when cached report is stale
 
 ### Provider Chain
-- **Tier 1**: Gemini 2.5 Flash (free tier, 500 req/day) — best quality for health reasoning
-- **Tier 2**: OpenAI gpt-4.1-mini (~$0.0015/call) — strong fallback with good insight depth
-- **Tier 3**: Groq Llama 4 Scout (free) — emergency fallback, adequate for structured reports
-- Temperature: 0.3 (factual, consistent)
+- **Tier 1**: Gemini 3.5 Flash-Lite (low thinking) — cost-efficient structured analysis
+- **Tier 2**: OpenAI GPT-5.6 Luna (reasoning disabled) — balanced fallback
+- **Tier 3**: Groq GPT-OSS 20B (low reasoning) — low-cost emergency fallback
 - Max output tokens: 1200
 - Per-provider timeout: 15 seconds
 
 ### Cost Profile
-- 95%+ of calls: **$0.00** (Gemini free tier)
-- Rare fallback: **~$0.0015** (gpt-4.1-mini)
-- Emergency: **$0.00** (Groq free tier)
+- Primary calls use the lower-priced Flash-Lite tier
+- Paid fallbacks run only after the primary fails
+- Reasoning is capped or disabled to bound output-token cost and latency
 - Estimated input: ~450 tokens, output: ~900 tokens per analysis
 
 ### Files

@@ -52,7 +52,7 @@ Point your camera at a plate and get **per-dish** calorie, protein, carbs, fat, 
 
 **Works with:** Dal, roti, biryani, thali plates, street food, packaged snacks, restaurant meals.
 
-**AI:** Gemini 2.5 Flash → OpenAI gpt-4o-mini → Groq Llama 4 (tiered fallback)
+**AI:** Gemini 3.6 Flash → OpenAI gpt-4o-mini → Groq Qwen 3.6 (tiered fallback)
 
 ---
 
@@ -72,7 +72,7 @@ No camera? Type what you ate in natural language — **Hindi-English mix works**
 
 **Fractional quantity support** — "half croissant", "quarter pizza", "1.5 roti" parsed correctly.
 
-**AI:** Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq parallel race (~1-2s)
+**AI:** Gemini 3.5 Flash-Lite → OpenAI gpt-4.1-nano + Groq GPT-OSS 20B parallel race
 
 ---
 
@@ -99,7 +99,7 @@ Select a time window (**Today** / **7 Days** / **14 Days** / **30 Days**) and ge
 
 **Smart caching:** No re-generation if no new meals logged since last report.
 
-**AI:** Gemini 2.5 Flash → OpenAI gpt-4.1-mini → Groq (~95% free tier)
+**AI:** Gemini 3.5 Flash-Lite → OpenAI GPT-5.6 Luna → Groq GPT-OSS 20B
 
 ---
 
@@ -119,7 +119,7 @@ Set up your health profile with:
 
 **Eating analysis integration:** Reports connect patterns to your conditions (e.g., "High sodium intake — watch for hypertension flare-ups").
 
-**AI:** Gemini 2.5 Flash → Claude 3.5 Haiku → OpenAI gpt-4.1-mini
+**AI:** Gemini 3.5 Flash-Lite → Claude Haiku 4.5 → OpenAI GPT-5.6 Luna
 
 ---
 
@@ -136,7 +136,7 @@ Set up your health profile with:
 
 **Dietary filters:** Veg, Vegan, Eggetarian, Jain (no onion/garlic/root veg).
 
-**AI:** Gemini 2.0 Flash → Gemini 2.0 Flash-Lite → Groq
+**AI:** Gemini 3.5 Flash-Lite → Groq Qwen 3.6
 
 ---
 
@@ -221,25 +221,25 @@ A **mood-reactive capybara mascot** with:
 
 | Feature | Primary (Tier 1) | Fallback 1 (Tier 2) | Fallback 2 (Tier 3) |
 |---------|------------------|---------------------|---------------------|
-| **Dish Scan** | Gemini 2.5 Flash (15s) | OpenAI gpt-4o-mini (10s) | Groq Llama 4 Scout (5s) |
-| **Describe Meal** | Gemini 2.0 Flash-Lite (6s) | OpenAI gpt-4.1-nano + Groq (parallel race, 6s each) | — |
-| **Eating Analysis** | Gemini 2.5 Flash (15s) | OpenAI gpt-4.1-mini (15s) | Groq Llama 4 Scout (15s) |
-| **Health Verdict** | Gemini 2.5 Flash (8s) | Claude 3.5 Haiku (8s) | OpenAI gpt-4.1-mini (8s) |
-| **Fridge Scan** | Gemini 2.0 Flash (10s) | Gemini 2.0 Flash-Lite (10s) | Groq Llama 4 Scout (10s) |
-| **Hindi Text** | Groq Llama 4 Scout | — | — |
+| **Dish Scan** | Gemini 3.6 Flash (15s) | OpenAI gpt-4o-mini (10s) | Groq Qwen 3.6 (5s) |
+| **Describe Meal** | Gemini 3.5 Flash-Lite (6s) | OpenAI gpt-4.1-nano + Groq GPT-OSS 20B (parallel race, 6s each) | — |
+| **Eating Analysis** | Gemini 3.5 Flash-Lite (15s) | OpenAI GPT-5.6 Luna (15s) | Groq GPT-OSS 20B (15s) |
+| **Health Verdict** | Gemini 3.5 Flash-Lite (8s) | Claude Haiku 4.5 (8s) | OpenAI GPT-5.6 Luna (8s) |
+| **Fridge Scan** | Gemini 3.5 Flash-Lite (10s) | Groq Qwen 3.6 (10s) | — |
+| **Hindi Text** | Groq GPT-OSS 20B | — | — |
 | **Hindi Audio** | Sarvam AI Bulbul v3 | — | — |
-| **Capy Motivation** | Gemini 2.0 Flash-Lite | Groq Llama 3.1 8B | — |
+| **Capy Motivation** | Gemini 3.5 Flash-Lite | Groq GPT-OSS 20B | — |
 
 ### Exact Model IDs
 
-- **Gemini 2.5 Flash**: `gemini-2.5-flash`
-- **Gemini 2.0 Flash**: `gemini-2.0-flash`
-- **Gemini 2.0 Flash-Lite**: `gemini-2.0-flash-lite`
+- **Gemini 3.6 Flash**: `gemini-3.6-flash`
+- **Gemini 3.5 Flash-Lite**: `gemini-3.5-flash-lite`
 - **OpenAI gpt-4o-mini**: `gpt-4o-mini`
-- **OpenAI gpt-4.1-mini**: `gpt-4.1-mini`
+- **OpenAI GPT-5.6 Luna**: `gpt-5.6-luna`
 - **OpenAI gpt-4.1-nano**: `gpt-4.1-nano`
-- **Claude 3.5 Haiku**: `claude-3-5-haiku-20241022`
-- **Groq Llama 4 Scout**: `meta-llama/llama-4-scout-17b-16e-instruct` (only Groq model with vision support)
+- **Claude Haiku 4.5**: `claude-haiku-4-5-20251001`
+- **Groq Qwen 3.6**: `qwen/qwen3.6-27b` (vision fallback)
+- **Groq GPT-OSS 20B**: `openai/gpt-oss-20b` (low-cost text fallback)
 
 ### Cost Controls
 

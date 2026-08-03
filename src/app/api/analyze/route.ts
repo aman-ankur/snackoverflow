@@ -1,6 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { AI_MODELS } from "@/lib/aiModels";
+import { generateGeminiContent, ThinkingLevel } from "@/lib/gemini";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { validateBase64Image } from "@/lib/validateInput";
 
@@ -73,19 +74,21 @@ async function tryGemini(base64Data: string, prompt: string): Promise<object | n
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const imageContent = {
-    inlineData: { mimeType: "image/jpeg" as const, data: base64Data },
-  };
-
-  const models = ["gemini-2.0-flash", "gemini-2.0-flash-lite"];
+  const models = [AI_MODELS.gemini.fastMultimodal];
 
   for (const modelName of models) {
     try {
       console.log(`[Gemini] Trying ${modelName}...`);
-      const model = genAI.getGenerativeModel({ model: modelName });
-      const result = await model.generateContent([prompt, imageContent]);
-      const parsed = parseJsonResponse(result.response.text());
+      const text = await generateGeminiContent({
+        apiKey,
+        model: modelName,
+        prompt,
+        imageBase64: base64Data,
+        maxOutputTokens: 2048,
+        thinkingLevel: ThinkingLevel.LOW,
+        json: true,
+      });
+      const parsed = parseJsonResponse(text);
       console.log(`[Gemini] Success with ${modelName}`);
       return parsed;
     } catch (err: unknown) {
@@ -108,9 +111,9 @@ async function tryGroq(base64Data: string, prompt: string): Promise<object | nul
   const groq = new Groq({ apiKey });
 
   try {
-    console.log("[Groq] Trying llama-4-scout-17b-16e-instruct...");
+    console.log(`[Groq] Trying ${AI_MODELS.groq.visionFallback}...`);
     const result = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: AI_MODELS.groq.visionFallback,
       messages: [
         {
           role: "user",
@@ -123,6 +126,7 @@ async function tryGroq(base64Data: string, prompt: string): Promise<object | nul
           ],
         },
       ],
+      reasoning_effort: "none",
       temperature: 0.3,
       max_tokens: 2048,
     });

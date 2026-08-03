@@ -1,8 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import { checkRateLimit } from "@/lib/rateLimit";
+import { AI_MODELS } from "@/lib/aiModels";
+import { generateGeminiContent, ThinkingLevel } from "@/lib/gemini";
 
 export const maxDuration = 30;
 import type { ConfidenceLevel, DescribedDish, DescribeMealResult, PortionOption } from "@/lib/dishTypes";
@@ -248,22 +249,24 @@ async function tryGemini(prompt: string): Promise<DescribeMealResult | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const models = ["gemini-2.0-flash-lite"];
+  const models = [AI_MODELS.gemini.fastText];
 
   for (const modelName of models) {
     try {
       console.log(`[Describe/Gemini] Trying ${modelName}...`);
-      const model = genAI.getGenerativeModel({
+      const resultPromise = generateGeminiContent({
+        apiKey,
         model: modelName,
-        generationConfig: { temperature: 0.2, maxOutputTokens: 1500 },
+        prompt,
+        maxOutputTokens: 1500,
+        thinkingLevel: ThinkingLevel.LOW,
+        json: true,
       });
-      const resultPromise = model.generateContent([prompt]);
       const result = await Promise.race([
         resultPromise,
         new Promise<never>((_, reject) => setTimeout(() => reject(new Error("Gemini timeout")), PROVIDER_TIMEOUT_MS)),
       ]);
-      const parsed = parseJsonResponse(result.response.text());
+      const parsed = parseJsonResponse(result);
       console.log(`[Describe/Gemini] Success with ${modelName}`);
       return normalizeResult(parsed);
     } catch (err: unknown) {
@@ -287,9 +290,9 @@ async function tryOpenAI(prompt: string): Promise<DescribeMealResult | null> {
   const openai = new OpenAI({ apiKey });
 
   try {
-    console.log("[Describe/OpenAI] Trying gpt-4.1-nano...");
+    console.log(`[Describe/OpenAI] Trying ${AI_MODELS.openai.fastTextFallback}...`);
     const resultPromise = openai.chat.completions.create({
-      model: "gpt-4.1-nano",
+      model: AI_MODELS.openai.fastTextFallback,
       messages: [{ role: "user", content: prompt }],
       temperature: 0.2,
       max_tokens: 1500,
@@ -320,9 +323,7 @@ async function tryGroq(prompt: string): Promise<DescribeMealResult | null> {
   if (!apiKey) return null;
 
   const groq = new Groq({ apiKey });
-  const models = [
-    "meta-llama/llama-4-scout-17b-16e-instruct",
-  ];
+  const models = [AI_MODELS.groq.fastTextFallback];
 
   for (const groqModel of models) {
     try {
@@ -330,6 +331,7 @@ async function tryGroq(prompt: string): Promise<DescribeMealResult | null> {
       const resultPromise = groq.chat.completions.create({
         model: groqModel,
         messages: [{ role: "user", content: prompt }],
+        reasoning_effort: "low",
         temperature: 0.2,
         max_tokens: 1500,
       });
