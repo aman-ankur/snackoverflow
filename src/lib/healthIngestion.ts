@@ -47,13 +47,15 @@ export function normalizeHealthExport(payload: unknown) {
   // HAE may group samples as { name, units, data: [{date,value}] }.
   const metricGroups = metricItems.flatMap((item): unknown[] => { if (!item || typeof item !== "object") return [item]; const record = item as Record<string, unknown>; const samples = record.data; if (!Array.isArray(samples)) return [item]; return samples.map((sample) => ({ ...(sample as Record<string, unknown>), name: record.name, unit: record.unit ?? record.units })); });
   for (const item of metricGroups) {
-    if (!item || typeof item !== "object") continue; const o = item as Record<string, unknown>; const at = iso(first(o, "date", "timestamp", "startDate", "recordedAt")); const value = n(first(o, "value", "quantity", "average", "qty", "Avg")); if (!at || value === null) continue;
-    const original = String(first(o, "type", "name", "metricType") ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    if (!item || typeof item !== "object") continue; const o = item as Record<string, unknown>; const original = String(first(o, "type", "name", "metricType") ?? "").toLowerCase().replace(/[^a-z]/g, "");
     if (original === "sleepanalysis") {
-      const sleepStart = iso(first(o, "sleepStart", "inBedStart", "startDate")); const sleepEnd = iso(first(o, "sleepEnd", "inBedEnd", "endDate"));
-      if (sleepStart && sleepEnd) sleep.push({ providerRecordId: String(first(o, "id", "sleepId") ?? `sleep:${sleepStart}:${sleepEnd}`), sleepDate: String(first(o, "date") ?? sleepStart.slice(0, 10)).slice(0, 10), startedAt: sleepStart, endedAt: sleepEnd, asleepSeconds: hoursToSeconds(first(o, "asleep", "totalSleep")), inBedSeconds: hoursToSeconds(first(o, "inBed")), coreSeconds: hoursToSeconds(first(o, "core")), deepSeconds: hoursToSeconds(first(o, "deep")), remSeconds: hoursToSeconds(first(o, "rem")), efficiency: null, raw: item });
+      const sleepDate = String(first(o, "date") ?? "").slice(0, 10); const asleepSeconds = hoursToSeconds(first(o, "asleep", "totalSleep")); const inBedSeconds = hoursToSeconds(first(o, "inBed")) ?? asleepSeconds;
+      const sleepStart = iso(first(o, "sleepStart", "inBedStart", "startDate")) ?? (sleepDate ? `${sleepDate}T00:00:00.000Z` : null);
+      const sleepEnd = iso(first(o, "sleepEnd", "inBedEnd", "endDate")) ?? (sleepStart && inBedSeconds !== null ? new Date(new Date(sleepStart).getTime() + inBedSeconds * 1000).toISOString() : null);
+      if (sleepStart && sleepEnd) sleep.push({ providerRecordId: String(first(o, "id", "sleepId") ?? `sleep:${sleepDate || sleepStart}:${sleepEnd}`), sleepDate: sleepDate || sleepStart.slice(0, 10), startedAt: sleepStart, endedAt: sleepEnd, asleepSeconds, inBedSeconds, coreSeconds: hoursToSeconds(first(o, "core")), deepSeconds: hoursToSeconds(first(o, "deep")), remSeconds: hoursToSeconds(first(o, "rem")), efficiency: null, raw: item });
       continue;
     }
+    const at = iso(first(o, "date", "timestamp", "startDate", "recordedAt")); const value = n(first(o, "value", "quantity", "average", "qty", "Avg")); if (!at || value === null) continue;
     const metricType = original.includes("bodymass") || original.includes("weight") ? "weight" : original.includes("restingheartrate") ? "resting_heart_rate" : original.includes("heartratevariability") || original.includes("hrv") ? "hrv" : original.includes("step") ? "steps" : original.includes("activeenergy") || original.includes("energy") ? "active_energy" : original.includes("respiratory") ? "respiratory_rate" : original.includes("oxygen") || original.includes("spo2") ? "spo2" : original;
     if (!["weight", "resting_heart_rate", "hrv", "steps", "active_energy", "respiratory_rate", "spo2"].includes(metricType)) continue;
     const unit = String(first(o, "unit", "units") ?? (metricType === "weight" ? "kg" : metricType === "hrv" ? "ms" : metricType === "steps" ? "count" : metricType === "active_energy" ? "kcal" : metricType === "spo2" ? "%" : "bpm"));
