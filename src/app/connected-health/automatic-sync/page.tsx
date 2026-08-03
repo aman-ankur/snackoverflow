@@ -8,7 +8,7 @@ export const metadata = {
 
 export default function AutomaticHealthSyncPage() {
   return (
-    <main className="min-h-dvh bg-background px-4 py-8 text-foreground">
+    <main className="h-dvh overflow-y-auto overscroll-contain bg-background px-4 py-8 text-foreground">
       <div className="mx-auto max-w-lg">
         <Link href="/" className="inline-flex items-center gap-2 text-xs font-bold text-muted hover:text-foreground">
           <ArrowLeft className="h-4 w-4" /> Back to SnackOverflow
@@ -27,7 +27,7 @@ export default function AutomaticHealthSyncPage() {
             <code className="mt-2 block break-all rounded-lg bg-background px-3 py-2 text-[11px] font-bold text-foreground">/api/health/ingest/apple-health</code>
             <p className="mt-3 text-[10px] font-extrabold uppercase tracking-wider text-muted">Header</p>
             <code className="mt-2 block break-all rounded-lg bg-background px-3 py-2 text-[11px] text-foreground">Authorization: Bearer YOUR_TOKEN</code>
-            <p className="mt-3 text-[10px] leading-relaxed text-muted">Choose JSON as the request format. Enable the Workouts and Health Metrics automations; include sleep analysis if Health Auto Export offers it as a separate data type.</p>
+            <p className="mt-3 text-[10px] leading-relaxed text-muted">In Health Auto Export, choose JSON Version 2, enable Workouts, and turn on Include Workout Metrics. Use minute grouping for a smaller export or seconds for more detail. Include sleep analysis if it is offered as a separate data type.</p>
           </div>
           <Step number="4" icon={CheckCircle2} title="Run a test, then schedule it" text="Send a test export. Return to Connected Health and tap Refresh health data. Once it looks right, schedule the automation daily." />
         </div>

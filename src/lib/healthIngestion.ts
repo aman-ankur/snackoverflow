@@ -13,6 +13,20 @@ export type NormalizedMetric = { providerRecordId: string; metricType: string; r
 
 const n = (v: unknown): number | null => typeof v === "number" && Number.isFinite(v) ? v : typeof v === "string" && Number.isFinite(Number(v)) ? Number(v) : null;
 const first = (o: Record<string, unknown>, ...keys: string[]) => keys.map((k) => o[k]).find((v) => v !== undefined && v !== null);
+const quantity = (v: unknown): number | null => {
+  const direct = n(v);
+  if (direct !== null) return direct;
+  if (Array.isArray(v)) {
+    const values = v.map(quantity).filter((value): value is number => value !== null);
+    return values.length ? values.reduce((sum, value) => sum + value, 0) : null;
+  }
+  if (v && typeof v === "object") {
+    const record = v as Record<string, unknown>;
+    return n(record.qty) ?? n(record.value) ?? n(record.quantity);
+  }
+  return null;
+};
+const quantityUnit = (v: unknown) => v && typeof v === "object" && !Array.isArray(v) ? String((v as Record<string, unknown>).units ?? (v as Record<string, unknown>).unit ?? "") : "";
 const iso = (v: unknown) => { const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? null : d.toISOString(); };
 const seconds = (v: unknown) => { const value = n(v); return value === null ? null : value > 10000 ? Math.round(value / 1000) : Math.round(value); };
 const hoursToSeconds = (v: unknown) => { const value = n(v); return value === null ? null : Math.round(value * 3600); };
@@ -29,12 +43,18 @@ export function normalizeHealthExport(payload: unknown) {
     if (!start || !end) continue;
     const id = String(first(o, "id", "uuid", "workoutId") ?? `${start}:${end}:${first(o, "workoutActivityType", "type", "name") ?? "workout"}`);
     const hr = (first(o, "heartRate", "heartRateSummary") as Record<string, unknown> | undefined) ?? {};
-    const energy = (first(o, "activeEnergy", "totalEnergyBurned", "energyKcal", "calories") as Record<string, unknown> | undefined);
+    const energy = first(o, "activeEnergyBurned", "activeEnergy", "totalEnergyBurned", "totalEnergy", "energyKcal", "calories");
     const distance = (first(o, "distance", "totalDistance", "distanceKm") as Record<string, unknown> | undefined);
     const heartRateData = Array.isArray(o.heartRateData) ? o.heartRateData[0] as Record<string, unknown> : {};
     const rawDistance = n(distance ? first(distance, "qty", "value") : first(o, "totalDistance", "distanceKm"));
     const distanceUnits = String(distance ? first(distance, "units", "unit") ?? "" : "");
-    workouts.push({ providerRecordId: id, workoutType: String(first(o, "workoutActivityType", "type", "name") ?? "Other"), startedAt: start, endedAt: end, durationSeconds: seconds(first(o, "duration", "durationSeconds")), energyKcal: n(energy ? first(energy, "qty", "value") : first(o, "totalEnergyBurned", "energyKcal", "calories")), distanceKm: rawDistance === null ? null : /mi|mile/i.test(distanceUnits) ? rawDistance * 1.609344 : /m$|meter/i.test(distanceUnits) ? rawDistance / 1000 : rawDistance > 100 ? rawDistance / 1000 : rawDistance, heartRateAvgBpm: n(first(hr, "average", "avg", "averageBpm")) ?? n(first(heartRateData, "Avg", "average", "avg")), heartRateMinBpm: n(first(hr, "min", "minimum")) ?? n(first(heartRateData, "Min", "minimum")), heartRateMaxBpm: n(first(hr, "max", "maximum")) ?? n(first(heartRateData, "Max", "maximum")), raw: item });
+    const energyValue = quantity(energy);
+    const energyUnits = quantityUnit(energy);
+    const energyKcal = energyValue === null ? null : /kj|kilojoule/i.test(energyUnits) ? energyValue / 4.184 : energyValue;
+    const heartRateAverage = first(hr, "average", "avg", "averageBpm", "avgHeartRate") ?? first(o, "avgHeartRate", "averageHeartRate");
+    const heartRateMin = first(hr, "min", "minimum") ?? first(o, "minHeartRate", "minimumHeartRate");
+    const heartRateMax = first(hr, "max", "maximum") ?? first(o, "maxHeartRate", "maximumHeartRate");
+    workouts.push({ providerRecordId: id, workoutType: String(first(o, "workoutActivityType", "type", "name") ?? "Other"), startedAt: start, endedAt: end, durationSeconds: seconds(first(o, "duration", "durationSeconds")), energyKcal, distanceKm: rawDistance === null ? null : /mi|mile/i.test(distanceUnits) ? rawDistance * 1.609344 : /^(m|meter|meters)$/i.test(distanceUnits) ? rawDistance / 1000 : rawDistance > 100 ? rawDistance / 1000 : rawDistance, heartRateAvgBpm: quantity(heartRateAverage) ?? n(first(heartRateData, "Avg", "average", "avg")), heartRateMinBpm: quantity(heartRateMin) ?? n(first(heartRateData, "Min", "minimum")), heartRateMaxBpm: quantity(heartRateMax) ?? n(first(heartRateData, "Max", "maximum")), raw: item });
   }
   for (const item of array(payload, "sleep", "sleepAnalysis", "sleepSessions")) {
     if (!item || typeof item !== "object") continue; const o = item as Record<string, unknown>;

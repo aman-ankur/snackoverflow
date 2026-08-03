@@ -62,6 +62,15 @@ export default function Home() {
   const eatingAnalysis = useEatingAnalysis();
   const auth = useAuthContext();
 
+  const handleTabChange = (nextTab: AppTab) => {
+    setActiveTab(nextTab);
+    if (nextTab !== "progress") setOpenAnalysisLauncher(false);
+  };
+  const handleProgressSectionChange = (nextSection: ProgressSection) => {
+    setProgressSection(nextSection);
+    if (nextSection !== "insights") setOpenAnalysisLauncher(false);
+  };
+
   useEffect(() => {
     if (userGoals.hasLoaded && !userGoals.hasProfile) {
       setShowOnboarding(true);
@@ -199,12 +208,13 @@ export default function Home() {
                 healthProfile={healthProfile.healthProfile}
                 hasHealthProfile={healthProfile.hasHealthProfile}
                 eatingAnalysis={eatingAnalysis}
-                onViewAnalysisReport={(analysis, windowLabel) =>
-                  setAnalysisSheetData({ analysis, windowLabel })
-                }
+                onViewAnalysisReport={(analysis, windowLabel) => {
+                  setOpenAnalysisLauncher(false);
+                  setAnalysisSheetData({ analysis, windowLabel });
+                }}
                 onOpenHealthPlaybook={() => setShowHealthPlaybook(true)}
                 initialSection={progressSection}
-                onSectionChange={setProgressSection}
+                onSectionChange={handleProgressSectionChange}
                 openAnalysisLauncher={openAnalysisLauncher}
                 isLoggedIn={auth.isLoggedIn}
               />
@@ -265,7 +275,7 @@ export default function Home() {
         </PullToRefresh>
       </main>
 
-      <BottomTabBar activeTab={activeTab} onTabChange={setActiveTab} />
+      <BottomTabBar activeTab={activeTab} onTabChange={handleTabChange} />
 
       {/* Fridge Overlay */}
       <AnimatePresence>
