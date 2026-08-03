@@ -1,5 +1,7 @@
 # Scan Performance Optimization - Test Report
 
+> **Historical test report:** Results and model names below reflect the 2026-02-27 implementation and must not be used as current provider guidance.
+
 **Date:** 2026-02-27
 **Branch:** `improve/scan-performance-optimization`
 **Commit:** `56d3e3b`

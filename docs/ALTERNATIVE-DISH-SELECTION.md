@@ -424,16 +424,14 @@ const handleAlternativeSelect = useCallback((dishIndex: number, optionIndex: num
 
 ### Token Usage
 
-| Scan Type | Tokens | Cost (Free Tier) |
+| Scan Type | Approx. output budget | Cost treatment |
 |-----------|--------|------------------|
-| Unambiguous item (no alternatives) | 1600 | ✅ FREE |
-| Ambiguous dish (with alternatives) | **2600** | **✅ FREE** |
+| Unambiguous item (no alternatives) | 1600 tokens | Usage-priced |
+| Ambiguous dish (with alternatives) | **2600 tokens** | **Usage-priced** |
 
 **Optimization:** Alternatives skipped only for clearly unambiguous items (whole fruit, labeled packaging, single distinctive items). Most cooked dishes (~60-70% of scans) will now generate alternatives.
 
-Daily limits:
-- Gemini 2.5 Flash: 1500 requests/day, 10M tokens/day
-- 100 scans/day mixed = ~230K tokens = **2.3% of limit**
+Current dish scans use Gemini 3.6 Flash with low thinking. Actual spend and quota depend on the configured Gemini billing tier; higher-cost vision is restricted to dish-photo analysis.
 
 ### Latency
 

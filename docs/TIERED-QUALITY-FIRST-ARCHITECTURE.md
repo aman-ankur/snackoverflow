@@ -1,5 +1,7 @@
 # Tiered Quality-First Fallback Architecture
 
+> **Archived snapshot (2026-03-01):** This document records the previous Gemini 2.5/Llama 4 design. It is not the current model configuration. See [`CLAUDE.md`](../CLAUDE.md), [`ARCHITECTURE.md`](./ARCHITECTURE.md), and [`src/lib/aiModels.ts`](../src/lib/aiModels.ts) for the active architecture.
+
 **Date:** 2026-03-01 (Updated)
 **Branch:** `perf/optimize-paid-gemini-timeouts`
 **Commit:** `8c2f515`

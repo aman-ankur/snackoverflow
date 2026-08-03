@@ -161,7 +161,7 @@ Scan Tab (ScanView.tsx — center FAB):
   → Camera/Describe toggle at top (pill switcher)
   
   Camera mode:
-    Camera → captureFrame() → /api/analyze-dish → Gemini 2.5 Flash/Groq → nutrition JSON
+    Camera → captureFrame() → /api/analyze-dish → Gemini 3.6 Flash → OpenAI gpt-4o-mini → Groq Qwen 3.6 → nutrition JSON
     → Auto-scroll to Plate Total (items list + macro summary)
     → Collapsed view for multi-dish plates ("Show N dishes · Edit quantities")
     → Per-dish: WeightEditor (±10g stepper / direct input → proportional recalc),
@@ -170,14 +170,14 @@ Scan Tab (ScanView.tsx — center FAB):
   
   Describe mode (DescribeMealView.tsx):
     Textarea (200 char limit) + meal type pills → "Analyze with AI"
-    → /api/describe-meal → Gemini 2.0 Flash-Lite / OpenAI+Groq parallel race → nutrition JSON
+    → /api/describe-meal → Gemini 3.5 Flash-Lite / OpenAI gpt-4.1-nano + Groq GPT-OSS 20B race → nutrition JSON
     → Per-dish cards with 3 food-specific portion options (katori/roti count/cup/handful)
     → Portion picker updates macros + plate total in real-time
     → Correction context: if opened from bad camera scan, pre-fills with scanned dish name
   
   Both modes:
     → After results: "AI Health Check" button (on-demand, not auto-triggered)
-      → Tap → /api/health-verdict → Gemini 2.5 Flash / Claude 3.5 Haiku / GPT-4.1-mini fallback
+      → Tap → /api/health-verdict → Gemini 3.5 Flash-Lite / Claude Haiku 4.5 / GPT-5.6 Luna fallback
       → Result replaces button with expandable MealHealthBanner (Good/Caution/Avoid per dish)
       → If no health profile: muted "Get AI health advice — set up your profile" link → opens wizard
     → Log This Meal → page-level useMealLog.logMeal() (shared state, not internal hook)

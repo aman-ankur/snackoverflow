@@ -88,7 +88,7 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 ### ~~Describe Your Meal — Text-Based Nutrition~~ ✅ SHIPPED
 - ~~Camera/Describe toggle on Scan tab~~
 - ~~Natural language meal description → AI-parsed nutrition with food-specific portion options~~
-- ~~3-tier provider chain: Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq parallel race~~
+- ~~3-tier provider chain: Gemini 3.5 Flash-Lite → OpenAI gpt-4.1-nano + Groq GPT-OSS 20B parallel race~~
 - ~~Correction flow from bad camera scans ("Describe instead")~~
 - ~~MealTypeSheet "Describe" button alongside "Scan"~~
 - ~~Hindi-English code-switching support (aloo, dal, roti, sabzi, katori)~~
@@ -100,7 +100,7 @@ See [PRD-DISH-SCANNER.md](./PRD-DISH-SCANNER.md) for full spec.
 ### Eating Habits Analysis — AI-Powered Reports ✅ SHIPPED
 - AI-generated eating habits report with time-window selection (Today / 7d / 14d / 30d)
 - Client-side pre-aggregation for minimal token cost (~400 input tokens, ~700 output tokens)
-- Provider chain: Gemini 2.5 Flash (free) → gpt-4.1-mini → Groq Llama 4 Scout
+- Provider chain: Gemini 3.5 Flash-Lite → GPT-5.6 Luna → Groq GPT-OSS 20B
 - Tabbed bottom sheet report: Summary (score + trends + comparison), Patterns (5-7 AI-selected insights), Health (condition-specific notes), Actions (prioritized items)
 - Hidden pattern detection: weekend vs weekday calorie spikes, breakfast skipping impact, protein clustering at dinner, snack calorie percentage, fried food frequency, diet monotony
 - Health-condition-aware: connects eating patterns to diabetes, hypertension, cholesterol, etc.

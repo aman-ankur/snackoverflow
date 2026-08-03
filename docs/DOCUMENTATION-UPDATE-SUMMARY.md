@@ -1,5 +1,7 @@
 # Documentation Update Summary
 
+> **Historical snapshot:** This records the documentation state on 2026-03-10. Model IDs in this report are intentionally preserved as history and are not current configuration.
+
 **Date:** 2026-03-10
 
 ## Overview

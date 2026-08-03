@@ -1,5 +1,7 @@
 # Live API Test Report - Scan Performance Optimization
 
+> **Historical test report:** Results and model names below reflect the 2026-02-27 implementation and must not be used as current provider guidance.
+
 **Date:** 2026-02-27 15:30 IST
 **Branch:** `improve/scan-performance-optimization`
 **Environment:** Live API testing (localhost:3000, no mock mode)

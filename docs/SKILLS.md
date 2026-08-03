@@ -32,9 +32,9 @@ npx tsx scripts/health-check.ts --verbose
 
 **Example output:**
 ```
-✅ Gemini 2.0 Flash: OK (245ms)
+✅ Gemini 3.5 Flash-Lite: OK (245ms)
 ✅ OpenAI GPT-4.1-nano: OK (312ms)
-⚠️  Groq Llama 4 Scout: TIMEOUT (exceeded 5s)
+⚠️  Groq Qwen 3.6: TIMEOUT (exceeded 5s)
 ✅ Sarvam API: OK (156ms)
 ✅ Anthropic Claude: OK (289ms)
 ✅ Supabase: OK (78ms)

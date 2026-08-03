@@ -1,5 +1,7 @@
 # Scan Performance Optimization
 
+> **Archived snapshot (2026-02-27):** This describes the former staggered parallel fallback. Current dish scanning uses the sequential chain documented in [`CLAUDE.md`](../CLAUDE.md) and [`API-ROUTES.md`](./API-ROUTES.md).
+
 **Date:** 2026-02-27
 **Status:** ✅ Implemented
 

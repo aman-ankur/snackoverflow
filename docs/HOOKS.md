@@ -447,7 +447,7 @@ On-demand AI health verdict fetcher with abort support.
 ### Behavior
 - **Not auto-triggered** — called explicitly when user taps "AI Health Check" button
 - Sends dish nutrition + health context to `/api/health-verdict`
-- API uses tiered fallback: Gemini 2.5 Flash → Claude 3.5 Haiku → GPT-4.1-mini
+- API uses tiered fallback: Gemini 3.5 Flash-Lite → Claude Haiku 4.5 → GPT-5.6 Luna
 - Returns per-dish verdicts (good/caution/avoid) with notes and swap suggestions
 - Supports abort via AbortController when component unmounts
 

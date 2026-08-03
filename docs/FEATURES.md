@@ -230,7 +230,7 @@
 - **MealTypeSheet integration**: "Describe" button alongside "Scan" in empty meal slots
 - **Button label**: "Estimate Nutrition" (distinct from scan's "Analyze Dish")
 - Logs to same meal system as camera scan — appears on Home immediately
-- **Provider chain**: Gemini 2.0 Flash-Lite → OpenAI gpt-4.1-nano + Groq parallel race
+- **Provider chain**: Gemini 3.5 Flash-Lite → OpenAI gpt-4.1-nano + Groq GPT-OSS 20B parallel race
 - **Performance**: ~1-2s when Gemini available, ~4-5s fallback (parallel race), 6s max timeout
 - New files: `describe-meal/route.ts`, `useDescribeMeal.ts`, `DescribeMealView.tsx`
 - New dep: `openai` (npm package)
@@ -297,7 +297,7 @@ WiFi networks that DNS-block `supabase.co` will always fail for auth. The app de
 - Contextual subtitle: shows first 2 condition short labels separated by " · ", "+N more" if overflow
 - Loading state: gradient card with spinner + "Analyzing..."
 - Result: expandable `MealHealthBanner` with "Dr. Capy's Verdict" label, overall verdict (Looks Good/Needs Attention/Not Recommended) + per-dish verdicts with swap suggestions
-- **Provider chain**: Gemini 2.5 Flash → Claude 3.5 Haiku → GPT-4.1-mini (tiered fallback)
+- **Provider chain**: Gemini 3.5 Flash-Lite → Claude Haiku 4.5 → GPT-5.6 Luna (tiered fallback)
 - Medical disclaimer: "For informational purposes only. Consult your doctor."
 
 ### Profile View Integration

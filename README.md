@@ -503,7 +503,7 @@ Comprehensive docs in [`/docs`](./docs/):
 | [ENV-VARS.md](./docs/ENV-VARS.md) | Environment variables, API keys, configuration |
 | [DEPLOYMENT.md](./docs/DEPLOYMENT.md) | Vercel + Supabase setup guide |
 | [TESTING.md](./docs/TESTING.md) | Calorie benchmarks + Playwright E2E tests |
-| [API-LOGGING-GUIDE.md](./docs/API-LOGGING-GUIDE.md) | Debug logging strategy for AI routes |
+| [API-LOGGING-GUIDE.md](./docs/API-LOGGING-GUIDE.md) | Archived logging examples from the previous provider architecture |
 | [BACKLOG.md](./docs/BACKLOG.md) | Shipped features and future ideas |
 
 ---

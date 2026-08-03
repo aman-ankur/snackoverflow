@@ -19,6 +19,18 @@ const runtimeFiles = [
   "src/app/api/capy-motivation/route.ts",
   "src/app/api/hindi-message/route.ts",
 ].map(read).join("\n");
+const activeDocumentation = [
+  "README.md",
+  "CLAUDE.md",
+  "docs/API-ROUTES.md",
+  "docs/ARCHITECTURE.md",
+  "docs/ENV-VARS.md",
+  "docs/FEATURES.md",
+  "docs/HOOKS.md",
+  "docs/BACKLOG.md",
+  "docs/SKILLS.md",
+  "docs/ALTERNATIVE-DISH-SELECTION.md",
+].map(read).join("\n");
 
 const expectedModels = [
   "gemini-3.6-flash",
@@ -48,6 +60,7 @@ const retiredOrUnnecessaryModels = [
 
 for (const model of retiredOrUnnecessaryModels) {
   assert.ok(!runtimeFiles.includes(model), `runtime still references disallowed model ${model}`);
+  assert.ok(!activeDocumentation.includes(model), `active documentation still references disallowed model ${model}`);
 }
 
 assert.equal(packageJson.dependencies["@google/generative-ai"], undefined, "legacy Gemini SDK must be removed");

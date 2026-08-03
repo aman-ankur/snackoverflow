@@ -258,13 +258,13 @@ All documentation lives in [`docs/`](./docs/) — 20+ comprehensive guides:
 
 ### Feature Deep-Dives
 - [`ALTERNATIVE-DISH-SELECTION.md`](./docs/ALTERNATIVE-DISH-SELECTION.md) — How ambiguous dish detection works (~24 KB)
-- [`API-LOGGING-GUIDE.md`](./docs/API-LOGGING-GUIDE.md) — Debug logging strategy for AI routes
-- [`SCAN-PERFORMANCE-OPTIMIZATION.md`](./docs/SCAN-PERFORMANCE-OPTIMIZATION.md) — Tiered fallback strategy
+- [`API-LOGGING-GUIDE.md`](./docs/API-LOGGING-GUIDE.md) — Archived logging examples from the previous provider architecture
+- [`SCAN-PERFORMANCE-OPTIMIZATION.md`](./docs/SCAN-PERFORMANCE-OPTIMIZATION.md) — Archived staggered-fallback optimization notes
 - [`BACKLOG.md`](./docs/BACKLOG.md) — Shipped features and future ideas
 
 ### Test Reports
-- [`LIVE-API-TEST-REPORT.md`](./docs/LIVE-API-TEST-REPORT.md) — Live AI provider performance tests
-- [`SCAN-PERFORMANCE-TEST-REPORT.md`](./docs/SCAN-PERFORMANCE-TEST-REPORT.md) — Dish scan latency benchmarks
+- [`LIVE-API-TEST-REPORT.md`](./docs/LIVE-API-TEST-REPORT.md) — Historical 2026-02-27 live-provider test snapshot
+- [`SCAN-PERFORMANCE-TEST-REPORT.md`](./docs/SCAN-PERFORMANCE-TEST-REPORT.md) — Historical 2026-02-27 dish-scan benchmark
 - [`TEST-RESULTS.md`](./docs/TEST-RESULTS.md) — E2E test results
 
 ## Key Rules

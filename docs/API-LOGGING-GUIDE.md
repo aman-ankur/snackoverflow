@@ -1,5 +1,7 @@
 # API Latency and Model Logging Guide
 
+> **Archived snapshot (2026-02-27):** The examples below document the former staggered-race implementation and retired models. They are retained for historical debugging context, not current configuration. For current provider chains use [`CLAUDE.md`](../CLAUDE.md), [`API-ROUTES.md`](./API-ROUTES.md), and [`src/lib/aiModels.ts`](../src/lib/aiModels.ts). Current dish scanning is sequential: Gemini 3.6 Flash → OpenAI gpt-4o-mini → Groq Qwen 3.6.
+
 **Date:** 2026-02-27
 **Feature:** Enhanced logging for dish scan API performance tracking
 **Commit:** `edbca4d`
