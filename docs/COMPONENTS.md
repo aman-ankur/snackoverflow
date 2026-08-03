@@ -245,7 +245,11 @@ All components are in `src/components/`. All are `"use client"` components.
   - Rendered as compact pills: `{count}x {dish name}` with count color-coded (≥3 = green, <3 = orange)
 
 ### `ProgressView.tsx`
-**Main Progress tab — insight-first layout with 5 sections.**
+**Main Progress tab — three-section information architecture.**
+
+- **Overview** (default): compact stats, activity calendar, and calorie trend.
+- **Insights**: Health Playbook and compact Eating Analysis launcher rows.
+- **History**: meal history accordion with older-meal behavior.
 - Props: `todayTotals`, `goals`, `streak`, `meals`, `weeklyByDate`, `repeatedDishes`, `coachMarks`, `healthProfile`, `hasHealthProfile`, `eatingAnalysis`, `onViewAnalysisReport`
 - **Layout (top → bottom)**:
   1. **Header**: "Progress" + subtitle "Your nutrition insights" + cat Lottie mascot

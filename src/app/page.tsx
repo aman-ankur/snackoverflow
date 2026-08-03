@@ -14,6 +14,7 @@ import GoalOnboarding from "@/components/GoalOnboarding";
 import HealthProfileWizard from "@/components/HealthProfileWizard";
 import WelcomeTour from "@/components/WelcomeTour";
 import EatingAnalysisSheet from "@/components/EatingAnalysisSheet";
+import { HealthPlaybookSheet } from "@/components/HealthPlaybook";
 import PullToRefresh from "@/components/PullToRefresh";
 import dynamic from "next/dynamic";
 import { useMealLog } from "@/lib/useMealLog";
@@ -23,6 +24,7 @@ import { useEatingAnalysis } from "@/lib/useEatingAnalysis";
 import { useAuthContext } from "@/components/AuthProvider";
 import { useCoachMarks } from "@/lib/useCoachMarks";
 import type { UserProfile, NutritionGoals, MealType, HealthCondition, LabValue, DietPreference, EatingAnalysis } from "@/lib/dishTypes";
+import type { ProgressSection } from "@/components/ProgressView";
 
 const CapyView = dynamic(() => import("@/components/CapyView"), {
   ssr: false,
@@ -49,6 +51,9 @@ export default function Home() {
     analysis: EatingAnalysis;
     windowLabel: string;
   } | null>(null);
+  const [showHealthPlaybook, setShowHealthPlaybook] = useState(false);
+  const [progressSection, setProgressSection] = useState<ProgressSection>("overview");
+  const [openAnalysisLauncher, setOpenAnalysisLauncher] = useState(false);
   const coachMarks = useCoachMarks();
 
   const mealLog = useMealLog();
@@ -107,11 +112,6 @@ export default function Home() {
     setActiveTab("scan");
   };
 
-  const handleWhatsNewTryIt = () => {
-    setScanInitialMode("describe");
-    setActiveTab("scan");
-  };
-
   const handlePullRefresh = useCallback(async () => {
     // Offline-first: data is already in-memory via hooks.
     // Pull-to-refresh provides a visual "I've refreshed" moment.
@@ -145,12 +145,14 @@ export default function Home() {
                 onScanDish={() => setActiveTab("scan")}
                 onRemoveMeal={mealLog.removeMeal}
                 onMealTypeClick={(type) => setSheetMealType(type)}
-                onWhatsNewTryIt={handleWhatsNewTryIt}
                 coachMarks={coachMarks}
                 latestAnalysis={eatingAnalysis.getLatest()}
-                onViewAnalysis={() => setActiveTab("progress")}
+                onViewAnalysis={() => { setProgressSection("insights"); setOpenAnalysisLauncher(true); setActiveTab("progress"); }}
+                onOpenHealthPlaybook={() => setShowHealthPlaybook(true)}
                 dietPreference={healthProfile.healthProfile?.dietPreference}
                 healthContextString={healthProfile.healthContextString}
+                healthProfile={healthProfile.healthProfile}
+                hasHealthProfile={healthProfile.hasHealthProfile}
               />
             </motion.div>
           )}
@@ -200,6 +202,10 @@ export default function Home() {
                 onViewAnalysisReport={(analysis, windowLabel) =>
                   setAnalysisSheetData({ analysis, windowLabel })
                 }
+                onOpenHealthPlaybook={() => setShowHealthPlaybook(true)}
+                initialSection={progressSection}
+                onSectionChange={setProgressSection}
+                openAnalysisLauncher={openAnalysisLauncher}
               />
             </motion.div>
           )}
@@ -353,6 +359,15 @@ export default function Home() {
           />
         )}
       </AnimatePresence>
+
+      <HealthPlaybookSheet
+        open={showHealthPlaybook}
+        onClose={() => setShowHealthPlaybook(false)}
+        meals={mealLog.meals}
+        healthProfile={healthProfile.healthProfile}
+        hasHealthProfile={healthProfile.hasHealthProfile}
+        onSetupHealthProfile={() => setShowHealthWizard(true)}
+      />
     </div>
   );
 }

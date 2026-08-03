@@ -27,6 +27,8 @@ interface EatingAnalysisCardProps {
     healthProfile: HealthProfile | null
   ) => Promise<EatingAnalysis | null>;
   onViewReport: (analysis: EatingAnalysis, windowLabel: string) => void;
+  compact?: boolean;
+  openLauncher?: boolean;
 }
 
 const WINDOWS = [
@@ -54,8 +56,11 @@ export default function EatingAnalysisCard({
   isCacheFresh,
   onGenerate,
   onViewReport,
+  compact = false,
+  openLauncher = false,
 }: EatingAnalysisCardProps) {
   const [selectedWindow, setSelectedWindow] = useState(7);
+  const [showLauncher, setShowLauncher] = useState(!compact || openLauncher);
 
   const currentWindowLabel = WINDOWS.find((w) => w.days === selectedWindow)?.label ?? "7 Days";
   const hasCached = latestAnalysis?.windowDays === selectedWindow;
@@ -74,12 +79,23 @@ export default function EatingAnalysisCard({
     }
   };
 
+  if (compact && !showLauncher) {
+    return (
+      <button onClick={() => setShowLauncher(true)} className="flex w-full items-center gap-3 rounded-xl border border-border bg-card px-3 py-3 text-left hover:bg-card-hover" data-testid="eating-analysis-entry">
+        <Sparkles className="h-4 w-4 text-violet-500" />
+        <span className="min-w-0 flex-1"><span className="block text-xs font-bold text-foreground">Eating Analysis</span><span className="block text-[10px] text-muted">{hasCached ? (isFresh ? "Cached report ready" : "New meals since last report") : "Generate a report from your meals"}</span></span>
+        <ChevronRight className="h-4 w-4 text-muted-light" />
+      </button>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-[#DBEAFE] border border-accent/10 p-4"
+      className={`${compact ? "fixed inset-x-4 bottom-4 z-[90] max-h-[90vh] overflow-y-auto shadow-2xl sm:inset-x-auto sm:left-1/2 sm:w-full sm:max-w-lg sm:-translate-x-1/2" : ""} rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-[#DBEAFE] border border-accent/10 p-4`}
     >
+      {compact && <button onClick={() => setShowLauncher(false)} className="absolute right-3 top-3 rounded-full bg-card/80 px-2 py-1 text-[10px] font-bold text-muted">Close</button>}
       <div className="flex items-center gap-2 mb-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-[10px] bg-gradient-to-br from-violet-50 to-indigo-50">
           <Sparkles className="h-4 w-4 text-violet-400 animate-[pulse-subtle_3s_ease-in-out_infinite]" />

@@ -3,7 +3,7 @@
 ## 1. Bottom Navigation (4-Tab + Fridge Overlay)
 - Fixed bottom tab bar with four tabs + center FAB:
   - 🏠 **Home** — dashboard with Capy mascot, daily intake ring, meal slots, fridge scan CTA
-  - 📊 **Progress** — insight-first layout: AI eating analysis, activity calendar + top dishes, calorie trend chart, stats row, meal history accordion
+  - 📊 **Progress** — tabbed layout: Overview (stats, activity calendar, calorie trend), Insights (Playbook and Eating Analysis), and History (meal history accordion)
   - 📷 **Scan** (center FAB) — dish scanner with camera, meal context, portion adjuster
   - 👤 **Profile** — body stats, daily targets, goal setup, reset
 - 🧊 **Fridge Scanner** — full-screen overlay triggered from Home CTA (not a tab)
@@ -397,7 +397,11 @@ Report displayed in a bottom sheet (consistent with MealTypeSheet pattern) with 
 - Types in `dishTypes.ts`: `EatingAnalysis`, `EatingReport`, `ReportInsight`, `ActionItem`, `PeriodComparison`, `MacroTrends`
 
 ## 20. Progress Page Revamp (NEW)
-Complete redesign of the Progress tab from information-heavy to insight-first layout.
+Progress is organized into three local tabs so metrics, intelligence, and history do not compete in one vertical feed.
+
+- **Overview** (default): compact stats strip, activity calendar, and calorie trend.
+- **Insights**: grouped Health Playbook and Eating Analysis entries. Eating Analysis opens its Today / 7 Days / 14 Days / 30 Days launcher while preserving the cached report sheet.
+- **History**: existing meal-history accordion and older-meal behavior.
 
 ### What Changed
 - **Removed**: Total Progress card, Nutrition/Fitness 2-col cards, Today's Macros (3 progress bars), Streak Card, Weekly Calorie bar chart, Patterns section, flat Meal History list

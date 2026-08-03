@@ -1,17 +1,17 @@
 "use client";
 
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { Flame, Refrigerator, ChevronRight, Plus, Coffee, Sun, Moon, Sunset, ShieldCheck, CheckCircle2, AlertTriangle, Circle, Brain, Sparkles, Loader2, X } from "lucide-react";
 import { getMealHealthRating, type HealthRating } from "@/lib/healthRating";
 import CapyMascot from "@/components/CapyMascot";
 import CapyLottie from "@/components/CapyLottie";
-import WhatsNewCard from "@/components/WhatsNewCard";
 import QuickInsightCard from "@/components/QuickInsight";
+import { buildHealthPlaybook } from "@/lib/healthPlaybook";
 import CoachMark from "@/components/CoachMark";
 import { getCapyState, getGreeting } from "@/lib/capyLines";
 import { getQuickInsight } from "@/lib/quickInsights";
-import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, EatingAnalysis, AnalysisScore, MealRecommendation, MealType } from "@/lib/dishTypes";
+import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, EatingAnalysis, AnalysisScore, MealRecommendation, MealType, HealthProfile } from "@/lib/dishTypes";
 import { buildMealMemory, cacheKey, fetchRecommendations } from "@/lib/recommendations";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
 
@@ -26,12 +26,15 @@ interface HomeViewProps {
   onScanDish: () => void;
   onRemoveMeal: (id: string) => void;
   onMealTypeClick: (mealType: "breakfast" | "lunch" | "snack" | "dinner") => void;
-  onWhatsNewTryIt: () => void;
   coachMarks: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
   latestAnalysis: EatingAnalysis | null;
   onViewAnalysis: () => void;
+  onOpenHealthPlaybook: () => void;
+  onOpenMealIdeas?: () => void;
   dietPreference?: string;
   healthContextString?: string;
+  healthProfile: HealthProfile | null;
+  hasHealthProfile: boolean;
 }
 
 const MEAL_ICONS: Record<string, typeof Coffee> = {
@@ -138,12 +141,15 @@ export default function HomeView({
   onScanDish,
   onRemoveMeal,
   onMealTypeClick,
-  onWhatsNewTryIt,
   coachMarks,
   latestAnalysis,
   onViewAnalysis,
+  onOpenHealthPlaybook,
+  onOpenMealIdeas,
   dietPreference,
   healthContextString,
+  healthProfile,
+  hasHealthProfile,
 }: HomeViewProps) {
   const greeting = getGreeting(userName);
   const capyState = useMemo(
@@ -156,8 +162,6 @@ export default function HomeView({
     [todayTotals, goals, streak, todayMeals]
   );
 
-  // Track WhatsNewCard dismissed state for QuickInsight visibility
-  const [whatsNewDismissed, setWhatsNewDismissed] = useState(false);
   const [recommendations, setRecommendations] = useState<MealRecommendation[] | null>(null);
   const [recommendationLoading, setRecommendationLoading] = useState(false);
   const inferredMealType = (new Date().getHours() < 11 ? "breakfast" : new Date().getHours() < 15 ? "lunch" : new Date().getHours() < 18 ? "snack" : "dinner") as MealType;
@@ -170,15 +174,6 @@ export default function HomeView({
       setRecommendations(result); try { localStorage.setItem(key, JSON.stringify(result)); } catch { /* ignore */ }
     } catch { setRecommendations([]); } finally { setRecommendationLoading(false); }
   };
-  useEffect(() => {
-    try {
-      const seen = localStorage.getItem("snackoverflow-whats-new-seen");
-      setWhatsNewDismissed(seen === "v1");
-    } catch {
-      setWhatsNewDismissed(false);
-    }
-  }, []);
-
   const calRemaining = Math.round(goals.calories - todayTotals.calories);
   const calPercent = goals.calories > 0 ? Math.min((todayTotals.calories / goals.calories) * 100, 100) : 0;
   const isOverGoal = calRemaining < 0;
@@ -197,6 +192,33 @@ export default function HomeView({
     });
     return grouped;
   }, [todayMeals]);
+
+  const forYouCard = (
+    <>
+      <section className="overflow-hidden rounded-[22px] border border-accent/20 bg-gradient-to-br from-[#F3FAEE] via-white to-[#F4F0FF] p-1 shadow-[0_8px_24px_rgba(71,101,64,0.08)]" data-testid="for-you-card">
+        <div className="rounded-[18px] px-3.5 pb-2 pt-3">
+          <div className="flex items-start gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-white shadow-sm ring-1 ring-accent/10"><Sparkles className="h-4 w-4 text-accent" /></div>
+            <div className="min-w-0 flex-1"><div className="flex items-center gap-2"><p className="text-sm font-extrabold text-foreground">For You</p><span className="rounded-full bg-white/80 px-2 py-0.5 text-[9px] font-bold uppercase tracking-wide text-accent-dim">Today</span></div><p className="mt-0.5 text-[10px] text-muted">A few thoughtful next steps from your meals</p></div>
+          </div>
+        </div>
+        <div className="overflow-hidden rounded-[18px] bg-white/75 ring-1 ring-black/[0.03]">
+          <button onClick={onOpenHealthPlaybook} className="group flex w-full items-center gap-3 border-b border-border/70 px-3.5 py-3 text-left transition-colors hover:bg-white active:bg-white/80">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-accent-light"><ShieldCheck className="h-4 w-4 text-accent-dim" /></div>
+            <div className="min-w-0 flex-1"><p className="text-xs font-bold text-foreground">Health Playbook</p><p className="mt-0.5 text-[10px] text-muted">{(() => { const s = buildHealthPlaybook(allMeals, healthProfile); return `${s.status === "unlocked" ? "Ready to explore" : s.status === "learning" ? "Learning your patterns" : s.status === "sparse" ? "Limited edition" : "Early preview"} · ${s.daysLogged}/7 days`; })()}</p></div>
+            <ChevronRight className="h-4 w-4 text-muted-light transition-transform group-hover:translate-x-0.5" />
+          </button>
+          <button onClick={onOpenMealIdeas || (allMeals.length >= 3 ? loadRecommendations : () => {})} className="group flex w-full items-center gap-3 border-b border-border/70 px-3.5 py-3 text-left transition-colors hover:bg-white active:bg-white/80">
+            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-[#F4F0FF]"><Sparkles className="h-4 w-4 text-violet-500" /></div>
+            <div className="min-w-0 flex-1"><p className="text-xs font-bold text-foreground">Meal Ideas</p><p className="mt-0.5 text-[10px] text-muted">{allMeals.length >= 3 ? `Ready for ${inferredMealType}` : `Log ${3 - allMeals.length} more meal${3 - allMeals.length === 1 ? "" : "s"} to unlock`}</p></div>
+            {recommendationLoading ? <Loader2 className="h-4 w-4 animate-spin text-accent" /> : <ChevronRight className="h-4 w-4 text-muted-light transition-transform group-hover:translate-x-0.5" />}
+          </button>
+          {latestAnalysis && Math.floor((Date.now() - new Date(latestAnalysis.generatedAt).getTime()) / (1000 * 60 * 60 * 24)) <= 7 && (() => { const scoreInfo = SCORE_LABELS[latestAnalysis.report.score]; return <button onClick={onViewAnalysis} className="group flex w-full items-center gap-3 px-3.5 py-3 text-left transition-colors hover:bg-white active:bg-white/80"><div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl bg-purple-100"><Brain className="h-4 w-4 text-purple-600" /></div><div className="min-w-0 flex-1"><p className="text-xs font-bold text-foreground">Latest Eating Analysis <span className={`ml-1 text-[10px] ${scoreInfo.color}`}>{scoreInfo.label}</span></p><p className="mt-0.5 truncate text-[10px] text-muted">{latestAnalysis.report.scoreSummary}</p></div><ChevronRight className="h-4 w-4 text-muted-light transition-transform group-hover:translate-x-0.5" /></button>; })()}
+        </div>
+      </section>
+      {recommendations && recommendations.length > 0 && <div className="fixed inset-0 z-[100] flex items-end bg-black/40" onClick={() => setRecommendations(null)}><div className="w-full rounded-t-3xl bg-card p-4" onClick={(e) => e.stopPropagation()}><div className="mb-3 flex items-center justify-between"><p className="font-extrabold">Ideas for {inferredMealType}</p><button onClick={() => setRecommendations(null)}><X className="h-5 w-5 text-muted" /></button></div><div className="space-y-2">{recommendations.slice(0, 3).map((item) => <article key={item.id} className="rounded-2xl border border-border bg-background p-3"><div className="flex items-center gap-2"><span className="rounded-full bg-accent-light px-2 py-0.5 text-[9px] font-bold uppercase text-accent-dim">{item.kind}</span><h3 className="text-xs font-extrabold">{item.title}</h3></div><p className="mt-1 text-[11px] text-muted">{item.reason}</p>{item.adjustments.length > 0 && <p className="mt-1 text-[10px] text-accent-dim">Try: {item.adjustments.join(" · ")}</p>}</article>)}</div></div></div>}
+    </>
+  );
 
   return (
     <div className="space-y-4">
@@ -233,52 +255,7 @@ export default function HomeView({
         </div>
       </div>
 
-      {/* What's New (dismissable) */}
-      <WhatsNewCard onTryIt={onWhatsNewTryIt} />
-
-      {/* Quick Insight (shows after WhatsNew dismissed) */}
-      <QuickInsightCard insight={quickInsight} whatsNewDismissed={whatsNewDismissed} />
-
-      <section className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent-light to-card p-4">
-        <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80"><Sparkles className="h-4 w-4 text-accent" /></div>
-          <div className="flex-1"><p className="text-sm font-extrabold text-foreground">What should I eat?</p><p className="mt-0.5 text-[11px] text-muted">Personalized ideas from your meal memory</p></div>
-          {allMeals.length >= 3 && <button onClick={loadRecommendations} disabled={recommendationLoading} className="rounded-full bg-accent px-3 py-1.5 text-[11px] font-bold text-white">{recommendationLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Show ideas"}</button>}
-        </div>
-        {allMeals.length < 3 && <p className="mt-3 text-[11px] font-semibold text-accent-dim">Log {3 - allMeals.length} more meal{3 - allMeals.length === 1 ? "" : "s"} to unlock.</p>}
-        {recommendations && recommendations.length > 0 && <div className="fixed inset-0 z-[100] flex items-end bg-black/40" onClick={() => setRecommendations(null)}><div className="w-full rounded-t-3xl bg-card p-4" onClick={(e) => e.stopPropagation()}><div className="mb-3 flex items-center justify-between"><p className="font-extrabold">Ideas for {inferredMealType}</p><button onClick={() => setRecommendations(null)}><X className="h-5 w-5 text-muted" /></button></div><div className="space-y-2">{recommendations.slice(0, 3).map((item) => <article key={item.id} className="rounded-2xl border border-border bg-background p-3"><div className="flex items-center gap-2"><span className="rounded-full bg-accent-light px-2 py-0.5 text-[9px] font-bold uppercase text-accent-dim">{item.kind}</span><h3 className="text-xs font-extrabold">{item.title}</h3></div><p className="mt-1 text-[11px] text-muted">{item.reason}</p>{item.adjustments.length > 0 && <p className="mt-1 text-[10px] text-accent-dim">Try: {item.adjustments.join(" · ")}</p>}</article>)}</div></div></div>}
-      </section>
-
-      {/* Latest Eating Analysis */}
-      {latestAnalysis && (() => {
-        const daysSince = Math.floor(
-          (Date.now() - new Date(latestAnalysis.generatedAt).getTime()) / (1000 * 60 * 60 * 24)
-        );
-        if (daysSince > 7) return null;
-        const scoreInfo = SCORE_LABELS[latestAnalysis.report.score];
-        return (
-          <button
-            onClick={onViewAnalysis}
-            className="w-full rounded-2xl bg-gradient-to-br from-[#F0E8FF] to-white border border-purple-200/40 p-3.5 flex items-center gap-3 text-left transition-colors hover:bg-purple-50 active:scale-[0.98]"
-          >
-            <div className="flex h-9 w-9 items-center justify-center rounded-full bg-purple-100 shrink-0">
-              <Brain className="h-4 w-4 text-purple-600" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <p className="text-xs font-extrabold text-foreground">Eating Analysis</p>
-                <span className={`text-[10px] font-bold ${scoreInfo.color}`}>
-                  {scoreInfo.label}
-                </span>
-              </div>
-              <p className="text-[10px] text-muted mt-0.5 line-clamp-1">
-                {latestAnalysis.report.scoreSummary}
-              </p>
-            </div>
-            <ChevronRight className="h-4 w-4 text-muted-light shrink-0" />
-          </button>
-        );
-      })()}
+      {forYouCard}
 
       {/* Calorie Ring + Macros */}
       <div className="rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-white border border-accent/10 p-4">
@@ -296,6 +273,8 @@ export default function HomeView({
           <MacroPill label="Fats" value={todayTotals.fat} max={goals.fat} color="#D07A3E" />
         </div>
       </div>
+
+      <QuickInsightCard insight={quickInsight} />
 
       {/* Today's Meals */}
       <div className="rounded-2xl bg-card border border-border overflow-hidden">
