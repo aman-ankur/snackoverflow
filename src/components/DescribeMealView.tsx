@@ -31,7 +31,7 @@ interface DescribeMealViewProps {
     servingsMultiplier: number;
     dishes: DishNutrition[];
     totals: MealTotals;
-  }) => LoggedMeal;
+  }) => Promise<LoggedMeal>;
   refreshStreak: () => void;
   onMealLogged?: () => void;
   correctionContext?: { scannedAs: string; mealType: MealType };
@@ -498,9 +498,9 @@ export default function DescribeMealView({
     healthVerdict.fetchVerdict(dishInputs, healthContextString);
   }, [dm.result, healthContextString]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const handleLogMeal = () => {
+  const handleLogMeal = async () => {
     if (finalDishes.length === 0) return;
-    logMeal({
+    await logMeal({
       mealType: dm.mealType,
       servingsMultiplier: 1,
       dishes: finalDishes,

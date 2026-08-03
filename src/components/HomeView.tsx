@@ -2,7 +2,7 @@
 
 import { useMemo, useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Flame, Refrigerator, ChevronRight, Plus, Coffee, Sun, Moon, Sunset, ShieldCheck, CheckCircle2, AlertTriangle, Circle, Brain } from "lucide-react";
+import { Flame, Refrigerator, ChevronRight, Plus, Coffee, Sun, Moon, Sunset, ShieldCheck, CheckCircle2, AlertTriangle, Circle, Brain, Sparkles, Loader2, X } from "lucide-react";
 import { getMealHealthRating, type HealthRating } from "@/lib/healthRating";
 import CapyMascot from "@/components/CapyMascot";
 import CapyLottie from "@/components/CapyLottie";
@@ -11,11 +11,13 @@ import QuickInsightCard from "@/components/QuickInsight";
 import CoachMark from "@/components/CoachMark";
 import { getCapyState, getGreeting } from "@/lib/capyLines";
 import { getQuickInsight } from "@/lib/quickInsights";
-import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, EatingAnalysis, AnalysisScore } from "@/lib/dishTypes";
+import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, EatingAnalysis, AnalysisScore, MealRecommendation, MealType } from "@/lib/dishTypes";
+import { buildMealMemory, cacheKey, fetchRecommendations } from "@/lib/recommendations";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
 
 interface HomeViewProps {
   todayMeals: LoggedMeal[];
+  allMeals: LoggedMeal[];
   todayTotals: MealTotals;
   goals: NutritionGoals;
   streak: StreakData;
@@ -28,6 +30,8 @@ interface HomeViewProps {
   coachMarks: { shouldShow: (id: CoachMarkId) => boolean; dismiss: (id: CoachMarkId) => void };
   latestAnalysis: EatingAnalysis | null;
   onViewAnalysis: () => void;
+  dietPreference?: string;
+  healthContextString?: string;
 }
 
 const MEAL_ICONS: Record<string, typeof Coffee> = {
@@ -125,6 +129,7 @@ const SCORE_LABELS: Record<AnalysisScore, { label: string; color: string }> = {
 
 export default function HomeView({
   todayMeals,
+  allMeals,
   todayTotals,
   goals,
   streak,
@@ -137,6 +142,8 @@ export default function HomeView({
   coachMarks,
   latestAnalysis,
   onViewAnalysis,
+  dietPreference,
+  healthContextString,
 }: HomeViewProps) {
   const greeting = getGreeting(userName);
   const capyState = useMemo(
@@ -151,6 +158,18 @@ export default function HomeView({
 
   // Track WhatsNewCard dismissed state for QuickInsight visibility
   const [whatsNewDismissed, setWhatsNewDismissed] = useState(false);
+  const [recommendations, setRecommendations] = useState<MealRecommendation[] | null>(null);
+  const [recommendationLoading, setRecommendationLoading] = useState(false);
+  const inferredMealType = (new Date().getHours() < 11 ? "breakfast" : new Date().getHours() < 15 ? "lunch" : new Date().getHours() < 18 ? "snack" : "dinner") as MealType;
+  const loadRecommendations = async () => {
+    const key = cacheKey(allMeals, goals, inferredMealType, `${dietPreference || ""}:${healthContextString || ""}`);
+    try { const cached = localStorage.getItem(key); if (cached) { setRecommendations(JSON.parse(cached)); return; } } catch { /* ignore */ }
+    setRecommendationLoading(true);
+    try {
+      const result = await fetchRecommendations(buildMealMemory(allMeals), { todayTotals, goals, mealType: inferredMealType, dietPreference, healthContext: healthContextString });
+      setRecommendations(result); try { localStorage.setItem(key, JSON.stringify(result)); } catch { /* ignore */ }
+    } catch { setRecommendations([]); } finally { setRecommendationLoading(false); }
+  };
   useEffect(() => {
     try {
       const seen = localStorage.getItem("snackoverflow-whats-new-seen");
@@ -219,6 +238,16 @@ export default function HomeView({
 
       {/* Quick Insight (shows after WhatsNew dismissed) */}
       <QuickInsightCard insight={quickInsight} whatsNewDismissed={whatsNewDismissed} />
+
+      <section className="rounded-2xl border border-accent/20 bg-gradient-to-br from-accent-light to-card p-4">
+        <div className="flex items-start gap-3">
+          <div className="flex h-9 w-9 items-center justify-center rounded-full bg-white/80"><Sparkles className="h-4 w-4 text-accent" /></div>
+          <div className="flex-1"><p className="text-sm font-extrabold text-foreground">What should I eat?</p><p className="mt-0.5 text-[11px] text-muted">Personalized ideas from your meal memory</p></div>
+          {allMeals.length >= 3 && <button onClick={loadRecommendations} disabled={recommendationLoading} className="rounded-full bg-accent px-3 py-1.5 text-[11px] font-bold text-white">{recommendationLoading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : "Show ideas"}</button>}
+        </div>
+        {allMeals.length < 3 && <p className="mt-3 text-[11px] font-semibold text-accent-dim">Log {3 - allMeals.length} more meal{3 - allMeals.length === 1 ? "" : "s"} to unlock.</p>}
+        {recommendations && recommendations.length > 0 && <div className="fixed inset-0 z-[100] flex items-end bg-black/40" onClick={() => setRecommendations(null)}><div className="w-full rounded-t-3xl bg-card p-4" onClick={(e) => e.stopPropagation()}><div className="mb-3 flex items-center justify-between"><p className="font-extrabold">Ideas for {inferredMealType}</p><button onClick={() => setRecommendations(null)}><X className="h-5 w-5 text-muted" /></button></div><div className="space-y-2">{recommendations.slice(0, 3).map((item) => <article key={item.id} className="rounded-2xl border border-border bg-background p-3"><div className="flex items-center gap-2"><span className="rounded-full bg-accent-light px-2 py-0.5 text-[9px] font-bold uppercase text-accent-dim">{item.kind}</span><h3 className="text-xs font-extrabold">{item.title}</h3></div><p className="mt-1 text-[11px] text-muted">{item.reason}</p>{item.adjustments.length > 0 && <p className="mt-1 text-[10px] text-accent-dim">Try: {item.adjustments.join(" · ")}</p>}</article>)}</div></div></div>}
+      </section>
 
       {/* Latest Eating Analysis */}
       {latestAnalysis && (() => {
