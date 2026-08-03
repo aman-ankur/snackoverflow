@@ -7,6 +7,7 @@ import CapyLottie from "@/components/CapyLottie";
 import CalendarProgressView from "@/components/CalendarProgressView";
 import CoachMark from "@/components/CoachMark";
 import EatingAnalysisCard from "@/components/EatingAnalysisCard";
+import { ConnectedHealthCard } from "@/components/ConnectedHealth";
 import { buildHealthPlaybook } from "@/lib/healthPlaybook";
 import type { LoggedMeal, MealTotals, NutritionGoals, StreakData, HealthProfile, EatingAnalysis } from "@/lib/dishTypes";
 import type { CoachMarkId } from "@/lib/useCoachMarks";
@@ -41,6 +42,7 @@ interface ProgressViewProps {
   initialSection?: ProgressSection;
   onSectionChange?: (section: ProgressSection) => void;
   openAnalysisLauncher?: boolean;
+  isLoggedIn?: boolean;
 }
 
 export type ProgressSection = "overview" | "insights" | "history";
@@ -410,6 +412,7 @@ export default function ProgressView({
   initialSection = "overview",
   onSectionChange,
   openAnalysisLauncher = false,
+  isLoggedIn = false,
 }: ProgressViewProps) {
   const [section, setSection] = useState<ProgressSection>(initialSection);
   const [expandedDate, setExpandedDate] = useState<string | null>(() => {
@@ -480,6 +483,7 @@ export default function ProgressView({
         <CalendarProgressView meals={meals} goals={goals} />
         {coachMarks?.shouldShow("progress-rings") && <CoachMark id="progress-rings" text="Each ring shows your daily calories, protein, and carbs" visible={true} onDismiss={coachMarks.dismiss} />}
         <CalorieTrendCard meals={meals} weeklyByDate={weeklyByDate} goals={goals} />
+        <ConnectedHealthCard isLoggedIn={isLoggedIn} compact />
       </>}
 
       {section === "insights" && <div className="space-y-2" data-testid="progress-insights">
