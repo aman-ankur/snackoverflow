@@ -7,6 +7,8 @@ const read = (path) => readFileSync(resolve(root, path), "utf8");
 
 const registry = read("src/lib/aiModels.ts");
 const packageJson = JSON.parse(read("package.json"));
+const packageLock = read("package-lock.json");
+const npmConfig = read(".npmrc");
 const runtimeFiles = [
   "src/lib/aiModels.ts",
   "src/app/api/analyze-dish/route.ts",
@@ -50,6 +52,9 @@ for (const model of retiredOrUnnecessaryModels) {
 
 assert.equal(packageJson.dependencies["@google/generative-ai"], undefined, "legacy Gemini SDK must be removed");
 assert.ok(packageJson.dependencies["@google/genai"], "maintained Gemini SDK must be installed");
+assert.ok(npmConfig.includes("registry=https://registry.npmjs.org/"), "project must use the public npm registry");
+assert.ok(!packageLock.includes("jfrog.booking.com"), "lockfile must not contain private Booking registry URLs");
+assert.ok(!packageLock.includes("registry.npmmirror.com"), "lockfile must not contain mirror-specific URLs");
 
 const dishRoute = read("src/app/api/analyze-dish/route.ts");
 const otherRoutes = runtimeFiles.replace(dishRoute, "");
