@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
+import { AI_MODELS } from "@/lib/aiModels";
 import { checkRateLimit } from "@/lib/rateLimit";
 import { validateString, validateArray } from "@/lib/validateInput";
 
@@ -50,11 +51,12 @@ export async function POST(request: NextRequest) {
 
     const groq = new Groq({ apiKey: groqKey });
     const result = await groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: AI_MODELS.groq.fastTextFallback,
       messages: [
         { role: "system", content: buildHindiPrompt(servings) },
         { role: "user", content: userMsg },
       ],
+      reasoning_effort: "low",
       temperature: 0.7,
       max_tokens: 200,
     });

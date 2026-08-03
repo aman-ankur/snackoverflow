@@ -1,8 +1,9 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 import OpenAI from "openai";
 import { NextRequest, NextResponse } from "next/server";
 import type { ConfidenceLevel, DishAnalysisResult, DishNutrition } from "@/lib/dishTypes";
+import { AI_MODELS } from "@/lib/aiModels";
+import { generateGeminiContent, ThinkingLevel } from "@/lib/gemini";
 
 export const maxDuration = 30;
 import { buildReferenceTable } from "@/lib/nutritionReference";
@@ -361,62 +362,27 @@ function normalizeResult(raw: unknown): DishAnalysisResult {
   };
 }
 
-async function tryGemini25Flash(base64Data: string, prompt: string): Promise<{ result: DishAnalysisResult; provider: string } | null> {
+async function tryGemini36Flash(base64Data: string, prompt: string): Promise<{ result: DishAnalysisResult; provider: string } | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const imageContent = {
-    inlineData: { mimeType: "image/jpeg" as const, data: base64Data },
-  };
-
   try {
-    console.log("[Gemini Dish] Trying gemini-2.5-flash...");
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 4096,
-        thinkingConfig: { thinkingBudget: 1024 },
-      } as Record<string, unknown>,
+    console.log(`[Gemini Dish] Trying ${AI_MODELS.gemini.dishVision}...`);
+    const text = await generateGeminiContent({
+      apiKey,
+      model: AI_MODELS.gemini.dishVision,
+      prompt,
+      imageBase64: base64Data,
+      maxOutputTokens: 4096,
+      thinkingLevel: ThinkingLevel.LOW,
+      json: true,
     });
-    const result = await model.generateContent([prompt, imageContent]);
-    const parsed = parseJsonResponse(result.response.text());
-    console.log("[Gemini Dish] Success with gemini-2.5-flash");
-    return { result: normalizeResult(parsed), provider: "G25F" };
+    const parsed = parseJsonResponse(text);
+    console.log(`[Gemini Dish] Success with ${AI_MODELS.gemini.dishVision}`);
+    return { result: normalizeResult(parsed), provider: "G36F" };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "";
-    console.error(`[Gemini Dish/gemini-2.5-flash] ${msg}`);
-    if (isRateLimitError(msg)) return null;
-    throw err;
-  }
-}
-
-async function tryGemini20Flash(base64Data: string, prompt: string): Promise<{ result: DishAnalysisResult; provider: string } | null> {
-  const apiKey = process.env.GEMINI_API_KEY;
-  if (!apiKey) return null;
-
-  const genAI = new GoogleGenerativeAI(apiKey);
-  const imageContent = {
-    inlineData: { mimeType: "image/jpeg" as const, data: base64Data },
-  };
-
-  try {
-    console.log("[Gemini Dish] Trying gemini-2.0-flash...");
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.0-flash",
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 4096,
-      } as Record<string, unknown>,
-    });
-    const result = await model.generateContent([prompt, imageContent]);
-    const parsed = parseJsonResponse(result.response.text());
-    console.log("[Gemini Dish] Success with gemini-2.0-flash");
-    return { result: normalizeResult(parsed), provider: "G20F" };
-  } catch (err: unknown) {
-    const msg = err instanceof Error ? err.message : "";
-    console.error(`[Gemini Dish/gemini-2.0-flash] ${msg}`);
+    console.error(`[Gemini Dish/${AI_MODELS.gemini.dishVision}] ${msg}`);
     if (isRateLimitError(msg)) return null;
     throw err;
   }
@@ -429,9 +395,9 @@ async function tryOpenAI(base64Data: string, prompt: string): Promise<{ result: 
   const openai = new OpenAI({ apiKey });
 
   try {
-    console.log("[OpenAI Dish] Trying gpt-4o-mini...");
+    console.log(`[OpenAI Dish] Trying ${AI_MODELS.openai.visionFallback}...`);
     const result = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: AI_MODELS.openai.visionFallback,
       messages: [
         {
           role: "user",
@@ -451,7 +417,7 @@ async function tryOpenAI(base64Data: string, prompt: string): Promise<{ result: 
 
     const text = result.choices[0]?.message?.content || "";
     const parsed = parseJsonResponse(text);
-    console.log("[OpenAI Dish] Success with gpt-4o-mini");
+    console.log(`[OpenAI Dish] Success with ${AI_MODELS.openai.visionFallback}`);
     return { result: normalizeResult(parsed), provider: "OAI4m" };
   } catch (err: unknown) {
     const msg = err instanceof Error ? err.message : "";
@@ -467,9 +433,9 @@ async function tryGroq(base64Data: string, prompt: string): Promise<{ result: Di
 
   const groq = new Groq({ apiKey });
 
-  // Only Scout supports vision on Groq (Maverick decommissioned March 2026, GPT OSS 120B is text-only)
+  // Qwen 3.6 is Groq's current multimodal replacement for retired Llama 4 Scout.
   const groqModels: Array<{ model: string; tag: string }> = [
-    { model: "meta-llama/llama-4-scout-17b-16e-instruct", tag: "GRQS" },
+    { model: AI_MODELS.groq.visionFallback, tag: "GRQ36" },
   ];
 
   for (const { model: groqModel, tag } of groqModels) {
@@ -489,6 +455,7 @@ async function tryGroq(base64Data: string, prompt: string): Promise<{ result: Di
             ],
           },
         ],
+        reasoning_effort: "none",
         temperature: 0.2,
         max_tokens: 2400,
       });
@@ -538,37 +505,35 @@ export async function POST(request: NextRequest) {
     const startTotal = Date.now();
 
     // Tiered quality-first fallback strategy (optimized for PAID Gemini):
-    // Tier 1 (Best Accuracy): Gemini 2.5 Flash (10s timeout - catches 99% of responses)
+    // Tier 1 (Best Accuracy): Gemini 3.6 Flash (10s timeout - catches 99% of responses)
     // Tier 2 (Reliable Fallback): OpenAI gpt-4o-mini (10s timeout)
     // Tier 3 (Fast Last Resort): Groq (5s timeout)
 
-    type ProviderResult = { result: DishAnalysisResult; provider: string; latencyMs: number };
-
     console.log("[Dish Scan] 🎯 Starting tiered quality-first fallback (Gemini → OpenAI → Groq)...\n");
 
-    // Tier 1: Gemini 2.5 Flash (best accuracy, 15s timeout allows complex multi-dish analysis)
+    // Tier 1: Gemini 3.6 Flash (best accuracy, 15s timeout allows complex multi-dish analysis)
     const tier1Start = Date.now();
     try {
-      console.log(`[Dish Scan] 🚀 [Tier 1] Gemini 2.5 Flash (15s timeout)...`);
-      const hit = await withTimeout(tryGemini25Flash(base64Data, prompt), 15000);
+      console.log(`[Dish Scan] 🚀 [Tier 1] Gemini 3.6 Flash (15s timeout)...`);
+      const hit = await withTimeout(tryGemini36Flash(base64Data, prompt), 15000);
       if (hit) {
         const latencyMs = Date.now() - tier1Start;
         const totalMs = Date.now() - startTotal;
-        console.log(`[Dish Scan] ✅ [Tier 1] Gemini 2.5 Flash succeeded in ${latencyMs}ms (model: gemini-2.5-flash)`);
-        console.log(`[Dish Scan] 🏆 WINNER: Gemini 2.5 Flash in ${latencyMs}ms (total: ${totalMs}ms)\n`);
+        console.log(`[Dish Scan] ✅ [Tier 1] Gemini 3.6 Flash succeeded in ${latencyMs}ms (model: ${AI_MODELS.gemini.dishVision})`);
+        console.log(`[Dish Scan] 🏆 WINNER: Gemini 3.6 Flash in ${latencyMs}ms (total: ${totalMs}ms)\n`);
         const data = { ...hit.result, _provider: hit.provider, _latencyMs: latencyMs };
         setCachedResult(cacheKey, data);
         return NextResponse.json(data);
       }
       const failTime = Date.now() - tier1Start;
-      console.log(`[Dish Scan] ⚠️ [Tier 1] Gemini 2.5 Flash rate limited after ${failTime}ms`);
-      errors.push(`Gemini 2.5 Flash rate limited (${failTime}ms)`);
+      console.log(`[Dish Scan] ⚠️ [Tier 1] Gemini 3.6 Flash rate limited after ${failTime}ms`);
+      errors.push(`Gemini 3.6 Flash rate limited (${failTime}ms)`);
     } catch (err: unknown) {
       const failTime = Date.now() - tier1Start;
       const msg = err instanceof Error ? err.message : "failed";
       const isTimeout = msg.includes("Timeout");
-      console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} [Tier 1] Gemini 2.5 Flash ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
-      errors.push(`Gemini 2.5 Flash: ${msg} (${failTime}ms)`);
+      console.log(`[Dish Scan] ${isTimeout ? '⏱️ ' : '❌'} [Tier 1] Gemini 3.6 Flash ${isTimeout ? 'timeout' : 'error'} after ${failTime}ms: ${msg}`);
+      errors.push(`Gemini 3.6 Flash: ${msg} (${failTime}ms)`);
     }
 
     // Tier 2: OpenAI gpt-4o-mini (reliable fallback, 10s timeout)
@@ -604,7 +569,7 @@ export async function POST(request: NextRequest) {
       console.log("\n[Dish Scan] 🔄 [Tier 3] Groq fallback (last resort)...");
       const tier3Start = Date.now();
       try {
-        console.log(`[Dish Scan] 🚀 [Tier 3] Groq Llama 4 Scout (5s timeout)...`);
+        console.log(`[Dish Scan] 🚀 [Tier 3] Groq Qwen 3.6 (5s timeout)...`);
         const hit = await withTimeout(tryGroq(base64Data, prompt), 5000);
         if (hit) {
           const latencyMs = Date.now() - tier3Start;

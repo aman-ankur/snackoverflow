@@ -59,7 +59,7 @@ All routes are protected by:
 }
 ```
 
-**Provider chain**: Gemini 2.0 Flash → Gemini 2.0 Flash Lite → Groq Llama 4 Scout  
+**Provider chain**: Gemini 3.5 Flash-Lite → Groq Qwen 3.6
 **Rate limit handling**: Returns 429 with friendly message if all providers exhausted  
 **Image preprocessing**: Base64 stripped of data URL prefix, sent as inline data to Gemini or as image_url to Groq  
 **Prompt**: `buildSystemPrompt(dietaryFilter)` — requests exactly 5 Indian lunch/dinner recipes, respects dietary constraints
@@ -159,7 +159,7 @@ All routes are protected by:
 - **Token cost**: ~2600 tokens per scan (vs 1600 without alternatives), still FREE within Gemini limits
 - **Client-side handling**: Instant swap between options (0s latency, no re-analysis)
 
-**Provider chain**: Gemini 2.5 Flash → OpenAI gpt-4o-mini → Groq Llama 4 Scout
+**Provider chain**: Gemini 3.6 Flash → OpenAI gpt-4o-mini → Groq Qwen 3.6
 **Safety/normalization**: Strict JSON parsing + numeric normalization + confidence/tag fallback defaults + recursive alternatives normalization
 **Cost control**: 2-minute in-memory response cache for repeated near-identical dish scans
 **Rate limit handling**: Returns 429 with friendly message when providers are exhausted
@@ -196,10 +196,10 @@ All routes are protected by:
 }
 ```
 
-**Provider chain**: Gemini 2.0 Flash Lite → Groq Llama 3.1 8B Instant  
+**Provider chain**: Gemini 3.5 Flash-Lite → Groq GPT-OSS 20B
 **Prompt**: Capy persona, 1-2 sentence max, warm/playful, references garden state  
 **Fallback**: Returns a generic motivational message if both providers fail  
-**Cost**: Free (uses free tier models)
+**Cost**: Low-cost models; actual cost depends on provider quota and usage
 
 ---
 
@@ -226,9 +226,9 @@ All routes are protected by:
 }
 ```
 
-**Provider**: Groq (meta-llama/llama-4-scout-17b-16e-instruct)  
+**Provider**: Groq (`openai/gpt-oss-20b`, low reasoning)
 **Prompt**: `buildHindiPrompt(servings)` — casual Hindi, 2-3 sentences, mentions dish name + serving count + ingredients in fridge  
-**Cost**: Free (Groq free tier)
+**Cost**: Depends on Groq quota and usage
 
 ---
 
@@ -304,7 +304,7 @@ All routes are protected by:
 }
 ```
 
-**Provider chain**: Gemini 2.0 Flash-Lite (Tier 1) → OpenAI gpt-4.1-nano + Groq Llama 4 Scout **raced in parallel** (Tier 2+3)  
+**Provider chain**: Gemini 3.5 Flash-Lite (Tier 1) → OpenAI gpt-4.1-nano + Groq GPT-OSS 20B **raced in parallel** (Tier 2+3)
 **Parallel race**: When Gemini fails, OpenAI and Groq fire simultaneously — first valid response wins  
 **Per-provider timeout**: 6 seconds (prevents slow providers from blocking the pipeline)  
 **Cost control**: 5-minute in-memory cache (200 entries max), 200-char input limit  
@@ -368,7 +368,7 @@ All routes are protected by:
 }
 ```
 
-**Provider chain**: Gemini 2.5 Flash (free, primary) → OpenAI gpt-4.1-mini ($0.0015/call) → Groq Llama 4 Scout (free, emergency)  
+**Provider chain**: Gemini 3.5 Flash-Lite (primary) → OpenAI GPT-5.6 Luna (reasoning off) → Groq GPT-OSS 20B (low reasoning, emergency)
 **Cost optimization**: Input is a pre-aggregated summary (~400 tokens) computed client-side by `mealAggregator.ts`, not raw meal data  
 **Per-provider timeout**: 15 seconds  
 **Temperature**: 0.3 (factual, consistent)  

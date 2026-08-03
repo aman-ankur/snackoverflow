@@ -1,7 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import OpenAI from "openai";
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { AI_MODELS } from "@/lib/aiModels";
+import { generateGeminiContent, ThinkingLevel } from "@/lib/gemini";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 export const maxDuration = 30;
@@ -249,28 +250,29 @@ function normalizeReport(raw: unknown): EatingReport | null {
   };
 }
 
-/* ─── Provider: Gemini 2.5 Flash ─── */
+/* ─── Provider: Gemini Flash-Lite ─── */
 
 async function tryGemini(prompt: string): Promise<EatingReport | null> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) return null;
 
-  const genAI = new GoogleGenerativeAI(apiKey);
-
   try {
-    console.log("[AnalyzeHabits/Gemini] Trying gemini-2.5-flash...");
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      generationConfig: { temperature: 0.3, maxOutputTokens: 1200 },
+    console.log(`[AnalyzeHabits/Gemini] Trying ${AI_MODELS.gemini.fastText}...`);
+    const resultPromise = generateGeminiContent({
+      apiKey,
+      model: AI_MODELS.gemini.fastText,
+      prompt,
+      maxOutputTokens: 1200,
+      thinkingLevel: ThinkingLevel.LOW,
+      json: true,
     });
-    const resultPromise = model.generateContent([prompt]);
     const result = await Promise.race([
       resultPromise,
       new Promise<never>((_, reject) =>
         setTimeout(() => reject(new Error("Gemini timeout")), PROVIDER_TIMEOUT_MS)
       ),
     ]);
-    const parsed = parseJsonResponse(result.response.text());
+    const parsed = parseJsonResponse(result);
     const normalized = normalizeReport(parsed);
     if (normalized) {
       console.log("[AnalyzeHabits/Gemini] Success");
@@ -286,21 +288,21 @@ async function tryGemini(prompt: string): Promise<EatingReport | null> {
   }
 }
 
-/* ─── Provider: OpenAI GPT-4.1-mini ─── */
+/* ─── Provider: OpenAI balanced fallback ─── */
 
 async function tryOpenAI(prompt: string): Promise<EatingReport | null> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) return null;
 
   try {
-    console.log("[AnalyzeHabits/OpenAI] Trying gpt-4.1-mini...");
+    console.log(`[AnalyzeHabits/OpenAI] Trying ${AI_MODELS.openai.balancedTextFallback}...`);
     const openai = new OpenAI({ apiKey });
     const resultPromise = openai.chat.completions.create({
-      model: "gpt-4.1-mini",
+      model: AI_MODELS.openai.balancedTextFallback,
       messages: [{ role: "user", content: prompt }],
       response_format: { type: "json_object" },
-      temperature: 0.3,
-      max_tokens: 1200,
+      reasoning_effort: "none",
+      max_completion_tokens: 1200,
     });
     const result = await Promise.race([
       resultPromise,
@@ -326,18 +328,19 @@ async function tryOpenAI(prompt: string): Promise<EatingReport | null> {
   }
 }
 
-/* ─── Provider: Groq Llama 4 Scout ─── */
+/* ─── Provider: Groq fast text fallback ─── */
 
 async function tryGroq(prompt: string): Promise<EatingReport | null> {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) return null;
 
   try {
-    console.log("[AnalyzeHabits/Groq] Trying llama-4-scout...");
+    console.log(`[AnalyzeHabits/Groq] Trying ${AI_MODELS.groq.fastTextFallback}...`);
     const groq = new Groq({ apiKey });
     const resultPromise = groq.chat.completions.create({
-      model: "meta-llama/llama-4-scout-17b-16e-instruct",
+      model: AI_MODELS.groq.fastTextFallback,
       messages: [{ role: "user", content: prompt }],
+      reasoning_effort: "low",
       temperature: 0.3,
       max_tokens: 1200,
     });
@@ -395,7 +398,7 @@ export async function POST(request: NextRequest) {
     const errors: string[] = [];
     const startTotal = Date.now();
 
-    // Tier 1: Gemini 2.5 Flash (free)
+    // Tier 1: Gemini Flash-Lite
     try {
       const t0 = Date.now();
       const result = await tryGemini(prompt);
@@ -423,7 +426,7 @@ export async function POST(request: NextRequest) {
       errors.push(`OpenAI: ${err instanceof Error ? err.message : "failed"}`);
     }
 
-    // Tier 3: Groq Llama 4 Scout (emergency)
+    // Tier 3: Groq fast text fallback (emergency)
     try {
       const t0 = Date.now();
       const result = await tryGroq(prompt);

@@ -1,11 +1,11 @@
 /**
  * Test script to verify Groq models work for dish scanning (vision + JSON)
  *
- * Confirms that the Tier 3 Groq fallback is healthy after the Maverick
- * decommission.  Scout is the only Groq model that supports vision input.
+ * Confirms that the Tier 3 Groq fallback is healthy after Llama 4 Scout's
+ * retirement. Qwen 3.6 is Groq's current multimodal replacement.
  *
  * Usage:
- *   export $(cat .env.local | grep GROQ_API_KEY | xargs) && npx tsx scripts/test-groq-fallback.ts
+ *   npm run test:groq
  */
 
 import Groq from "groq-sdk";
@@ -15,7 +15,7 @@ const TEST_IMAGE_BASE64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAIAAAACUFjqAAAAEklEQVR4nGP4n2KEBzGMSmNDACBmnjXyCN/wAAAAAElFTkSuQmCC";
 
 const MODELS = [
-  { model: "meta-llama/llama-4-scout-17b-16e-instruct", tag: "GRQS", name: "Llama 4 Scout" },
+  { model: "qwen/qwen3.6-27b", tag: "GRQ36", name: "Qwen 3.6 27B" },
 ];
 
 const PROMPT = `You are analyzing a food image. Return ONLY a JSON object (no markdown, no code blocks):
@@ -47,6 +47,10 @@ interface TestResult {
   response?: Record<string, unknown>;
 }
 
+function getErrorMessage(err: unknown): string {
+  return err instanceof Error ? err.message : String(err);
+}
+
 async function testModel(groq: Groq, model: string, tag: string, name: string): Promise<TestResult> {
   const start = Date.now();
   const result: TestResult = {
@@ -75,6 +79,7 @@ async function testModel(groq: Groq, model: string, tag: string, name: string): 
           ],
         },
       ],
+      reasoning_effort: "none",
       temperature: 0.3,
       max_tokens: 500,
     });
@@ -100,9 +105,9 @@ async function testModel(groq: Groq, model: string, tag: string, name: string): 
     } catch {
       result.error = `Invalid JSON: ${cleaned.substring(0, 120)}`;
     }
-  } catch (err: any) {
+  } catch (err: unknown) {
     result.latencyMs = Date.now() - start;
-    result.error = (err.message || String(err)).substring(0, 150);
+    result.error = getErrorMessage(err).substring(0, 150);
   }
 
   result.pass = result.supportsVision && result.validJson && result.hasRequiredFields;
@@ -110,7 +115,7 @@ async function testModel(groq: Groq, model: string, tag: string, name: string): 
   if (result.pass) {
     console.log(`  => PASS  vision:YES  json:YES  fields:YES  ${result.latencyMs}ms`);
     if (result.response) {
-      console.log(`     Response: ${(result.response as any).dishName} (${(result.response as any).calories} cal, confidence: ${(result.response as any).confidence})`);
+      console.log(`     Response: ${result.response.dishName} (${result.response.calories} cal, confidence: ${result.response.confidence})`);
     }
   } else {
     console.log(`  => FAIL  ${result.latencyMs}ms — ${result.error}`);
@@ -126,7 +131,7 @@ async function main() {
   const apiKey = process.env.GROQ_API_KEY;
   if (!apiKey) {
     console.error("ERROR: GROQ_API_KEY not set.");
-    console.error("Run: export $(cat .env.local | grep GROQ_API_KEY | xargs) && npx tsx scripts/test-groq-fallback.ts");
+    console.error("Run: npm run test:groq");
     process.exit(1);
   }
 
@@ -137,19 +142,19 @@ async function main() {
     results.push(await testModel(groq, m.model, m.tag, m.name));
   }
 
-  // Also verify the old Maverick is truly gone
-  console.log(`\n  Verifying Maverick is decommissioned...`);
+  // Also verify the retired model is truly gone.
+  console.log(`\n  Verifying Llama 4 Scout is retired...`);
   try {
     await groq.chat.completions.create({
-      model: "meta-llama/llama-4-maverick-17b-128e-instruct",
+      model: "meta-llama/llama-4-scout-17b-16e-instruct",
       messages: [{ role: "user", content: "test" }],
       max_tokens: 1,
     });
-    console.log(`  => WARNING: Maverick still responds (unexpected)`);
-  } catch (err: any) {
-    const msg = err.message || "";
+    console.log(`  => WARNING: Llama 4 Scout still responds (unexpected)`);
+  } catch (err: unknown) {
+    const msg = getErrorMessage(err);
     if (msg.includes("does not exist") || msg.includes("model_not_found") || msg.includes("decommissioned")) {
-      console.log(`  => Confirmed: Maverick is decommissioned`);
+      console.log(`  => Confirmed: Llama 4 Scout is retired`);
     } else {
       console.log(`  => Error (${msg.substring(0, 80)})`);
     }
@@ -161,8 +166,8 @@ async function main() {
 
   if (allPass) {
     console.log("RESULT: ALL TESTS PASSED");
-    console.log(`  Tier 3 fallback (Scout) is working correctly.`);
-    console.log(`  Maverick removal confirmed — no dead code in the fallback chain.`);
+    console.log(`  Tier 3 fallback (Qwen 3.6) is working correctly.`);
+    console.log(`  Scout retirement confirmed — no dead model in the fallback chain.`);
     process.exit(0);
   } else {
     console.log("RESULT: TESTS FAILED");

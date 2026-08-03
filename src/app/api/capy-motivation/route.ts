@@ -1,6 +1,7 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
 import Groq from "groq-sdk";
 import { NextRequest, NextResponse } from "next/server";
+import { AI_MODELS } from "@/lib/aiModels";
+import { generateGeminiContent } from "@/lib/gemini";
 import { checkRateLimit } from "@/lib/rateLimit";
 
 function buildPrompt(input: {
@@ -40,10 +41,14 @@ async function tryGemini(prompt: string): Promise<{ message: string; mood: strin
   if (!apiKey) return null;
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: "gemini-2.0-flash-lite" });
-    const result = await model.generateContent(prompt);
-    return parseJsonResponse(result.response.text());
+    const text = await generateGeminiContent({
+      apiKey,
+      model: AI_MODELS.gemini.fastText,
+      prompt,
+      maxOutputTokens: 150,
+      json: true,
+    });
+    return parseJsonResponse(text);
   } catch (err) {
     console.error("[Capy/Gemini]", err instanceof Error ? err.message : err);
     return null;
@@ -57,8 +62,9 @@ async function tryGroq(prompt: string): Promise<{ message: string; mood: string 
   try {
     const groq = new Groq({ apiKey });
     const result = await groq.chat.completions.create({
-      model: "llama-3.1-8b-instant",
+      model: AI_MODELS.groq.fastTextFallback,
       messages: [{ role: "user", content: prompt }],
+      reasoning_effort: "low",
       temperature: 0.7,
       max_tokens: 150,
     });
