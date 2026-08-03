@@ -7,6 +7,7 @@ import { useDevMode } from "@/lib/useDevMode";
 import type { UserProfile, NutritionGoals, StreakData, HealthProfile } from "@/lib/dishTypes";
 import { getConditionById } from "@/lib/healthConditions";
 import { getHealthSummaryDisplay, getStaleLabs } from "@/lib/healthContextBuilder";
+import { ConnectedHealthCard } from "@/components/ConnectedHealth";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 
 interface ProfileViewProps {
@@ -133,6 +134,8 @@ export default function ProfileView({
           </div>
         </div>
       )}
+
+      <ConnectedHealthCard isLoggedIn={isLoggedIn} />
 
       {/* Body Stats */}
       {profile && (

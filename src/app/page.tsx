@@ -206,6 +206,7 @@ export default function Home() {
                 initialSection={progressSection}
                 onSectionChange={setProgressSection}
                 openAnalysisLauncher={openAnalysisLauncher}
+                isLoggedIn={auth.isLoggedIn}
               />
             </motion.div>
           )}
