@@ -15,6 +15,7 @@ const n = (v: unknown): number | null => typeof v === "number" && Number.isFinit
 const first = (o: Record<string, unknown>, ...keys: string[]) => keys.map((k) => o[k]).find((v) => v !== undefined && v !== null);
 const iso = (v: unknown) => { const d = new Date(String(v)); return Number.isNaN(d.getTime()) ? null : d.toISOString(); };
 const seconds = (v: unknown) => { const value = n(v); return value === null ? null : value > 10000 ? Math.round(value / 1000) : Math.round(value); };
+const hoursToSeconds = (v: unknown) => { const value = n(v); return value === null ? null : Math.round(value * 3600); };
 const array = (payload: unknown, ...keys: string[]): unknown[] => { if (Array.isArray(payload)) return payload as unknown[]; if (!payload || typeof payload !== "object") return []; const o = payload as Record<string, unknown>; for (const k of keys) { if (Array.isArray(o[k])) return o[k] as unknown[]; if (o.data && typeof o.data === "object" && !Array.isArray(o.data) && Array.isArray((o.data as Record<string, unknown>)[k])) return (o.data as Record<string, unknown>)[k] as unknown[]; } return []; };
 
 export function hashIngestionToken(token: string) { return crypto.createHash("sha256").update(token).digest("hex"); }
@@ -28,7 +29,12 @@ export function normalizeHealthExport(payload: unknown) {
     if (!start || !end) continue;
     const id = String(first(o, "id", "uuid", "workoutId") ?? `${start}:${end}:${first(o, "workoutActivityType", "type", "name") ?? "workout"}`);
     const hr = (first(o, "heartRate", "heartRateSummary") as Record<string, unknown> | undefined) ?? {};
-    workouts.push({ providerRecordId: id, workoutType: String(first(o, "workoutActivityType", "type", "name") ?? "Other"), startedAt: start, endedAt: end, durationSeconds: seconds(first(o, "duration", "durationSeconds")), energyKcal: n(first(o, "totalEnergyBurned", "energyKcal", "calories")), distanceKm: (n(first(o, "totalDistance", "distanceKm", "distance")) ?? 0) > 100 ? (n(first(o, "totalDistance", "distanceKm", "distance"))! / 1000) : n(first(o, "totalDistance", "distanceKm", "distance")), heartRateAvgBpm: n(first(hr, "average", "avg", "averageBpm")), heartRateMinBpm: n(first(hr, "min", "minimum")), heartRateMaxBpm: n(first(hr, "max", "maximum")), raw: item });
+    const energy = (first(o, "activeEnergy", "totalEnergyBurned", "energyKcal", "calories") as Record<string, unknown> | undefined);
+    const distance = (first(o, "distance", "totalDistance", "distanceKm") as Record<string, unknown> | undefined);
+    const heartRateData = Array.isArray(o.heartRateData) ? o.heartRateData[0] as Record<string, unknown> : {};
+    const rawDistance = n(distance ? first(distance, "qty", "value") : first(o, "totalDistance", "distanceKm"));
+    const distanceUnits = String(distance ? first(distance, "units", "unit") ?? "" : "");
+    workouts.push({ providerRecordId: id, workoutType: String(first(o, "workoutActivityType", "type", "name") ?? "Other"), startedAt: start, endedAt: end, durationSeconds: seconds(first(o, "duration", "durationSeconds")), energyKcal: n(energy ? first(energy, "qty", "value") : first(o, "totalEnergyBurned", "energyKcal", "calories")), distanceKm: rawDistance === null ? null : /mi|mile/i.test(distanceUnits) ? rawDistance * 1.609344 : /m$|meter/i.test(distanceUnits) ? rawDistance / 1000 : rawDistance > 100 ? rawDistance / 1000 : rawDistance, heartRateAvgBpm: n(first(hr, "average", "avg", "averageBpm")) ?? n(first(heartRateData, "Avg", "average", "avg")), heartRateMinBpm: n(first(hr, "min", "minimum")) ?? n(first(heartRateData, "Min", "minimum")), heartRateMaxBpm: n(first(hr, "max", "maximum")) ?? n(first(heartRateData, "Max", "maximum")), raw: item });
   }
   for (const item of array(payload, "sleep", "sleepAnalysis", "sleepSessions")) {
     if (!item || typeof item !== "object") continue; const o = item as Record<string, unknown>;
@@ -41,8 +47,13 @@ export function normalizeHealthExport(payload: unknown) {
   // HAE may group samples as { name, units, data: [{date,value}] }.
   const metricGroups = metricItems.flatMap((item): unknown[] => { if (!item || typeof item !== "object") return [item]; const record = item as Record<string, unknown>; const samples = record.data; if (!Array.isArray(samples)) return [item]; return samples.map((sample) => ({ ...(sample as Record<string, unknown>), name: record.name, unit: record.unit ?? record.units })); });
   for (const item of metricGroups) {
-    if (!item || typeof item !== "object") continue; const o = item as Record<string, unknown>; const at = iso(first(o, "date", "timestamp", "startDate", "recordedAt")); const value = n(first(o, "value", "quantity", "average")); if (!at || value === null) continue;
+    if (!item || typeof item !== "object") continue; const o = item as Record<string, unknown>; const at = iso(first(o, "date", "timestamp", "startDate", "recordedAt")); const value = n(first(o, "value", "quantity", "average", "qty", "Avg")); if (!at || value === null) continue;
     const original = String(first(o, "type", "name", "metricType") ?? "").toLowerCase().replace(/[^a-z]/g, "");
+    if (original === "sleepanalysis") {
+      const sleepStart = iso(first(o, "sleepStart", "inBedStart", "startDate")); const sleepEnd = iso(first(o, "sleepEnd", "inBedEnd", "endDate"));
+      if (sleepStart && sleepEnd) sleep.push({ providerRecordId: String(first(o, "id", "sleepId") ?? `sleep:${sleepStart}:${sleepEnd}`), sleepDate: String(first(o, "date") ?? sleepStart.slice(0, 10)).slice(0, 10), startedAt: sleepStart, endedAt: sleepEnd, asleepSeconds: hoursToSeconds(first(o, "asleep", "totalSleep")), inBedSeconds: hoursToSeconds(first(o, "inBed")), coreSeconds: hoursToSeconds(first(o, "core")), deepSeconds: hoursToSeconds(first(o, "deep")), remSeconds: hoursToSeconds(first(o, "rem")), efficiency: null, raw: item });
+      continue;
+    }
     const metricType = original.includes("bodymass") || original.includes("weight") ? "weight" : original.includes("restingheartrate") ? "resting_heart_rate" : original.includes("heartratevariability") || original.includes("hrv") ? "hrv" : original.includes("step") ? "steps" : original.includes("activeenergy") || original.includes("energy") ? "active_energy" : original.includes("respiratory") ? "respiratory_rate" : original.includes("oxygen") || original.includes("spo2") ? "spo2" : original;
     if (!["weight", "resting_heart_rate", "hrv", "steps", "active_energy", "respiratory_rate", "spo2"].includes(metricType)) continue;
     const unit = String(first(o, "unit", "units") ?? (metricType === "weight" ? "kg" : metricType === "hrv" ? "ms" : metricType === "steps" ? "count" : metricType === "active_energy" ? "kcal" : metricType === "spo2" ? "%" : "bpm"));
