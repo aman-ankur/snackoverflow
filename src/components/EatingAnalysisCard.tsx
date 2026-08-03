@@ -93,7 +93,7 @@ export default function EatingAnalysisCard({
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`${compact ? "fixed inset-x-4 bottom-4 z-[90] max-h-[90vh] overflow-y-auto shadow-2xl sm:inset-x-auto sm:left-1/2 sm:w-full sm:max-w-lg sm:-translate-x-1/2" : ""} rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-[#DBEAFE] border border-accent/10 p-4`}
+      className={`${compact ? "relative" : ""} rounded-2xl bg-gradient-to-br from-[#E8F5E0] to-[#DBEAFE] border border-accent/10 p-4`}
     >
       {compact && <button onClick={() => setShowLauncher(false)} className="absolute right-3 top-3 rounded-full bg-card/80 px-2 py-1 text-[10px] font-bold text-muted">Close</button>}
       <div className="flex items-center gap-2 mb-3">
