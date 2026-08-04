@@ -65,12 +65,15 @@ export interface MealPhotoRef {
 
 export interface MealRecommendation {
   id: string;
-  kind: "familiar" | "healthier";
+  source: "history" | "similar";
+  mealType: MealType;
+  kind: "familiar" | "similar";
   title: string;
   reason: string;
   adjustments: string[];
   basedOnMealIds: string[];
   representativeMealId?: string;
+  lastHadDaysAgo?: number;
 }
 
 export type Gender = "male" | "female" | "other";

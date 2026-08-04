@@ -11,7 +11,8 @@
     "test:groq": "tsx --env-file=.env.local scripts/test-groq-fallback.ts",
     "test:models": "node scripts/check-ai-models.mjs",
     "test:playbook": "tsx scripts/test-health-playbook.ts",
-    "test:health-ingestion": "tsx scripts/test-health-ingestion.ts"
+    "test:health-ingestion": "tsx scripts/test-health-ingestion.ts",
+    "test:recommendations": "tsx scripts/test-recommendations.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",
