@@ -10,7 +10,8 @@
     "postinstall": "cp node_modules/onnxruntime-web/dist/ort-wasm-simd-threaded* public/ 2>/dev/null || true",
     "test:groq": "tsx --env-file=.env.local scripts/test-groq-fallback.ts",
     "test:models": "node scripts/check-ai-models.mjs",
-    "test:playbook": "tsx scripts/test-health-playbook.ts"
+    "test:playbook": "tsx scripts/test-health-playbook.ts",
+    "test:health-ingestion": "tsx scripts/test-health-ingestion.ts"
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.78.0",

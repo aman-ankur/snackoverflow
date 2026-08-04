@@ -69,35 +69,17 @@ export default function ProfileView({
 
   return (
     <div className="space-y-4">
-      {/* Header */}
       <div>
         <h2 className="text-lg font-extrabold text-foreground">Profile</h2>
         <p className="text-xs text-muted mt-0.5">Your goals and settings</p>
       </div>
 
-      {/* Capy Card */}
       <div className="rounded-2xl bg-gradient-to-br from-accent-light/40 to-card border border-accent/10 p-6 flex flex-col items-center text-center">
-        <div className="animate-breathe">
-          <CapyMascot mood="concerned" size={100} />
-        </div>
-        {profile?.name ? (
-          <h3 className="text-base font-extrabold text-foreground mt-3">{profile.name}</h3>
-        ) : (
-          <h3 className="text-base font-extrabold text-foreground mt-3">SnackOverflow</h3>
-        )}
+        <div className="animate-breathe"><CapyMascot mood="concerned" size={100} /></div>
+        <h3 className="text-base font-extrabold text-foreground mt-3">{profile?.name || "SnackOverflow"}</h3>
         <p className="text-xs text-muted mt-0.5">{profile?.name ? "SnackOverflow Member" : "Your Smart Kitchen Assistant"}</p>
-        {streak.currentStreak > 0 && (
-          <div className="flex items-center gap-1 mt-3 rounded-full bg-orange-light border border-orange/20 px-3 py-1">
-            <Flame className="h-3 w-3 text-orange" />
-            <span className="text-xs font-bold text-orange">{streak.currentStreak} Day Streak</span>
-          </div>
-        )}
-        {isLoggedIn && authUser && (
-          <div className="flex items-center gap-1.5 mt-3">
-            <Cloud className="h-3 w-3 text-green-500" />
-            <span className="text-[10px] text-muted">{authUser.email}</span>
-          </div>
-        )}
+        {streak.currentStreak > 0 && <div className="flex items-center gap-1 mt-3 rounded-full bg-orange-light border border-orange/20 px-3 py-1"><Flame className="h-3 w-3 text-orange" /><span className="text-xs font-bold text-orange">{streak.currentStreak} Day Streak</span></div>}
+        {isLoggedIn && authUser && <div className="flex items-center gap-1.5 mt-3"><Cloud className="h-3 w-3 text-green-500" /><span className="text-[10px] text-muted">{authUser.email}</span></div>}
       </div>
 
       {/* Auth Section */}
