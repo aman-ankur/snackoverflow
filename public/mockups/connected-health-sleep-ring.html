@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SnackOverflow · Sleep ring concept</title>
+  <style>
+    :root {
+      --cream: #f7f5ed;
+      --card: #fff;
+      --ink: #161716;
+      --muted: #6c6b65;
+      --line: #e4e0d6;
+      --green: #56ad5a;
+      --green-soft: #eaf6e8;
+      --core: #71c979;
+      --deep: #3c8553;
+      --rem: #9ad89a;
+      --awake: #e5e2d8;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; background: #dedbd2; color: var(--ink); font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; }
+    .phone { width: min(100%, 430px); min-height: 100vh; margin: 0 auto; padding: 26px 18px 42px; background: var(--cream); }
+    .eyebrow { margin: 12px 4px 6px; color: #4c9b50; font-size: 12px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+    h1 { margin: 0 4px 22px; font-size: 30px; letter-spacing: -.04em; }
+    .card { border: 1px solid var(--line); border-radius: 26px; background: var(--card); box-shadow: 0 8px 26px rgba(45, 52, 39, .06); }
+    .sleep-card { padding: 20px; }
+    .card-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+    .label { margin: 0; color: var(--muted); font-size: 13px; font-weight: 700; }
+    .date { margin: 5px 0 0; color: var(--ink); font-size: 18px; font-weight: 800; letter-spacing: -.02em; }
+    .source { display: inline-flex; align-items: center; gap: 5px; margin-top: 6px; color: #4c9b50; font-size: 12px; font-weight: 700; }
+    .source-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); }
+    .status { padding: 7px 10px; border-radius: 999px; background: var(--green-soft); color: #438d48; font-size: 11px; font-weight: 800; white-space: nowrap; }
+    .sleep-visual { display: flex; align-items: center; gap: 22px; padding: 24px 2px 18px; }
+    .ring { position: relative; flex: 0 0 158px; width: 158px; height: 158px; transform: rotate(-90deg); }
+    .ring svg { width: 100%; height: 100%; overflow: visible; }
+    .ring-center { position: absolute; inset: 0; display: grid; place-content: center; text-align: center; transform: rotate(90deg); }
+    .total { font-size: 27px; font-weight: 850; letter-spacing: -.06em; }
+    .total-caption { margin-top: 2px; color: var(--muted); font-size: 11px; font-weight: 700; }
+    .legend { flex: 1; display: grid; gap: 13px; }
+    .legend-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 13px; }
+    .legend-name { display: flex; align-items: center; gap: 8px; color: var(--muted); }
+    .legend-dot { width: 9px; height: 9px; border-radius: 50%; }
+    .legend-value { font-weight: 800; }
+    .window { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 15px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
+    .window strong { color: var(--ink); font-size: 13px; }
+    .insight { margin-top: 12px; padding: 14px; border-radius: 17px; background: var(--green-soft); color: #477849; font-size: 12px; line-height: 1.45; }
+    .insight strong { color: #2f6d38; }
+    .below { margin-top: 14px; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .health-picture { margin-bottom: 14px; padding: 20px; border: 1px solid #d5ecd2; border-radius: 26px; background: linear-gradient(135deg, #eaf7e7, #fff 72%); }
+    .health-picture .eyebrow { margin: 0; }
+    .health-picture h2 { margin: 9px 0 7px; font-size: 24px; letter-spacing: -.04em; }
+    .health-picture p { margin: 0; color: var(--muted); font-size: 13px; line-height: 1.45; }
+    .paired { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .paired .sleep-card { min-width: 0; padding: 13px; border-radius: 20px; }
+    .paired .card-head { display: block; }
+    .paired .date { font-size: 15px; }
+    .paired .source { font-size: 11px; }
+    .paired .status { display: inline-block; margin-top: 9px; }
+    .paired .sleep-visual { display: block; padding: 16px 0 12px; }
+    .paired .ring { width: 108px; height: 108px; margin: 0 auto; }
+    .paired .total { font-size: 18px; }
+    .paired .legend { gap: 7px; margin-top: 12px; }
+    .paired .legend-row { font-size: 11px; }
+    .paired .window { display: block; padding-top: 11px; font-size: 10px; line-height: 1.5; }
+    .paired .window strong { display: block; font-size: 11px; }
+    .paired .insight { display: none; }
+    .workout-ring { display: grid; place-items: center; width: 108px; height: 108px; margin: 16px auto 15px; border-radius: 50%; background: conic-gradient(var(--green) 0 70%, #edf0e8 70% 100%); }
+    .workout-ring::after { display: grid; place-content: center; width: 81px; height: 81px; border-radius: 50%; background: var(--card); content: ""; }
+    .workout-ring-content { position: absolute; display: grid; place-content: center; width: 81px; height: 81px; text-align: center; }
+    .workout-ring-content strong { font-size: 19px; letter-spacing: -.06em; }
+    .workout-ring-content span { color: var(--muted); font-size: 11px; font-weight: 700; }
+    .workout-stats { display: grid; gap: 8px; padding-bottom: 12px; }
+    .workout-stat { display: flex; align-items: center; justify-content: space-between; color: var(--muted); font-size: 11px; }
+    .workout-stat strong { color: var(--ink); font-size: 12px; }
+    @media (max-width: 360px) { .paired { grid-template-columns: 1fr; } }
+    .mini-card { padding: 16px; }
+    .mini-label { color: var(--muted); font-size: 12px; font-weight: 700; }
+    .mini-value { margin-top: 7px; font-size: 21px; font-weight: 850; letter-spacing: -.04em; }
+    .mini-meta { margin-top: 5px; color: var(--muted); font-size: 11px; line-height: 1.35; }
+    .note { margin: 20px 4px 0; color: #8a887f; font-size: 11px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <main class="phone">
+    <p class="eyebrow">Today’s health</p>
+    <h1>Your recovery picture</h1>
+
+    <section class="health-picture" aria-label="Health picture">
+      <p class="eyebrow">Today’s health</p>
+      <h2>Build your health picture</h2>
+      <p>Your connected sleep and workout trends will appear here as they become available.</p>
+    </section>
+
+    <div class="paired">
+    <section class="card sleep-card" aria-label="Sleep summary">
+      <div class="card-head">
+        <div>
+          <p class="label">Sleep</p>
+          <p class="date">Aug 2, 2026</p>
+          <span class="source"><span class="source-dot"></span>Apple Health</span>
+        </div>
+        <span class="status">Good night</span>
+      </div>
+
+      <div class="sleep-visual">
+        <div class="ring" aria-label="7 hours 35 minutes asleep">
+          <svg viewBox="0 0 160 160" role="img">
+            <circle cx="80" cy="80" r="61" fill="none" stroke="#edf0e8" stroke-width="15" />
+            <!-- Segments: core 4h34m, deep 1h09m, REM 1h51m -->
+            <circle cx="80" cy="80" r="61" fill="none" stroke="var(--core)" stroke-width="15" stroke-linecap="butt" stroke-dasharray="231 384" stroke-dashoffset="0" />
+            <circle cx="80" cy="80" r="61" fill="none" stroke="var(--deep)" stroke-width="15" stroke-linecap="butt" stroke-dasharray="58 384" stroke-dashoffset="-235" />
+            <circle cx="80" cy="80" r="61" fill="none" stroke="var(--rem)" stroke-width="15" stroke-linecap="butt" stroke-dasharray="94 384" stroke-dashoffset="-297" />
+          </svg>
+          <div class="ring-center"><div class="total">7h 35m</div><div class="total-caption">asleep</div></div>
+        </div>
+
+        <div class="legend">
+          <div class="legend-row"><span class="legend-name"><i class="legend-dot" style="background:var(--core)"></i>Core</span><strong class="legend-value">4h 34m</strong></div>
+          <div class="legend-row"><span class="legend-name"><i class="legend-dot" style="background:var(--deep)"></i>Deep</span><strong class="legend-value">1h 09m</strong></div>
+          <div class="legend-row"><span class="legend-name"><i class="legend-dot" style="background:var(--rem)"></i>REM</span><strong class="legend-value">1h 51m</strong></div>
+        </div>
+      </div>
+
+      <div class="window"><span>Sleep window</span><strong>1:02 AM – 8:45 AM</strong></div>
+      <div class="insight"><strong>Recovery looks promising.</strong> You got 7h 35m of sleep across core, deep, and REM stages.</div>
+    </section>
+
+    <section class="card sleep-card" aria-label="Workout summary">
+      <div class="card-head"><div><p class="label">Workout</p><p class="date">Aug 3, 2026</p><span class="source"><span class="source-dot"></span>Apple Health</span></div><span class="status">Active</span></div>
+      <div class="workout-ring"><div class="workout-ring-content"><strong>42m</strong><span>moving</span></div></div>
+      <div class="workout-stats"><div class="workout-stat"><span>Active energy</span><strong>286 kcal</strong></div><div class="workout-stat"><span>Workouts</span><strong>2 sessions</strong></div><div class="workout-stat"><span>Avg heart rate</span><strong>124 bpm</strong></div></div>
+      <div class="window"><span>Latest session</span><strong>Outdoor run · 7:10 AM</strong></div>
+    </section>
+    </div>
+
+    <div class="below">
+      <section class="card mini-card"><div class="mini-label">Resting HR</div><div class="mini-value">64 bpm</div><div class="mini-meta">31 Jul · Apple Health</div></section>
+      <section class="card mini-card"><div class="mini-label">HRV</div><div class="mini-value">34.2 ms</div><div class="mini-meta">1 Aug · Apple Health</div></section>
+      <section class="card mini-card"><div class="mini-label">Steps</div><div class="mini-value">2,560</div><div class="mini-meta">3 Aug · Apple Health</div></section>
+      <section class="card mini-card"><div class="mini-label">Weight</div><div class="mini-value">70.0 kg</div><div class="mini-meta">3 Aug · Manual</div></section>
+    </div>
+
+    <p class="note">Placement concept: this block sits below the health-picture summary when sleep or workout data exists. The four small cards stay focused on Resting HR, HRV, Steps, and Weight.</p>
+  </main>
+</body>
+</html>

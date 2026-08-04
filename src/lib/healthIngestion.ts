@@ -37,6 +37,14 @@ const durationSeconds = (v: unknown, fallbackUnit = "") => {
   if (/minute|min/.test(unit)) return Math.round(value * 60);
   return Math.round(value);
 };
+const sleepDuration = (asleep: number | null, start: string, end: string, stages: Array<number | null>, hasExplicitWindow = true) => {
+  if (asleep !== null && asleep > 0) return asleep;
+  const stagedSleep = stages.filter((value): value is number => value !== null && value > 0).reduce((sum, value) => sum + value, 0);
+  if (stagedSleep > 0) return stagedSleep;
+  if (!hasExplicitWindow) return null;
+  const elapsed = Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000);
+  return elapsed > 0 ? elapsed : null;
+};
 const seconds = (v: unknown) => durationSeconds(v);
 const array = (payload: unknown, ...keys: string[]): unknown[] => { if (Array.isArray(payload)) return payload as unknown[]; if (!payload || typeof payload !== "object") return []; const o = payload as Record<string, unknown>; for (const k of keys) { if (Array.isArray(o[k])) return o[k] as unknown[]; if (o.data && typeof o.data === "object" && !Array.isArray(o.data) && Array.isArray((o.data as Record<string, unknown>)[k])) return (o.data as Record<string, unknown>)[k] as unknown[]; } return []; };
 const groupedSamples = (payload: unknown): unknown[] => {
@@ -80,9 +88,9 @@ export function normalizeHealthExport(payload: unknown) {
     if (!item || typeof item !== "object") continue; const o = item as Record<string, unknown>;
     const start = iso(first(o, "startDate", "start", "startTime")), end = iso(first(o, "endDate", "end", "endTime")); if (!start || !end) continue;
     const id = String(first(o, "id", "uuid", "sleepId") ?? `${start}:${end}`); const stages = (first(o, "stages", "sleepStages") as Record<string, unknown> | undefined) ?? {};
-    const asleep = durationSeconds(first(o, "asleepDuration", "asleepSeconds", "duration"), String(first(o, "durationUnit", "unit", "units") ?? ""));
+    const asleep = durationSeconds(first(o, "totalSleep", "asleepDuration", "asleepSeconds", "duration"), String(first(o, "durationUnit", "unit", "units") ?? ""));
     const core = durationSeconds(first(stages, "core", "Core")); const deep = durationSeconds(first(stages, "deep", "Deep")); const rem = durationSeconds(first(stages, "rem", "REM"));
-    sleep.push({ providerRecordId: id, sleepDate: start.slice(0, 10), startedAt: start, endedAt: end, asleepSeconds: asleep ?? (core !== null || deep !== null || rem !== null ? (core ?? 0) + (deep ?? 0) + (rem ?? 0) : null), inBedSeconds: durationSeconds(first(o, "inBedDuration", "inBedSeconds")) ?? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000), coreSeconds: core, deepSeconds: deep, remSeconds: rem, efficiency: n(first(o, "efficiency")), raw: item });
+    sleep.push({ providerRecordId: id, sleepDate: start.slice(0, 10), startedAt: start, endedAt: end, asleepSeconds: sleepDuration(asleep, start, end, [core, deep, rem]), inBedSeconds: durationSeconds(first(o, "inBedDuration", "inBedSeconds")) ?? Math.round((new Date(end).getTime() - new Date(start).getTime()) / 1000), coreSeconds: core, deepSeconds: deep, remSeconds: rem, efficiency: n(first(o, "efficiency")), raw: item });
   }
   const metricItems = [...array(payload, "metrics", "healthMetrics", "samples"), ...groupedSamples(payload)];
   // HAE may group samples as { name, units, data: [{date,value}] }.
@@ -91,11 +99,17 @@ export function normalizeHealthExport(payload: unknown) {
     if (!item || typeof item !== "object") continue; const o = item as Record<string, unknown>; const original = String(first(o, "type", "name", "metricType") ?? "").toLowerCase().replace(/[^a-z]/g, "");
     if (original === "sleepanalysis" || original === "sleep_analysis") {
       const sourceDate = String(first(o, "date", "sleepDate", "day") ?? ""); const sleepDate = sourceDate.slice(0, 10); const unit = String(first(o, "unit", "units") ?? "");
-      const asleepSeconds = durationSeconds(first(o, "asleep", "totalSleep", "asleepDuration", "asleepSeconds"), unit) ?? (() => { const stages = ["core", "deep", "rem"].map((key) => durationSeconds(o[key], unit)).filter((v): v is number => v !== null); return stages.length ? stages.reduce((sum, value) => sum + value, 0) : null; })();
-      const inBedSeconds = durationSeconds(first(o, "inBed", "inBedDuration", "inBedSeconds"), unit) ?? asleepSeconds;
-      const sleepStart = iso(first(o, "sleepStart", "inBedStart", "startDate", "start")) ?? (sleepDate ? `${sleepDate}T00:00:00.000Z` : null);
-      const sleepEnd = iso(first(o, "sleepEnd", "inBedEnd", "endDate")) ?? (sleepStart && inBedSeconds !== null ? new Date(new Date(sleepStart).getTime() + inBedSeconds * 1000).toISOString() : null);
-      if (sleepStart && sleepEnd) sleep.push({ providerRecordId: String(first(o, "id", "uuid", "sleepId") ?? `sleep:${sleepDate || sleepStart}:${sleepEnd}`), sleepDate: sleepDate || sleepEnd.slice(0, 10), startedAt: sleepStart, endedAt: sleepEnd, asleepSeconds, inBedSeconds, coreSeconds: durationSeconds(o.core, unit), deepSeconds: durationSeconds(o.deep, unit), remSeconds: durationSeconds(o.rem, unit), efficiency: null, raw: item });
+      const stageSeconds = ["core", "deep", "rem"].map((key) => durationSeconds(o[key], unit));
+      const stagedSleepSeconds = stageSeconds.filter((value): value is number => value !== null).reduce((sum, value) => sum + value, 0) || null;
+      const rawAsleepSeconds = durationSeconds(first(o, "totalSleep", "asleep", "asleepDuration", "asleepSeconds"), unit);
+      const rawSleepStart = iso(first(o, "sleepStart", "inBedStart", "startDate", "start"));
+      const rawSleepEnd = iso(first(o, "sleepEnd", "inBedEnd", "endDate"));
+      const rawInBedSeconds = durationSeconds(first(o, "inBed", "inBedDuration", "inBedSeconds"), unit);
+      const windowSeconds = rawSleepStart && rawSleepEnd ? Math.round((new Date(rawSleepEnd).getTime() - new Date(rawSleepStart).getTime()) / 1000) : null;
+      const inBedSeconds = rawInBedSeconds !== null && rawInBedSeconds > 0 ? rawInBedSeconds : windowSeconds ?? rawAsleepSeconds ?? stagedSleepSeconds;
+      const sleepStart = rawSleepStart ?? (sleepDate ? `${sleepDate}T00:00:00.000Z` : null);
+      const sleepEnd = rawSleepEnd ?? (sleepStart && inBedSeconds !== null ? new Date(new Date(sleepStart).getTime() + inBedSeconds * 1000).toISOString() : null);
+      if (sleepStart && sleepEnd) sleep.push({ providerRecordId: String(first(o, "id", "uuid", "sleepId") ?? `sleep:${sleepDate || sleepStart}:${sleepEnd}`), sleepDate: sleepDate || sleepEnd.slice(0, 10), startedAt: sleepStart, endedAt: sleepEnd, asleepSeconds: sleepDuration(rawAsleepSeconds, sleepStart, sleepEnd, stageSeconds, Boolean(rawSleepStart && rawSleepEnd)), inBedSeconds, coreSeconds: stageSeconds[0], deepSeconds: stageSeconds[1], remSeconds: stageSeconds[2], efficiency: null, raw: item });
       continue;
     }
     const at = iso(first(o, "date", "timestamp", "startDate", "recordedAt")); const value = n(first(o, "value", "quantity", "average", "qty", "Avg")); if (!at || value === null) continue;
