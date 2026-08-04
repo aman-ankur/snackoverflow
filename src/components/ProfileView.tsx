@@ -119,32 +119,6 @@ export default function ProfileView({
 
       <ConnectedHealthCard isLoggedIn={isLoggedIn} />
 
-      {/* Body Stats */}
-      {profile && (
-        <div className="rounded-2xl bg-card border border-border p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <User className="h-4 w-4 text-accent" />
-              <h3 className="text-sm font-extrabold text-foreground">Body Stats</h3>
-            </div>
-            <button
-              onClick={onEditGoals}
-              className="text-[10px] text-accent font-semibold hover:text-accent-dim transition-colors"
-            >
-              Edit
-            </button>
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <StatItem icon={User} label="Gender" value={profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1)} />
-            <StatItem icon={User} label="Age" value={`${profile.age} years`} />
-            <StatItem icon={Ruler} label="Height" value={`${profile.heightCm} cm`} />
-            <StatItem icon={Scale} label="Weight" value={`${profile.weightKg} kg`} />
-            <StatItem icon={Activity} label="Activity" value={ACTIVITY_LABELS[profile.activityLevel] || profile.activityLevel} />
-            <StatItem icon={Target} label="Goal" value={GOAL_LABELS[profile.goal] || profile.goal} />
-          </div>
-        </div>
-      )}
-
       {/* Health Profile */}
       <div className="rounded-2xl bg-card border border-border p-4">
         <div className="flex items-center justify-between mb-3">
@@ -283,6 +257,32 @@ export default function ProfileView({
           )}
         </div>
       </div>
+
+      {/* Body Stats */}
+      {profile && (
+        <div className="rounded-2xl bg-card border border-border p-4">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <User className="h-4 w-4 text-accent" />
+              <h3 className="text-sm font-extrabold text-foreground">Body Stats</h3>
+            </div>
+            <button
+              onClick={onEditGoals}
+              className="text-[10px] text-accent font-semibold hover:text-accent-dim transition-colors"
+            >
+              Edit
+            </button>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <StatItem icon={User} label="Gender" value={profile.gender.charAt(0).toUpperCase() + profile.gender.slice(1)} />
+            <StatItem icon={User} label="Age" value={`${profile.age} years`} />
+            <StatItem icon={Ruler} label="Height" value={`${profile.heightCm} cm`} />
+            <StatItem icon={Scale} label="Weight" value={`${profile.weightKg} kg`} />
+            <StatItem icon={Activity} label="Activity" value={ACTIVITY_LABELS[profile.activityLevel] || profile.activityLevel} />
+            <StatItem icon={Target} label="Goal" value={GOAL_LABELS[profile.goal] || profile.goal} />
+          </div>
+        </div>
+      )}
 
       {/* Actions */}
       <div className="rounded-2xl bg-card border border-border overflow-hidden">
